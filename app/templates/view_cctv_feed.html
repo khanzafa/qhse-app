@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-8 p-6 bg-white shadow-md rounded-md">
+    <h2 class="text-2xl font-semibold mb-6">{{ title }}</h2>
+
+    <div class="mb-4">
+        <a href="{{ url_for('main.view_cctv_feed', camera_id=camera_id) }}?mode=normal" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300">View Original</a>
+        <a href="{{ url_for('main.view_cctv_feed', camera_id=camera_id) }}?mode=annotated" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300">View Annotated</a>
+    </div>
+
+    <div class="relative" style="width: 100%; height: 500px;">
+        <img id="cctv-feed" class="absolute top-0 left-0 w-full h-full object-cover" src="{{ url_for('main.stream', camera_id=camera_id, mode=request.args.get('mode', 'normal')) }}" alt="CCTV Feed">
+    </div>
+</div>
+{% endblock %}

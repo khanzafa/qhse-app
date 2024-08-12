@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Contact{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-8 p-6 bg-white shadow-md rounded-md">
+    <h2 class="text-2xl font-semibold mb-6">{{ title }}</h2>
+    
+    <form method="POST" action="{{ url_for('main.manage_contact', id=contact.id if contact else None) }}" class="space-y-4">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.phone_number.label(class="block text-gray-700 font-medium mb-2") }}
+            {{ form.phone_number(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+        </div>
+        
+        <div class="form-group">
+            {{ form.name.label(class="block text-gray-700 font-medium mb-2") }}
+            {{ form.name(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+        </div>
+        
+        <button type="submit" class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">
+            {{ 'Update Contact' if contact else 'Add Contact' }}
+        </button>
+    </form>
+
+    <h3 class="text-xl font-semibold mt-8 mb-4">Existing Contact Entries</h3>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Phone Number</th>
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Name</th>
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in whas %}
+                <tr class="border-t">
+                    <td class="py-3 px-4 text-gray-800">{{ contact.phone_number }}</td>
+                    <td class="py-3 px-4 text-gray-800">{{ contact.name }}</td>
+                    <td class="py-3 px-4 text-gray-800">
+                        <a href="{{ url_for('main.manage_contact', id=contact.id) }}" class="inline-block px-3 py-1 bg-yellow-500 text-white text-sm font-medium rounded hover:bg-yellow-600 transition duration-300">Edit</a>
+                        <a href="{{ url_for('main.delete_contact', id=contact.id) }}" class="inline-block px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 transition duration-300" onclick="return confirm('Are you sure you want to delete this entry?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
