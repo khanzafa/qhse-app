@@ -27,11 +27,11 @@ detected_objects = [
 
 @unfocused.route('/unfocused-detection', methods=['GET'])
 def unfocused_detection():
-    # detected_objects = DetectedObject.query.order_bye(DetectedObject.timestamp.desc()).all()
+    detected_objects = DetectedObject.query.order_by(DetectedObject.timestamp.desc()).all()
     return render_template('unfocused/index.html', detected_objects=detected_objects)
 
 @unfocused.route('/unfocused-detection/view-object/<int:object_id>', methods=['GET'])
 def view_object(object_id):
-    # detected_object = DetectedObject.query.get_or_404(object_id)    
+    detected_object = DetectedObject.query.get_or_404(object_id)    
     detected_object = next((object for object in detected_objects if object['id'] == object_id), None)
     return render_template('unfocused/view_object.html', detected_object=detected_object)

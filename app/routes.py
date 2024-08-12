@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, flash, redirect, request, url_for,
 from app.extensions import db
 from app.models import Camera, Contact, DetectedObject, Detector
 from app.forms import AddCCTVForm, EditCCTVForm, SelectCCTVForm, ContactForm, DetectorForm    
-from app import detector
+from app import gesture_detector, ppe_detector, unfocused_detector
 
 main = Blueprint('main', __name__)
 current_user = {'name': 'John'}
@@ -18,32 +18,47 @@ def view_cctv_feed(camera_id):
     return render_template('view_cctv_feed.html', title='Live CCTV Feed', camera_id=camera_id, current_user=current_user)
 
 @main.route('/cctv/stream/<int:camera_id>')
-def stream(camera_id):
+def cctv_stream(camera_id):
     camera = Camera.query.get_or_404(camera_id)
-    mode = request.args.get('mode', 'normal')
     def generate_frames():
-        if mode == 'annotated':
-            while True:
-                if camera_id in detector.frames:
-                    frame = detector.frames[camera_id]
-                    ret, buffer = cv2.imencode('.jpg', frame)
-                    frame = buffer.tobytes()
-                    yield (b'--frame\r\n'
-                           b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-                else:
-                    continue
-        else:
-            address = 0 if camera.ip_address == "http://0.0.0.0" else camera.ip_address            
-            cap = cv2.VideoCapture(address)
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
+        address = 0 if camera.ip_address == "http://0.0.0.0" else camera.ip_address            
+        cap = cv2.VideoCapture(address)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@main.route('/detector/view_feed/<int:detector_id>')
+def view_detector_feed(detector_id):
+    return render_template('view_detector_feed.html', title='Live Detector Feed', detector_id=detector_id, current_user=current_user)
+
+@main.route('/detector/stream/<int:detector_id>')
+def detector_stream(detector_id):
+    detector = Detector.query.get_or_404(detector_id)
+    camera = Camera.query.get_or_404(detector.camera_id)
+    detector_types = {
+        'PPE': ppe_detector,
+        'Gesture': gesture_detector,
+        'Unfocused': unfocused_detector
+    }
+    detector = detector_types[detector.type]
+    def generate_frames():
+        while True:
+            if detector_id in detector.frames:
+                frame = detector.frames[detector_id]
                 ret, buffer = cv2.imencode('.jpg', frame)
                 frame = buffer.tobytes()
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
+            else:
+                continue
+    
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @main.route('/cctv/all', methods=['GET'])
