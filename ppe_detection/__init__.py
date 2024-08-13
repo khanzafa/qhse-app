@@ -6,14 +6,17 @@ import cv2
 
 class PPEDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/yolov8n.pt", "PPE")
+        super().__init__("weights/ppe-detection.pt", "PPE")
 
     def process_results(self, results, frame, camera_id):
-        if 2 in results[0].boxes.cls:
+        res = results[0].boxes.cls
+        if 0 in results[0].boxes.cls or 1 in results[0].boxes.cls:
+            class_names = self.model.names
+            name = class_names[0] if 0 in res else class_names[1]
             print(f"PPE violation detected on camera {camera_id}.")
             detected_obj = DetectedObject(
                 detector_id=camera_id,
-                name='ppe-violation',
+                name=name,
                 frame=cv2.imencode('.jpg', frame)[1].tobytes(),
                 timestamp=datetime.now()
             )
