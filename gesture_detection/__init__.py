@@ -10,16 +10,20 @@ class GestureForHelpDetector(BaseDetector):
 
     def process_results(self, results, frame, camera_id):
         with self.app.app_context():
-            if 'cross-hands' in [results[0].names[int(cls)] for cls in results[0].boxes.cls]:
+            objects = ""
+            for c in results[0].boxes.cls:
+                name = self.model.names[int(c)]
+                if name == "cross-hands":
+                    objects += f"{name}, - "        
                 print(f"Gesture for Help detected on camera {camera_id}.")
-                detected_obj = DetectedObject(
-                    detector_id=camera_id,
-                    name='cross-hands',
-                    frame=cv2.imencode('.jpg', frame)[1].tobytes(),
-                    timestamp=datetime.now()
-                )
-                db.session.add(detected_obj)
-                db.session.commit()
+            detected_obj = DetectedObject(
+                detector_id=camera_id,
+                name='cross-hands',
+                frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                timestamp=datetime.now()
+            )
+            db.session.add(detected_obj)
+            db.session.commit()
         annotated_frame = results[0].plot()
         with self.lock:
             self.frames[camera_id] = annotated_frame

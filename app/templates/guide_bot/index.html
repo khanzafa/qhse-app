@@ -20,13 +20,24 @@
     <div class="container mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
       <h1 class="text-3xl font-bold text-gray-800">GuideBot 🤖️</h1>
       <div class="chat-container mt-6 space-y-4">
+        <div class="flex justify-start">
+            <div class="bg-gray-200 text-gray-800 p-4 rounded-lg shadow flex items-center space-x-2">
+              <span class="material-icons">smart_toy</span>
+              <pre class="whitespace-pre-wrap font-medium font-sans">{{ generated[0] }}</pre>
+            </div>
+          </div>
         {% for i in range(past|length) %}
-        <div class="bg-blue-100 text-blue-800 p-4 rounded-lg shadow">
-          <strong>You:</strong> {{ past[i] }}
+        <div class="flex justify-end">
+          <div class="bg-blue-100 text-blue-800 p-4 rounded-lg shadow flex items-center space-x-2">
+            <span class="material-icons">person</span>
+            <span>{{ past[i] }}</span>
+          </div>
         </div>
-        <div class="bg-gray-200 text-gray-800 p-4 rounded-lg shadow">
-          <strong>GuideBot:</strong>
-          <pre class="whitespace-pre-wrap font-medium font-serif"> {{ generated[i] }} </pre>
+        <div class="flex justify-start">
+          <div class="bg-gray-200 text-gray-800 p-4 rounded-lg shadow flex items-center space-x-2">
+            <span class="material-icons">smart_toy</span>
+            <pre class="whitespace-pre-wrap font-medium font-sans">{{ generated[i+1] }}</pre>
+          </div>
         </div>
         {% endfor %}
       </div>
@@ -47,5 +58,6 @@
         </div>
       </form>
     </div>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   </body>
 </html>

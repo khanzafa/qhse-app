@@ -153,8 +153,8 @@ def download_document(id):
 
 # Initialize variables
 history = []
-generated = ["Halo! Tanyakan sesuatu pada saya 😊️"]
-past = ["Hai! 🙌️"]
+generated = ["Selamat datang di GuideBot! Tanyakan sesuatu pada saya 😊️"]
+past = []
 
 # Function to handle conversation with the chatbot
 def conversation_chat(query, chain, history):

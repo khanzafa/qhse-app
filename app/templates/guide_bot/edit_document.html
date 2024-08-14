@@ -2,7 +2,7 @@
 {% block title %}Edit Document{% endblock %}
 
 {% block content %}
-<div class="container mx-auto mt-8 p-6 bg-white shadow-md rounded-md">
+<div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
   <h2 class="text-2xl font-semibold mb-6">Edit Document</h2>
   
   <form method="POST" action="{{ url_for('guide_bot.edit_document', id=document.id) }}" enctype="multipart/form-data">
