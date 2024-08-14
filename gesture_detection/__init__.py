@@ -6,7 +6,7 @@ import cv2
 
 class GestureForHelpDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/yolov8n.pt", "Gesture for Help")
+        super().__init__("weights/yolov8n.pt", "Gesture")
 
     def process_results(self, results, frame, camera_id):
         with self.app.app_context():
