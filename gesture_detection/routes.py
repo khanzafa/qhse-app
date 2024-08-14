@@ -27,7 +27,7 @@ detected_objects = [
 
 @gesture.route('/gesture-detection', methods=['GET'])
 def gesture_detection():
-    detected_objects = DetectedObject.query.order_by(DetectedObject.timestamp.desc()).all()
+    detected_objects = DetectedObject.query.join(Detector).filter(Detector.type == 'Gesture').order_by(DetectedObject.timestamp.desc()).all()
     return render_template('gesture/index.html', detected_objects=detected_objects)
 
 @gesture.route('/gesture-detection/view-object/<int:object_id>', methods=['GET'])
