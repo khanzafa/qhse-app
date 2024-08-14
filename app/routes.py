@@ -1,5 +1,12 @@
+import base64
+import io
 import cv2
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.io as pio
 import requests
+from datetime import datetime, timedelta
+from collections import Counter
 from flask import Blueprint, render_template, flash, redirect, request, url_for, Response, stream_with_context, abort, jsonify
 from app.extensions import db
 from app.models import Camera, Contact, DetectedObject, Detector
@@ -8,10 +15,115 @@ from app import gesture_detector, ppe_detector, unfocused_detector
 
 main = Blueprint('main', __name__)
 current_user = {'name': 'John'}
+GRAPHICS_DIR = 'app/static/graphics'
+
+# @main.route('/')
+# def index():    
+#     # Read dummy data from CSV
+#     cctv_data = pd.read_csv('app/static/data/data.csv')
+#     graph_data = pd.read_csv('app/static/data/graphs_data.csv')
+
+#     total_cctv = cctv_data[cctv_data['type'] == 'total_cctv']['value'].values[0]
+#     active_cctv = cctv_data[cctv_data['type'] == 'active_cctv']['value'].values[0]
+#     inactive_cctv = cctv_data[cctv_data['type'] == 'inactive_cctv']['value'].values[0]
+
+#     # Generate Bar Chart for PPE Undetected
+#     fig1 = go.Figure()
+#     fig1.add_trace(go.Bar(
+#         x=graph_data['date'],
+#         y=graph_data['ppe_undetected'],
+#         name='PPE Undetected'
+#     ))
+#     fig1.update_layout(title='PPE Undetected Per Day in One Week',
+#                        xaxis_title='Date',
+#                        yaxis_title='Count')
+    
+#     # Convert Plotly graph to Base64 image
+#     img1 = pio.to_image(fig1, format='png')
+#     buffer1 = io.BytesIO(img1)
+#     graph1 = base64.b64encode(buffer1.getvalue()).decode()
+
+#     # Generate Pie Chart for PPE Detection Categories
+#     categories = graph_data[['no_helmet', 'no_vest', 'no_boots']].sum()
+#     fig2 = go.Figure()
+#     fig2.add_trace(go.Pie(
+#         labels=categories.index,
+#         values=categories.values,
+#         hole=0.3
+#     ))
+#     fig2.update_layout(title='PPE Detection Categories')
+
+#     # Convert Plotly graph to Base64 image
+#     img2 = pio.to_image(fig2, format='png')
+#     buffer2 = io.BytesIO(img2)
+#     graph2 = base64.b64encode(buffer2.getvalue()).decode()
+    
+    
+#  # Generate Bar Chart for Gesture Warning Detected
+#     fig3 = go.Figure()
+#     fig3.add_trace(go.Bar(
+#         x=graph_data['gesture_warning_location'].value_counts().index,
+#         y=graph_data['gesture_warning_location'].value_counts().values,
+#         name='Gesture Warning Detected',
+#         marker=dict(color='greenyellow')  # Change the bar color here
+#     ))
+#     fig3.update_layout(title='Gesture Warning Detected Per Location',
+#                        xaxis_title='Location',
+#                        yaxis_title='Count')
+    
+#     # Convert Plotly graph to Base64 image
+#     img3 = pio.to_image(fig3, format='png')
+#     buffer3 = io.BytesIO(img3)
+#     graph3 = base64.b64encode(buffer3.getvalue()).decode()
+    
+#      # Generate Horizontal Bar Chart for Drowsiness Warning
+#     fig4 = go.Figure()
+#     fig4.add_trace(go.Bar(
+#         x=graph_data['drowsiness_warning'],
+#         y=graph_data['date'],
+#         orientation='h',  # Horizontal bars
+#         name='Drowsiness Warning Detected',
+#         marker=dict(color='purple')  # Optional: Set color
+#     ))
+#     fig4.update_layout(title='Drowsiness Warning Detected Per Day in One Week',
+#                        xaxis_title='Count',
+#                        yaxis_title='Date')
+
+#     # Convert Plotly graph to Base64 image
+#     img4 = pio.to_image(fig4, format='png')
+#     buffer4 = io.BytesIO(img4)
+#     graph4 = base64.b64encode(buffer4.getvalue()).decode()
+
+
+#     return render_template('dashboard.html', 
+#                            total_cctv=total_cctv, 
+#                            active_cctv=active_cctv, 
+#                            inactive_cctv=inactive_cctv, 
+#                            graph1=graph1, 
+#                            graph2=graph2,
+#                            graph3=graph3,
+#                            graph4=graph4)
 
 @main.route('/')
-def index():    
-    return render_template('dashboard.html', current_user=current_user)
+def index():
+    # Fetching data
+    num_cctv = Camera.query.count()
+    num_detectors = Detector.query.count()
+
+    # Assuming 'name' field in DetectedObject indicates no PPE
+    num_no_ppe = DetectedObject.query.filter(DetectedObject.name == 'no_ppe').count()
+    num_reckless = DetectedObject.query.filter(DetectedObject.name == 'reckless_driver').count()
+    num_gesture_help = DetectedObject.query.filter(DetectedObject.name == 'gesture_help').count()
+
+    # Example data for charts (this would normally be queried from the database)
+    today = datetime.today()
+    last_7_days = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+    chatbot_requests = Counter({day: 0 for day in last_7_days})  # Replace with actual data
+    safety_incidents = Counter({day: 0 for day in last_7_days})  # Replace with actual data
+
+    return render_template('dashboard.html', num_cctv=num_cctv, num_detectors=num_detectors,
+                           num_no_ppe=num_no_ppe, num_reckless=num_reckless, num_gesture_help=num_gesture_help,
+                           chatbot_requests=chatbot_requests, safety_incidents=safety_incidents)
 
 @main.route('/cctv/view_feed/<int:camera_id>')
 def view_cctv_feed(camera_id):

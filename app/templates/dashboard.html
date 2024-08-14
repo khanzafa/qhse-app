@@ -1,8 +1,102 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
+content %}
+<div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
+  <!-- Dashboard Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+    <!-- CCTV Count -->
+    <div class="bg-blue-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">CCTV Count</h3>
+      <p class="text-2xl">{{ num_cctv }}</p>
+    </div>
 
-{% block title %}Dashboard{% endblock %}
+    <!-- Detector Count -->
+    <div class="bg-green-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">Detector Count</h3>
+      <p class="text-2xl">{{ num_detectors }}</p>
+    </div>
 
-{% block content %}
-<h2>Welcome to the Dashboard</h2>
-<p>This is the main content area for the dashboard.</p>
+    <!-- No PPE Detected -->
+    <div class="bg-red-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">No PPE Detected</h3>
+      <p class="text-2xl">{{ num_no_ppe }}</p>
+    </div>
+
+    <!-- Reckless Driver Detected -->
+    <div class="bg-yellow-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">Reckless Drivers</h3>
+      <p class="text-2xl">{{ num_reckless }}</p>
+    </div>
+
+    <!-- Gesture for Help Detected -->
+    <div class="bg-purple-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">Help Gesture</h3>
+      <p class="text-2xl">{{ num_gesture_help }}</p>
+    </div>
+  </div>
+
+  <!-- Chatbot Request Chart -->
+  <div class="bg-white p-4 rounded-lg shadow mb-8">
+    <h3 class="text-xl font-semibold mb-4">Chatbot Requests (Last 7 Days)</h3>
+    <canvas id="chatbotRequestChart"></canvas>
+  </div>
+
+  <!-- Safety Incidents Chart -->
+  <div class="bg-white p-4 rounded-lg shadow">
+    <h3 class="text-xl font-semibold mb-4">Safety Incidents (Last 7 Days)</h3>
+    <canvas id="safetyIncidentsChart"></canvas>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Chart Data (replace with real data)
+  const chatbotRequestData = JSON.parse(
+    "{{ chatbot_requests }}"
+  );
+  const safetyIncidentsData = JSON.parse(
+    "{{ safety_incidents }}"
+  );
+
+  const labels = Object.keys(chatbotRequestData);
+  const chatbotRequestValues = Object.values(chatbotRequestData);
+  const safetyIncidentsValues = Object.values(safetyIncidentsData);
+
+  // Chatbot Request Chart
+  const chatbotRequestChart = new Chart(
+    document.getElementById("chatbotRequestChart"),
+    {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Requests",
+            data: chatbotRequestValues,
+            borderColor: "rgba(54, 162, 235, 1)",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+          },
+        ],
+      },
+    }
+  );
+
+  // Safety Incidents Chart
+  const safetyIncidentsChart = new Chart(
+    document.getElementById("safetyIncidentsChart"),
+    {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Incidents",
+            data: safetyIncidentsValues,
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+          },
+        ],
+      },
+    }
+  );
+</script>
 {% endblock %}

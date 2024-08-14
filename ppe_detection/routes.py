@@ -33,5 +33,5 @@ def ppe_detection():
 @ppe.route('/ppe-detection/view-object/<int:object_id>', methods=['GET'])
 def view_object(object_id):
     detected_object = DetectedObject.query.get_or_404(object_id)    
-    detected_object = next((object for object in detected_objects if object['id'] == object_id), None)
+    # detected_object = next((object for object in detected_objects if object['id'] == object_id), None)
     return render_template('ppe/view_object.html', detected_object=detected_object)
