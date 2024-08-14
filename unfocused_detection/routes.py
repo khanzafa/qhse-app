@@ -27,7 +27,7 @@ detected_objects = [
 
 @unfocused.route('/unfocused-detection', methods=['GET'])
 def unfocused_detection():
-    detected_objects = DetectedObject.query.order_by(DetectedObject.timestamp.desc()).all()
+    detected_objects = DetectedObject.query.join(Detector).filter(Detector.type == 'Unfocused').order_by(DetectedObject.timestamp.desc()).all()
     return render_template('unfocused/index.html', detected_objects=detected_objects)
 
 @unfocused.route('/unfocused-detection/view-object/<int:object_id>', methods=['GET'])

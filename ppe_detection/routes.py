@@ -27,7 +27,7 @@ detected_objects = [
 
 @ppe.route('/ppe-detection', methods=['GET'])
 def ppe_detection():
-    detected_objects = DetectedObject.query.order_by(DetectedObject.timestamp.desc()).all()
+    detected_objects = DetectedObject.query.join(Detector).filter(Detector.type == 'PPE').order_by(DetectedObject.timestamp.desc()).all()
     return render_template('ppe/index.html', detected_objects=detected_objects)
 
 @ppe.route('/ppe-detection/view-object/<int:object_id>', methods=['GET'])
