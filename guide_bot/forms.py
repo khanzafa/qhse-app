@@ -5,3 +5,4 @@ from wtforms.validators import DataRequired
 
 class DocumentForm(FlaskForm):
     files = MultipleFileField('Files', validators=[DataRequired()])
+    # files = MultipleFileField('Files', validators=[DataRequired()], render_kw={'webkitdirectory': True})
