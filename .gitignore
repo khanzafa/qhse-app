@@ -5,3 +5,5 @@ test.py
 migrations/
 data/*
 faiss_index_dir/*
+playground.ipynb
+runs/

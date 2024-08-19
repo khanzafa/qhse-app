@@ -7,7 +7,7 @@ from datetime import datetime
 
 class BaseDetector:
     def __init__(self, model_path, detector_name):
-        self.model = YOLO(model_path).to('cuda') # tambahi .to('cpu')
+        self.model = YOLO(model_path) # tambahi .to('cpu')
         self.detector_name = detector_name
         self.running = False
         self.frames = {}

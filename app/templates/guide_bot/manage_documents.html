@@ -1,22 +1,31 @@
-{% extends "base.html" %}
-{% block title %}Manage Documents{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Manage Documents{% endblock %} {%
+block content %}
 <div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
   <h2 class="text-2xl font-semibold mb-6">Manage Documents</h2>
 
   <!-- Add New Document Button -->
-<button onclick="document.getElementById('addDocumentModal').style.display='block'" 
-class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">
-Add New Document
-</button>
+  <button
+    onclick="document.getElementById('addDocumentModal').style.display='block'"
+    class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+  >
+    Add New Document
+  </button>
 
-<!-- Demo GuideBot -->
-<a href="{{url_for('guide_bot.chat')}}" 
-class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">
-Demo GuideBot
-</a>
+  <!-- Demo GuideBot -->
+  <a
+    href="{{url_for('guide_bot.chat')}}"
+    class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+  >
+    Demo GuideBot
+  </a>
 
+  <!-- Reload Vector DB -->
+  <a
+    href="{{url_for('guide_bot.reload_vector_db')}}"
+    class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+  >
+    Reload Vector DB
+  </a>
 
   <!-- Documents Table -->
   <h3 class="text-xl font-semibold mt-8 mb-4">Existing Documents</h3>
@@ -36,13 +45,23 @@ Demo GuideBot
         <td class="border border-gray-300 px-4 py-2">{{ doc.title }}</td>
         <td class="border border-gray-300 px-4 py-2">{{ doc.created_at }}</td>
         <td class="border border-gray-300 px-4 py-2 flex space-x-2">
-          <a href="{{ url_for('guide_bot.view_document', id=doc.id) }}"
-             class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300">View</a>
-          <a href="{{ url_for('guide_bot.edit_document', id=doc.id) }}"
-             class="px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition duration-300">Edit</a>
-          <form method="POST" action="{{ url_for('guide_bot.delete_document', id=doc.id) }}" style="display:inline;">
-            <button type="submit" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-300"
-                    onclick="return confirm('Are you sure you want to delete this document?')">Delete</button>
+          <a
+            href="{{ url_for('guide_bot.view_document', id=doc.id) }}"
+            class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300"
+            >View</a
+          >
+          <form
+            method="POST"
+            action="{{ url_for('guide_bot.delete_document', id=doc.id) }}"
+            style="display: inline"
+          >
+            <button
+              type="submit"
+              class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-300"
+              onclick="return confirm('Are you sure you want to delete this document?')"
+            >
+              Delete
+            </button>
           </form>
         </td>
       </tr>
@@ -52,23 +71,38 @@ Demo GuideBot
 </div>
 
 <!-- Add Document Modal -->
-<div id="addDocumentModal" class="fixed inset-0 flex items-center justify-center z-50" style="display:none;">
+<div
+  id="addDocumentModal"
+  class="fixed inset-0 flex items-center justify-center z-50"
+  style="display: none"
+>
   <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
     <h2 class="text-xl font-semibold mb-4">Add New Document</h2>
-    <form method="POST" action="{{ url_for('guide_bot.manage_documents') }}" enctype="multipart/form-data">
-      {{ form.hidden_tag() }}
+    <form
+      method="POST"
+      action="{{ url_for('guide_bot.manage_documents') }}"
+      enctype="multipart/form-data"
+    >
+      {{ form.hidden_tag() }}      
       <div class="mb-4">
-        {{ form.title.label(class="block text-gray-700 font-medium mb-2") }}
-        {{ form.title(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
-      </div>
-      <div class="mb-4">
-        {{ form.file.label(class="block text-gray-700 font-medium mb-2") }}
-        {{ form.file(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+        {{ form.files.label(class="block text-gray-700 font-medium mb-2") }} {{
+        form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm
+        focus:outline-none focus:ring-2 focus:ring-blue-500") }}
       </div>
       <div class="flex justify-end">
-        <button type="button" onclick="document.getElementById('addDocumentModal').style.display='none'"
-                class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-300">Cancel</button>
-        <button type="submit" class="ml-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">Save</button>
+        <button
+          type="button"
+          onclick="document.getElementById('addDocumentModal').style.display='none'"
+          class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="ml-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+        >
+          Save
+        </button>
       </div>
     </form>
   </div>
