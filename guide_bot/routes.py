@@ -160,8 +160,22 @@ def view_document(id):
 def get_document_file(document_id):
     document = Document.query.get_or_404(document_id)
     if document.file:
-        # Set appropriate MIME type based on file type
-        return send_file(io.BytesIO(document.file), mimetype='application/pdf', as_attachment=False)
+        # Determine the MIME type based on the file extension
+        file_extension = os.path.splitext(document.title)[1].lower()
+        if file_extension == '.pdf':
+            mimetype = 'application/pdf'
+            as_attachment = False  # View PDF in the browser
+        elif file_extension in ['.doc', '.docx']:
+            mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            as_attachment = True  # Force download for Word files
+        elif file_extension in ['.xls', '.xlsx']:
+            mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            as_attachment = True  # Force download for Excel files
+        else:
+            # For unsupported file types, return a 404 error
+            abort(404)
+
+        return send_file(io.BytesIO(document.file), mimetype=mimetype, as_attachment=as_attachment, download_name=document.title)
     else:
         abort(404)
 
