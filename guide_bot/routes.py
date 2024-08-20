@@ -1,6 +1,7 @@
 # guide_bot/routes.py
 import io
 import re
+from uuid import uuid4
 from flask import Blueprint, abort, render_template, redirect, send_file, url_for, flash, request, session
 from langchain_chroma import Chroma
 from guide_bot.models import Document
@@ -342,6 +343,7 @@ def reload_vector_db():
     documents = Document.query.all()
     document_ids = [str(document.id) for document in documents]    
     vector_store_ids = vector_store.get()['ids']    
+    vector_metadatas = vector_store.get()['metadatas']
     print("Documents:", document_ids)    
     print("Vector store IDs:", vector_store_ids)
 
@@ -389,42 +391,46 @@ def reload_vector_db():
         elif file_path.endswith('.txt'):
             with open(file_path, 'r', encoding='utf-8') as file:
                 all_text = file.read()
-        
+
         if not all_text.strip():
             print("Failed to extract text from the document.")
             flash("Failed to extract text from the document.")
             continue
 
-        document_obj = ChatDocument(
-             page_content= all_text,
-             metadata = {
-                    "title": document.title,
-                    "file_path": file_path,
-                    "id": document.id
-                }
-        )
-        
-        if len(vector_store_ids) == 0:
-            print("Vector store is empty")
-            vector_store = Chroma.from_documents(
-                embedding=embeddings,
-                collection_name="SPIL",
-                documents=[document_obj], 
-                persist_directory="vector_store",
-                ids=[str(document.id)])
-            print("Vector store created")
-        else:
-            print("Vector store is not empty")
-            vector_store.add_documents(
-                documents=[document_obj], 
-                ids=[str(document.id)]
-            )
-            print("Document with ID", document.id, "added to vector store")
+        splitted_text = split_documents(all_text)
+        for text in splitted_text:
 
-    for vector_id in vector_store_ids:
-        if vector_id not in document_ids:
-            vector_store.delete(ids=[vector_id])
-            print(f"Deleted vector with id {vector_id}")
+            document_obj = ChatDocument(
+                page_content= text,
+                metadata = {
+                        "id": str(uuid4()),
+                        "title": document.title,
+                        "file_path": file_path,
+                        "document_id": document.id,                        
+                    }
+            )
+            
+            if len(vector_store_ids) == 0:
+                print("Vector store is empty")
+                vector_store = Chroma.from_documents(
+                    embedding=embeddings,
+                    collection_name="SPIL",
+                    documents=[document_obj], 
+                    persist_directory="vector_store",
+                    ids=[document_obj.metadata['id']])
+                print("Vector store created")
+            else:
+                print("Vector store is not empty")
+                vector_store.add_documents(
+                    documents=[document_obj], 
+                    ids=[document_obj.metadata['id']]
+                )
+                print("Document with ID", document.id, "added to vector store")
+
+    for metadata in vector_metadatas:
+        if metadata['document_id'] not in document_ids:
+            vector_store.delete(ids=[metadata['id']])
+            print(f"Deleted vector with id {metadata['id']}")
 
     flash('Vector database reloaded successfully!')
     return redirect(url_for('guide_bot.manage_documents'))
