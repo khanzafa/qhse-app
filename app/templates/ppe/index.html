@@ -1,6 +1,8 @@
 {% extends "base.html" %} {% block title %}PPE{% endblock %} {% block content %}
 <div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
-  <h2 class="text-2xl font-semibold mb-6">Personal Protective Equipment Detection</h2>
+  <h2 class="text-2xl font-semibold mb-6">
+    Personal Protective Equipment Detection
+  </h2>
 
   <!-- Detected Objects Table -->
   <h3 class="text-xl font-semibold mt-8 mb-4">Detected Objects</h3>
@@ -18,10 +20,18 @@
       {% for obj in detected_objects %}
 
       <tr>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.id }}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.detector_id }}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.name }}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.timestamp }}</td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.id }}
+        </td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.detector_id }}
+        </td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.name }}
+        </td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.timestamp }}
+        </td>
         <td class="border border-gray-300 px-4 py-2 text-center">
           <a
             href="{{ url_for('ppe.view_object', object_id=obj.id) }}"
