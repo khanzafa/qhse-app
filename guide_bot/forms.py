@@ -1,10 +1,24 @@
 # guide_bot/forms.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, FileField, MultipleFileField
+from wtforms import StringField, FileField, MultipleFileField, SelectMultipleField
 from wtforms.validators import DataRequired
 
 class DocumentFileForm(FlaskForm):
     files = MultipleFileField('Files', validators=[DataRequired()], render_kw={'webkitdirectory':False})
+    allowed_roles = SelectMultipleField('Allowed Roles', choices=[
+        ('IT', 'IT'),
+        ('HR', 'HR'),
+        ('Finance', 'Finance'),
+        ('Accounting', 'Accounting'),
+        ('Security', 'Security')
+    ])
 
 class DocumentFolderForm(FlaskForm):
     files = MultipleFileField('Files', validators=[DataRequired()], render_kw={'webkitdirectory':True})
+    allowed_roles = SelectMultipleField('Allowed Roles', choices=[
+        ('IT', 'IT'),
+        ('HR', 'HR'),
+        ('Finance', 'Finance'),
+        ('Accounting', 'Accounting'),
+        ('Security', 'Security')
+    ])

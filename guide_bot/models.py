@@ -9,6 +9,7 @@ class Document(db.Model):
     file = db.Column(db.LargeBinary)
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+    allowed_roles = db.Column(db.String(100), default='manager')  # Comma-separated list of roles
 
     def to_dict(self):
         return {
@@ -16,11 +17,17 @@ class Document(db.Model):
             'title': self.title,
             'file': self.file,
             'created_at': self.created_at,
-            'updated_at': self.updated_at
+            'updated_at': self.updated_at,
+            'allowed_roles': self.allowed_roles
         }
 
     def __repr__(self):
         return f'<Document {self.title}>'
+
+    def is_accessible_by(self, user):
+        if user.is_manager():
+            return True
+        return user.role in self.allowed_roles.split(',')
     
 class ChatRoom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
