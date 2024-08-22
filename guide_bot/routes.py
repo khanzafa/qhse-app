@@ -88,47 +88,6 @@ def manage_documents():
     
     # Render halaman dengan form dan dokumen terpaginate
     return render_template('guide_bot/manage_documents.html', file_form=file_form, folder_form=folder_form, documents=documents, items_per_page=items_per_page, search_query=search_query)
-
-
-# @guide_bot.route('/guide-bot/documents/edit/<int:id>', methods=['GET', 'POST'])
-# def edit_document(id):
-#     document = Document.query.get_or_404(id)
-#     form = DocumentForm(obj=document)
-
-#     if form.validate_on_submit():
-#         document.title = form.title.data
-#         document.file = form.file.data.read()
-#         db.session.commit()
-#         flash('Document updated successfully!')
-#         return redirect(url_for('guide_bot.manage_documents'))
-
-#     return render_template('guide_bot/edit_document.html', form=form, document=document)
-
-# @guide_bot.route('/guide-bot/documents/delete/<int:id>', methods=['POST'])
-# def delete_document(id):
-#     document = Document.query.get_or_404(id)
-    
-#     # # Load the vector store
-#     # embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-#     # vector_store = load_vector_store(embeddings)
-    
-#     # # Remove the vector corresponding to the document from FAISS
-#     # if vector_store:
-#     #     # Assuming document.title is unique and was used as an identifier
-#     #     vector_store.delete(ids=[str(id)])
-#     #     save_vector_store(vector_store)
-    
-#     # Delete the document from the database
-#     db.session.delete(document)
-#     db.session.commit()
-
-#     # delete the file from the server
-#     file_path = os.path.join('data', sanitize_filename(document.title))
-#     if os.path.exists(file_path):
-#         os.remove(file_path)
-    
-#     flash('Document deleted successfully, and vector store updated!')
-#     return redirect(url_for('guide_bot.manage_documents'))\
     
 @guide_bot.route('/guide-bot/documents/delete-multiple', methods=['POST'])
 def delete_multiple_documents():
@@ -147,7 +106,7 @@ def delete_multiple_documents():
             document = Document.query.get(doc_id)
             if document:
                 db.session.delete(document)
-                file_path = os.path.join('data', f"{document.id}_{sanitize_filename(document.title)}")
+                file_path = os.path.join('data', f"{document.id}_{secure_filename(document.title)}")
                 if os.path.exists(file_path):
                     try:
                         os.remove(file_path)
@@ -169,8 +128,6 @@ def delete_multiple_documents():
         flash(f'Errors occurred: {", ".join(errors)}', 'error')
 
     return redirect(url_for('guide_bot.manage_documents'))
-
-
 
 @guide_bot.route('/guide-bot/documents/delete/<int:id>', methods=['POST'])
 def delete_document(id):
