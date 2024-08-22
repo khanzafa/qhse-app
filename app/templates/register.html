@@ -4,33 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h2>Register</h2>
-    <form method="POST" action="{{ url_for('auth.register') }}">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.name.label }}<br>
-            {{ form.name(size=32) }}
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6">Register</h2>
+        <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4">
+            {{ form.hidden_tag() }}
+            <div class="flex flex-col">
+                <label for="name" class="text-sm font-semibold mb-1">{{ form.name.label }}</label>
+                {{ form.name(class="border border-gray-300 p-2 rounded-md") }}
+            </div>
+            <div class="flex flex-col">
+                <label for="phone_number" class="text-sm font-semibold mb-1">{{ form.phone_number.label }}</label>
+                {{ form.phone_number(class="border border-gray-300 p-2 rounded-md") }}
+            </div>
+            <div class="flex flex-col">
+                <label for="password" class="text-sm font-semibold mb-1">{{ form.password.label }}</label>
+                {{ form.password(class="border border-gray-300 p-2 rounded-md") }}
+            </div>
+            <div class="flex flex-col">
+                <label for="password2" class="text-sm font-semibold mb-1">{{ form.password2.label }}</label>
+                {{ form.password2(class="border border-gray-300 p-2 rounded-md") }}
+            </div>
+            <div class="flex flex-col">
+                <label for="role" class="text-sm font-semibold mb-1">{{ form.role.label }}</label>
+                {{ form.role(class="border border-gray-300 p-2 rounded-md") }}
+            </div>
+            <div>
+                {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md cursor-pointer") }}
+            </div>
+        </form>
+        <p class="mt-4 text-center text-sm">
+            Already have an account? <a href="{{ url_for('auth.login') }}" class="text-blue-500">Login here</a>.
         </p>
-        <p>
-            {{ form.phone_number.label }}<br>
-            {{ form.phone_number(size=32) }}
-        </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}
-        </p>
-        <p>
-            {{ form.password2.label }}<br>
-            {{ form.password2(size=32) }}
-        </p>
-        <p>
-            {{ form.role.label }}<br>
-            {{ form.role() }}
-        </p>
-        <p>{{ form.submit() }}</p>
-    </form>
-    <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a>.</p>
+    </div>
 </body>
 </html>

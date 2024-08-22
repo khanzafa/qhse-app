@@ -4,6 +4,8 @@
 <div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
   <h2 class="text-2xl font-semibold mb-6">Manage Documents</h2>
 
+  {% if user_role == 'manager' %}
+  <!-- Manager-only content -->
   <!-- Add New File Button -->
   <button
     onclick="document.getElementById('addDocumentFileModal').style.display='block'"
@@ -19,6 +21,7 @@
   >
     Upload Folder
   </button>
+  {% endif %}
 
   <!-- Demo GuideBot -->
   <a
@@ -95,6 +98,7 @@
         Delete Selected
       </button>
 
+      {% if user_role == 'manager' %}
       <button
         type="button"
         onclick="toggleSelectAll()"
@@ -103,6 +107,7 @@
       >
         Select All
       </button>
+      {% endif %}
     </div>
   </div>
 
@@ -122,7 +127,9 @@
           <th class="border border-gray-300 px-4 py-2">Title</th>
           <th class="border border-gray-300 px-4 py-2">Created At</th>
           <th class="border border-gray-300 px-4 py-2">Actions</th>
+          {% if user_role == 'manager' %}
           <th class="border border-gray-300 px-4 py-2">Select</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -139,6 +146,7 @@
               View
             </a>
           </td>
+          {% if user_role == 'manager' %}
           <td class="border border-gray-300 px-4 py-2 text-center">
             <input
               type="checkbox"
@@ -149,6 +157,7 @@
               onclick="toggleDeleteButton()"
             />
           </td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>

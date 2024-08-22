@@ -4,21 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h2>Login</h2>
-    <form method="POST" action="{{ url_for('auth.login') }}">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.phone_number.label }}<br>
-            {{ form.phone_number(size=32) }}
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6">Login</h2>
+        <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
+            {{ form.hidden_tag() }}
+            <div class="flex flex-col">
+                <label for="phone_number" class="text-sm font-semibold mb-1">{{ form.phone_number.label }}</label>
+                {{ form.phone_number(class="border border-gray-300 p-2 rounded-md") }}
+            </div>
+            <div class="flex flex-col">
+                <label for="password" class="text-sm font-semibold mb-1">{{ form.password.label }}</label>
+                {{ form.password(class="border border-gray-300 p-2 rounded-md") }}
+            </div>
+            <div>
+                {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md cursor-pointer") }}
+            </div>
+        </form>
+        <p class="mt-4 text-center text-sm">
+            Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-blue-500">Register here</a>.
         </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}
-        </p>
-        <p>{{ form.submit() }}</p>
-    </form>
-    <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a>.</p>
+    </div>
 </body>
 </html>
