@@ -11,6 +11,9 @@ from gesture_detection.routes import gesture
 from unfocused_detection.routes import unfocused
 from guide_bot.routes import guide_bot
 
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+
 ppe_detector = PPEDetector()
 gesture_detector = GestureForHelpDetector()
 unfocused_detector = UnfocusedDetector()
@@ -40,9 +43,9 @@ def create_app():
     app.register_blueprint(gesture)
     app.register_blueprint(unfocused)
     app.register_blueprint(guide_bot)
-
-    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
-    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
+    
+    threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    threading.Thread(target=start_detector, args=(gesture_detector,)).start()
     # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
 
     return app
