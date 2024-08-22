@@ -1,8 +1,8 @@
 # app/forms.py
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, StringField, SubmitField, SelectField, TextAreaField
-from wtforms.validators import DataRequired, IPAddress, Length, URL
-from app.models import Camera
+from wtforms import BooleanField, IntegerField, StringField, SubmitField, SelectField, TextAreaField, PasswordField
+from wtforms.validators import DataRequired, IPAddress, Length, URL, EqualTo, ValidationError
+from app.models import Camera, User
 
 class AddCCTVForm(FlaskForm):
     location = StringField('Location', validators=[DataRequired()])    
@@ -32,3 +32,21 @@ class ContactForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=20)])
     name = TextAreaField('Name', validators=[Length(max=100)])  # Ganti 'description' dengan 'name'
     submit = SubmitField('Save')
+
+class LoginForm(FlaskForm):
+    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=20)])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
+
+class RegistrationForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=64)])
+    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=20)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128)])
+    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    role = SelectField('Role', choices=[('user', 'User'), ('manager', 'Manager')], validators=[DataRequired()])
+    submit = SubmitField('Register')
+
+    def validate_phone_number(self, phone_number):
+        user = User.query.filter_by(phone_number=phone_number.data).first()
+        if user:
+            raise ValidationError('Phone number already registered.')

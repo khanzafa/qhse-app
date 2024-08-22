@@ -18,10 +18,18 @@
       {% for obj in detected_objects %}
 
       <tr>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.id }}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.detector_id }}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.name }}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.timestamp }}</td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.id }}
+        </td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.detector_id }}
+        </td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.name }}
+        </td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.timestamp }}
+        </td>
         <td class="border border-gray-300 px-4 py-2 text-center">
           <a
             href="{{ url_for('ppe.view_object', object_id=obj.id) }}"

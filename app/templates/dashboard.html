@@ -50,12 +50,8 @@ content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   // Chart Data (replace with real data)
-  const chatbotRequestData = JSON.parse(
-    "{{ chatbot_requests }}"
-  );
-  const safetyIncidentsData = JSON.parse(
-    "{{ safety_incidents }}"
-  );
+  const chatbotRequestData = JSON.parse("{{ chatbot_requests }}");
+  const safetyIncidentsData = JSON.parse("{{ safety_incidents }}");
 
   const labels = Object.keys(chatbotRequestData);
   const chatbotRequestValues = Object.values(chatbotRequestData);

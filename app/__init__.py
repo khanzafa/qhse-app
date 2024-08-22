@@ -10,12 +10,17 @@ from ppe_detection.routes import ppe
 from gesture_detection.routes import gesture
 from unfocused_detection.routes import unfocused
 from guide_bot.routes import guide_bot
+from flask_login import LoginManager
+from app.models import User
 
 ppe_detector = PPEDetector()
 gesture_detector = GestureForHelpDetector()
 unfocused_detector = UnfocusedDetector()
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
 
 def create_app():
+    
     app = Flask(__name__)
     app.config.from_object('config.Config')
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -29,17 +34,24 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
     def start_detector(detector):
         with app.app_context():
             detector.run(app)
 
     from app.routes import main
+    from app.auth import auth as auth_blueprint
     app.register_blueprint(main)
     app.register_blueprint(ppe)
     app.register_blueprint(gesture)
     app.register_blueprint(unfocused)
     app.register_blueprint(guide_bot)
+    app.register_blueprint(auth_blueprint)
 
     # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
     # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
