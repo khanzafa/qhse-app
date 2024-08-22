@@ -122,7 +122,6 @@
 
     <table class="w-full table-auto border-collapse border border-gray-200">
       <thead class="bg-gray-100">
-        {% if current_user.is_manager() or doc.is_accessible_by(current_user) %}
         <tr>
           <th class="border border-gray-300 px-4 py-2">ID</th>
           <th class="border border-gray-300 px-4 py-2">Title</th>
@@ -132,10 +131,10 @@
           <th class="border border-gray-300 px-4 py-2">Select</th>
           {% endif %}
         </tr>
-        {% endif %}
       </thead>
       <tbody>
         {% for doc in documents.items %}
+        {% if current_user.is_manager() or doc.is_accessible_by(current_user) %}
         <tr>
           <td class="border border-gray-300 px-4 py-2">{{ doc.id }}</td>
           <td class="border border-gray-300 px-4 py-2">{{ doc.title }}</td>
@@ -161,6 +160,7 @@
           </td>
           {% endif %}
         </tr>
+        {% endif %}
         {% endfor %}
       </tbody>
     </table>
