@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 import os
 import bcrypt
 from langchain_core.documents import Document as ChatDocument
+from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 from guide_bot import conversation_chat, create_conversational_chain, load_vector_store, save_uploaded_file, load_saved_files, split_documents
 
@@ -27,6 +28,7 @@ GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 
 # Don't forget to update the manage_documents route to save documents with their ids
 @guide_bot.route('/guide-bot/documents', methods=['GET', 'POST'])
+@login_required
 def manage_documents():
     file_form = DocumentFileForm()
     folder_form = DocumentFolderForm()
@@ -37,6 +39,9 @@ def manage_documents():
     
     # Ambil query pencarian dari parameter query
     search_query = request.args.get('search_query', '')
+
+    # Get the current user's role
+    user_role = current_user.role
     
     # Filter dokumen berdasarkan search query jika ada
     if search_query:
@@ -87,7 +92,13 @@ def manage_documents():
         return redirect(url_for('guide_bot.manage_documents', page=page, items_per_page=items_per_page, search_query=search_query))
     
     # Render halaman dengan form dan dokumen terpaginate
-    return render_template('guide_bot/manage_documents.html', file_form=file_form, folder_form=folder_form, documents=documents, items_per_page=items_per_page, search_query=search_query)
+    return render_template('guide_bot/manage_documents.html', 
+                           file_form=file_form, 
+                           folder_form=folder_form, 
+                           documents=documents, 
+                           items_per_page=items_per_page, 
+                           search_query=search_query,
+                           user_role=user_role)
 
 
 # @guide_bot.route('/guide-bot/documents/edit/<int:id>', methods=['GET', 'POST'])
@@ -131,11 +142,16 @@ def manage_documents():
 #     return redirect(url_for('guide_bot.manage_documents'))\
     
 @guide_bot.route('/guide-bot/documents/delete-multiple', methods=['POST'])
+@login_required
 def delete_multiple_documents():
     document_ids = request.form.getlist('document_ids')  # Use getlist to handle multiple values
 
     if not document_ids:
         flash('No documents selected for deletion.', 'warning')
+        return redirect(url_for('guide_bot.manage_documents'))
+    
+    if not current_user.is_manager():
+        flash('You do not have permission to delete documents.', 'error')
         return redirect(url_for('guide_bot.manage_documents'))
 
     deleted_files = []
