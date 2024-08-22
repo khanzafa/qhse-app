@@ -1,16 +1,13 @@
 # guide_bot/routes.py
+import getpass
 import io
 import re
 from flask import Blueprint, abort, render_template, redirect, send_file, url_for, flash, request, session
 from langchain_chroma import Chroma
+import markdown
 from guide_bot.models import Document
 from guide_bot.forms import DocumentFileForm, DocumentFolderForm
 from app import db
-from langchain.chains import ConversationalRetrievalChain
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.memory import ConversationBufferMemory
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.vectorstores import FAISS
 from PyPDF2 import PdfReader
 import docx2txt
 from pptx import Presentation
@@ -22,11 +19,11 @@ import os
 import bcrypt
 from langchain_core.documents import Document as ChatDocument
 from werkzeug.utils import secure_filename
+from guide_bot import conversation_chat, create_conversational_chain, load_vector_store, save_uploaded_file, load_saved_files, split_documents
 
 guide_bot = Blueprint('guide_bot', __name__)
 
-def sanitize_filename(filename):
-    return re.sub(r'[<>:"/\\|?*\t\n]', '_', filename)
+GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 
 # Don't forget to update the manage_documents route to save documents with their ids
 @guide_bot.route('/guide-bot/documents', methods=['GET', 'POST'])
@@ -179,10 +176,12 @@ def delete_multiple_documents():
 def delete_document(id):
     document = Document.query.get_or_404(id)
     
+    # Delete the document from the database
     db.session.delete(document)
     db.session.commit()
 
-    file_path = os.path.join('data', f"{id}_{sanitize_filename(document.title)}")
+    # delete the file from the server
+    file_path = os.path.join('data', secure_filename(document.title))
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
@@ -219,122 +218,6 @@ history = []
 generated = ["Selamat datang di GuideBot! Tanyakan sesuatu pada saya 😊️"]
 past = []
 
-# # Function to handle conversation with the chatbot
-# def conversation_chat(query, chain, history):
-#     result = chain({"question": query, "chat_history": history})
-#     history.append((query, result["answer"]))
-#     return result["answer"]
-
-# Function to handle conversation with the chatbot
-def conversation_chat(query, chain, history):
-    result = chain.invoke({"question": query, "chat_history": history})
-    answer = result["answer"]        
-    history.append((query, answer))
-    # Assuming result contains relevant document metadata, such as filenames
-    if "source_documents" in result and result["source_documents"]:                    
-        return answer, result["source_documents"]
-    
-    return answer, []
-
-# Function to create the conversational chain
-def create_conversational_chain(vector_store):
-    # prompt_template = ChatPromptTemplate.from_template("""
-    #     Tolong jawab pertanyaan berikut dalam bahasa Indonesia.
-    #     Perkenalkan dirimu sebagai 'GuideBot', asisten virtual yang siap membantu.
-    #     Jika informasi dalam konteks tersedia, gunakan untuk memberikan jawaban yang akurat, jelas, dan to the point. 
-    #     Jika tidak ada konteks atau jawaban yang tepat, katakan 'Maaf, saya tidak tahu jawabannya'.
-    #     Pertanyaan: {question}
-    #     Konteks: {context}
-    #     Jawaban:
-    # """)
-
-    prompt_template = ChatPromptTemplate([
-        ("system", "Anda adalah AI Bot yang sangat membantu di lingkungan PT. Salam Pacific Indonesia Lines. Nama Anda adalah GuideBot."),
-        ("human", 
-         """
-            Tolong jawab pertanyaan berikut dalam bahasa Indonesia.
-            Jika informasi dalam konteks tersedia, gunakan untuk memberikan jawaban yang akurat dan jelas.
-            Jika tidak ada konteks atau jawaban yang tepat, katakan 'Maaf, saya tidak tahu jawabannya'.
-            Pertanyaan: {question}
-            Konteks: {context}
-            Jawaban:
-         """)
-    ])
-
-    llm = ChatGroq(
-        groq_api_key=os.getenv('GROQ_API_KEY'), 
-        model_name='llama3-70b-8192'
-    )
-
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, output_key='answer')
-
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        chain_type='stuff',
-        retriever=vector_store.as_retriever(search_kwargs={"k": 1}),
-        return_source_documents=True,
-        memory=memory,
-        combine_docs_chain_kwargs={
-            "prompt": prompt_template,
-            "document_variable_name": "context" 
-        },
-        
-    )    
-    
-    return chain
-
-# Function to save uploaded file to the server
-def save_uploaded_file(uploaded_file):
-    save_dir = 'data'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
-    file_path = os.path.join(save_dir, uploaded_file.filename)
-    uploaded_file.save(file_path)
-    return file_path
-
-# Function to load all saved files from the server
-def load_saved_files():
-    save_dir = 'data'
-    if not os.path.exists(save_dir):
-        return []
-    return [os.path.join(save_dir, f) for f in os.listdir(save_dir)]
-
-# Function to split documents into smaller chunks
-def split_documents(text):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=80,
-        length_function=len,
-        is_separator_regex=False,
-    )
-    return text_splitter.split_text(text)
-
-# Function to save the vector store to disk
-def save_vector_store(vector_store, save_dir="faiss_index_dir"):
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    index_path = os.path.join(save_dir, "faiss_index.index")
-    vector_store.save_local(index_path)
-
-# Function to load the vector store from disk
-# def load_vector_store(embeddings, save_dir="faiss_index_dir"):
-#     index_path = os.path.join(save_dir, "faiss_index.index")
-#     if os.path.exists(index_path):
-#         vector_store = FAISS.load_local(
-#             index_path, embeddings, allow_dangerous_deserialization=True
-#         )   
-#         return vector_store
-#     return None
-
-def load_vector_store(embeddings):
-    vector_store = Chroma(
-        collection_name="SPIL",
-        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
-        persist_directory="vector_store"
-    )
-    return vector_store
-
 @guide_bot.route('/guide-bot/chat', methods=['GET', 'POST'])
 def chat():
     global history, generated, past
@@ -347,8 +230,10 @@ def chat():
             print("Vector store is not empty")
             chain = create_conversational_chain(vector_store)
             print("Conversational chain created")
+            print("History:", history)
             output, source_documents = conversation_chat(user_input, chain, history)
-            print("Conversation completed")
+            print("Output:", output)
+            print("Conversation completed"  )
             past.append(user_input)
             generated.append({
                 "message": output,
@@ -395,18 +280,6 @@ def reload_vector_db():
                     all_text += text
         elif file_path.endswith('.docx'):
             all_text = docx2txt.process(file_path)        
-        # elif file_path.endswith('.doc'):
-        #     pythoncom.CoInitialize()
-        #     try:
-        #         word = win32com.client.Dispatch("Word.Application")
-        #         print("File path:", file_path)
-        #         doc = word.Documents.Open(file_path)
-        #         for paragraph in doc.Paragraphs:
-        #             all_text += paragraph.Range.Text
-        #         doc.Close()
-        #         word.Quit()
-        #     finally:
-        #         pythoncom.CoUninitialize()
         elif file_path.endswith('.ods') or file_path.endswith('.xls') or file_path.endswith('.xlsx'):
             df = pandas.read_excel(file_path)
             all_text = df.to_string()
