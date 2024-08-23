@@ -4,10 +4,11 @@ from ultralytics import YOLO
 from app.models import Camera, Detector, DetectedObject
 import threading
 from datetime import datetime
+import time
 
 class BaseDetector:    
     def __init__(self, model_path, detector_name):
-        self.model = YOLO(model_path) # tambahi .to('cpu')
+        self.model = YOLO(model_path).to('cpu') # tambahi .to('cpu')
         self.detector_name = detector_name
         self.running = False
         self.frames = {}
