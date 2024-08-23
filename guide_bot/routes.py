@@ -66,7 +66,7 @@ def manage_documents():
             save_dir = 'data'
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-            file_path = os.path.join(save_dir, f"{new_document.id}_{filename}")
+            file_path = os.path.join(save_dir, f"{filename}")
             with open(file_path, 'wb') as f:
                 f.write(new_document.file)
 
@@ -87,7 +87,7 @@ def manage_documents():
             save_dir = 'data'
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-            file_path = os.path.join(save_dir, f"{new_document.id}_{filename}")
+            file_path = os.path.join(save_dir, f"{filename}")
             with open(file_path, 'wb') as f:
                 f.write(new_document.file)
 
@@ -292,6 +292,7 @@ def reload_vector_db():
         if str(document.id) in vector_store_ids:
             continue           
 
+        print(document.title)
         file_path = os.path.join('data', secure_filename(document.title))
         
         # Extract text based on file type
