@@ -64,3 +64,6 @@ class PPEDetector(BaseDetector):
         annotated_frame = results[0].plot()
         with self.lock:
             self.frames[camera_id] = annotated_frame
+            
+        time_interval = 30
+        time.sleep(time_interval)
