@@ -1,37 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.2/dist/cdn.min.js"
-      defer
-    ></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header
-      <<<<<<<
-      HEAD
-      class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 h-16 flex items-center justify-between px-6"
-    >
-      <!-- Logo and App Name -->
-      <div class="flex items-center">
-        <div id="logo" class="text-xl font-semibold">
-          <img src="/static/img/spil_logo.svg" alt="Logo" class="h-8" />
-        </div>
-        <!-- Span App Name -->
-        <span class="text-2xl font-bold ml-2 tracking-wide">QHSE APP</span>
-      </div>
 
-      <!-- Search Bar -->
-      <!-- <div class="flex-1 mx-6">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.2/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+
+<body class="bg-gray-100">
+  <!-- Header -->
+  <header <<<<<<< HEAD
+    class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 h-16 flex items-center justify-between px-6">
+    <!-- Logo and App Name -->
+    <div class="flex items-center">
+      <div id="logo" class="text-xl font-semibold">
+        <img src="/static/img/spil_logo.svg" alt="Logo" class="h-8" />
+      </div>
+      <!-- Span App Name -->
+      <span class="text-2xl font-bold ml-2 tracking-wide">QHSE APP</span>
+    </div>
+
+    <!-- Search Bar -->
+    <!-- <div class="flex-1 mx-6">
     <input
       type="text"
       placeholder="Search..."
@@ -39,151 +32,242 @@
     />
   </div> -->
 
-      <!-- Running Text -->
-      <div class="marquee text-blue-600 font-semibold text-lg">
-        <marquee direction="left" scrollamount="12">
-          Quality, Health, Safety, and Environment - Salam Pacific Indonesia
-          Lines
-        </marquee>
-      </div>
-
-      <!-- User Profile & Notifications -->
-      <div class="flex items-center space-x-4">
-        <!-- Notifications Icon -->
-        <div class="relative">
-          <i
-            class="fas fa-bell text-gray-600 hover:text-gray-800 cursor-pointer"
-          ></i>
-          <span
-            class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"
-          ></span>
-        </div>
-
-        <!-- User Profile -->
-        <div class="flex items-center space-x-2">
-          <img
-            src="/static/img/corporate-user-icon.png"
-            alt="User Avatar"
-            class="w-8 h-8 rounded-full"
-          />
-          <span class="text-gray-700 font-medium">John Doe</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- Sidebar -->
-    <div class="flex pt-16">
-      <aside
-        id="sidebar"
-        class="fixed top-16 left-0 h-full bg-gray-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0"
-      >
-        <nav class="mt-4">
-          <!-- Dashboard -->
-          <a
-            href="{{ url_for('main.index') }}"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-          >
-            <i class="fas fa-tachometer-alt mr-3"></i>
-            Dashboard
-          </a>
-          <!-- CCTV -->
-          <a
-            href="{{ url_for('main.manage_cctv') }}"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-          >
-            <i class="fas fa-video mr-3"></i>
-            CCTV
-          </a>
-          <!-- Safety Detection -->
-          <div x-data="{ open: false }">
-            <a
-              href="#"
-              @click.prevent="open = !open"
-              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-            >
-              <i class="fas fa-shield-alt mr-3"></i>
-              Safety Detection
-              <span
-                :class="open ? 'rotate-90' : 'rotate-0'"
-                class="inline-block transform transition-transform duration-200 ml-auto"
-              >
-                >
-              </span>
-            </a>
-            <div x-show="open" class="pl-10">
-              <!-- Detector Management-->
-              <a
-                href="{{ url_for('main.manage_detector') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-              >
-                <i class="fas fa-crosshairs mr-3"></i>
-                Detector
-              </a>
-
-              <!-- PPE -->
-              <a
-                href="{{ url_for('ppe.ppe_detection') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-              >
-                <i class="fas fa-hard-hat mr-3"></i>
-                PPE
-              </a>
-              <!-- Unfocused -->
-              <a
-                href="{{ url_for('unfocused.unfocused_detection') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-              >
-                <i class="fas fa-eye-slash mr-3"></i>
-                Unfocused
-              </a>
-              <!-- Gesture for Help -->
-              <a
-                href="{{ url_for('gesture.gesture_detection') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-              >
-                <i class="fas fa-hands-helping mr-3"></i>
-                Gesture for Help
-              </a>
-            </div>
-          </div>
-          <!-- GuideBot -->
-          <a
-            href="{{ url_for('guide_bot.manage_documents') }}"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-          >
-            <i class="fas fa-robot mr-3"></i>
-            GuideBot
-          </a>
-          <!-- Contact -->
-          <a
-            href="{{ url_for('main.manage_contact') }}"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
-          >
-            <i class="fas fa-envelope mr-3"></i>
-            Contact
-          </a>
-        </nav>
-      </aside>
-
-      <!-- Main Content -->
-      <main class="flex-1 p-10 ml-64">{% block content %}{% endblock %}</main>
+    <!-- Running Text -->
+    <div class="marquee text-blue-600 font-semibold text-lg">
+      <marquee direction="left" scrollamount="12">
+        Quality, Health, Safety, and Environment - Salam Pacific Indonesia
+        Lines
+      </marquee>
     </div>
 
-    <!-- Toggle Button for Sidebar -->
-    <button
-      id="sidebarToggle"
-      class="fixed top-16 left-0 z-50 m-4 p-2 bg-gray-800 text-white rounded-md md:hidden"
+    <!-- User Profile & Notifications -->
+    <div class="flex items-center space-x-4">
+      <!-- Notifications Icon -->
+      <div class="relative">
+        <i class="fas fa-bell text-gray-600 hover:text-gray-800 cursor-pointer"></i>
+        <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+      </div>
+
+      <!-- User Profile -->
+      <div class="flex items-center space-x-2">
+        <img src="/static/img/corporate-user-icon.png" alt="User Avatar" class="w-8 h-8 rounded-full" />
+        <span class="text-gray-700 font-medium">John Doe</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <div class="flex pt-16">
+    <aside id="sidebar"
+      class="fixed top-16 left-0 h-full bg-red-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0">
+      <nav class="mt-4">
+        <!-- Dashboard -->
+        <a href="{{ url_for('main.index') }}"
+          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+          <i class="fas fa-tachometer-alt mr-3"></i>
+          Dashboard
+        </a>
+        <!-- CCTV -->
+        <a href="{{ url_for('main.manage_cctv') }}"
+          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+          <i class="fas fa-video mr-3"></i>
+          CCTV
+        </a>
+        <!-- Safety Detection -->
+        <div x-data="{ open: false }">
+          <a href="#" @click.prevent="open = !open"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+            <i class="fas fa-shield-alt mr-3"></i>
+            Safety Detection
+            <span :class="open ? 'rotate-90' : 'rotate-0'"
+              class="inline-block transform transition-transform duration-200 ml-auto">
+              >
+            </span>
+          </a>
+          <div x-show="open" class="pl-10">
+            <!-- Detector Management-->
+            <a href="{{ url_for('main.manage_detector') }}"
+              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+              <i class="fas fa-crosshairs mr-3"></i>
+              Detector
+            </a>
+
+            <!-- PPE -->
+            <a href="{{ url_for('ppe.ppe_detection') }}"
+              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+              <i class="fas fa-hard-hat mr-3"></i>
+              PPE
+            </a>
+            <!-- Unfocused -->
+            <a href="{{ url_for('unfocused.unfocused_detection') }}"
+              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+              <i class="fas fa-eye-slash mr-3"></i>
+              Unfocused
+            </a>
+            <!-- Gesture for Help -->
+            <a href="{{ url_for('gesture.gesture_detection') }}"
+              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+              <i class="fas fa-hands-helping mr-3"></i>
+              Gesture for Help
+            </a>
+          </div>
+        </div>
+        <!-- GuideBot -->
+        <a href="{{ url_for('guide_bot.manage_documents') }}"
+          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+          <i class="fas fa-robot mr-3"></i>
+          GuideBot
+        </a>
+        <!-- Contact -->
+        <a href="{{ url_for('main.manage_contact') }}"
+          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+          <i class="fas fa-envelope mr-3"></i>
+          Contact
+        </a>
+
+        <!-- HRMS -->
+        <div x-data="{ open: false }">
+          <a href="#" @click.prevent="open = !open"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+            <i class="fas fa-shield-alt mr-3"></i>
+            HRMS
+            <span :class="open ? 'rotate-90' : 'rotate-0'"
+              class="inline-block transform transition-transform duration-200 ml-auto">
+              >
+            </span>
+          </a>
+
+          <div x-show="open" class="pl-10">
+            <div x-data="{ open: false }">
+              <!-- QHSE -->
+              <a href="#" @click.prevent="open = !open"
+                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                <i class="fas fa-shield-alt mr-3"></i>
+                QHSE
+                <span :class="open ? 'rotate-90' : 'rotate-0'"
+                  class="inline-block transform transition-transform duration-200 ml-auto">
+                  >
+              </a>
+
+              <div x-show="open" class="pl-10">
+                <div x-data="{ transactionOpen: false }">
+                  <!-- Transaction -->
+                  <a href="#" @click.prevent="transactionOpen = !transactionOpen"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                    <i class="fas fa-shield-alt mr-3"></i>
+                    Transaction
+                    <span :class="transactionOpen ? 'rotate-90' : 'rotate-0'"
+                      class="inline-block transform transition-transform duration-200 ml-auto">
+                      >
+                  </a>
+
+                  <div x-show="transactionOpen" class="pl-10">
+                    <div x-data="{ uploadOpen: false }">
+                      <!-- Upload -->
+                      <a href="#" @click.prevent="uploadOpen = !uploadOpen"
+                        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                        <i class="fas fa-crosshairs mr-3"></i>
+                        Upload
+                      </a>
+
+                      <div x-show="uploadOpen" class="pl-10">
+                        <!-- Procedure -->
+                        <a href="#"
+                          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                          <i class="fas fa-crosshairs mr-3"></i>
+                          Procedure
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Report -->
+                  <div x-data="{ reportOpen: false }">
+                    <a href="#" @click.prevent="reportOpen  = !reportOpen"
+                      class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                      <i class="fas fa-shield-alt mr-3"></i>
+                      Report
+                      <span :class="reportOpen ? 'rotate-90' : 'rotate-0'"
+                        class="inline-block transform transition-transform duration-200 ml-auto">
+                        >
+                    </a>
+
+                    <div x-show="reportOpen" class="pl-10">
+                      <!-- Docs -->
+                      <a href="#"
+                        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                        <i class="fas fa-crosshairs mr-3"></i>
+                        Docs
+                      </a>
+                    </div>
+                  </div>
+
+
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AIOS -->
+        <div x-data="{ open: false }">
+          <a href="#" @click.prevent="open = !open"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+            <i class="fas fa-shield-alt mr-3"></i>
+            AIOS
+            <span :class="open ? 'rotate-90' : 'rotate-0'"
+              class="inline-block transform transition-transform duration-200 ml-auto">
+              >
+            </span>
+          </a>
+
+          <div x-show="open" class="pl-10">
+            <!-- My Activity -->
+            <div x-data="{ myactivityOpen: false }">
+              <a href="#" @click.prevent="myactivityOpen  = !myactivityOpen"
+                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                <i class="fas fa-crosshairs mr-3"></i>
+                My Activity
+                <span :class="myactivityOpen ? 'rotate-90' : 'rotate-0'"
+                  class="inline-block transform transition-transform duration-200 ml-auto">
+                  >
+              </a>
+
+              <div x-show="myactivityOpen" class="pl-10">
+                <!-- Procedure -->
+                <a href="#"
+                  class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                  <i class="fas fa-crosshairs mr-3"></i>
+                  Procedure
+                </a>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-10 ml-64">{% block content %}{% endblock %}</main>
+  </div>
+
+  <!-- Toggle Button for Sidebar -->
+  <button id="sidebarToggle" class="fixed top-16 left-0 z-50 m-4 p-2 bg-gray-800 text-white rounded-md md:hidden">
     >
-      >
-    </button>
+  </button>
 
-    <script>
-      const sidebar = document.getElementById("sidebar");
-      const toggleButton = document.getElementById("sidebarToggle");
+  <script>
+    const sidebar = document.getElementById("sidebar");
+    const toggleButton = document.getElementById("sidebarToggle");
 
-      toggleButton.addEventListener("click", () => {
-        sidebar.classList.toggle("-translate-x-full");
-      });
-    </script>
-  </body>
+    toggleButton.addEventListener("click", () => {
+      sidebar.classList.toggle("-translate-x-full");
+    });
+  </script>
+</body>
+
 </html>
