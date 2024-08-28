@@ -67,12 +67,12 @@ def create_app():
     option.add_experimental_option("detach", True)
     option.add_experimental_option("excludeSwitches", ["enable-automation"])
     option.add_experimental_option('useAutomationExtension', False)
-    app.driver = webdriver.Chrome(options=option)
-    app.driver.get("https://web.whatsapp.com/")
-    app.wait = WebDriverWait(app.driver, 100)
+    # app.driver = webdriver.Chrome(options=option)
+    # app.driver.get("https://web.whatsapp.com/")
+    # app.wait = WebDriverWait(app.driver, 100)
 
-    threading.Thread(target=start_detector, args=(ppe_detector,)).start()
-    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    #threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    # # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
+    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
 
     return app
