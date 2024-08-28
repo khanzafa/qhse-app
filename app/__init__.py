@@ -46,7 +46,7 @@ def create_app():
     app.register_blueprint(gesture)
     app.register_blueprint(unfocused)
     app.register_blueprint(guide_bot)
-    app.register_blueprint(auth_blueprint)
+    # app.register_blueprint(auth_blueprint)
     
     user_home_dir = os.path.expanduser("~")
     user_home_dir = user_home_dir.replace("\\", "/")

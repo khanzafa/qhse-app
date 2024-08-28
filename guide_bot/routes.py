@@ -14,8 +14,6 @@ from langchain_community.vectorstores import FAISS
 from PyPDF2 import PdfReader
 import docx2txt
 from pptx import Presentation
-import win32com.client
-import pythoncom
 import pandas
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
