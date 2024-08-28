@@ -11,7 +11,7 @@ content %}
     <!-- Display PDF file -->
     <iframe
       src="{{ url_for('guide_bot.get_document_file', document_id=document.id) }}"
-      class="w-full h-96"
+      class="w-full h-screen"
       frameborder="0"
     ></iframe>
     {% else %}

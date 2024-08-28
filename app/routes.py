@@ -188,7 +188,7 @@ def manage_cctv():
         db.session.add(camera)
         db.session.commit()
         flash('CCTV added successfully!')
-        return redirect(url_for('manage_cctv'))
+        return redirect(url_for('main.manage_cctv'))
     cameras = Camera.query.all()
     return render_template('manage_cctv.html', title='Manage CCTV', current_user=current_user, form=form, cameras=cameras)
 
@@ -212,7 +212,7 @@ def delete_cctv(id):
     db.session.delete(camera)
     db.session.commit()
     flash('CCTV deleted successfully!', 'success')
-    return redirect(url_for('manage_cctv'))
+    return redirect(url_for('main.manage_cctv'))
 
 @main.route('/detector/manage', methods=['GET', 'POST'])
 @main.route('/detector/manage/<int:id>', methods=['GET', 'POST'])

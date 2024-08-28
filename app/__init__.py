@@ -14,6 +14,10 @@ from api.routes import api
 from flask_login import LoginManager
 from app.models import User
 
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+import os
+
 ppe_detector = PPEDetector()
 gesture_detector = GestureForHelpDetector()
 unfocused_detector = UnfocusedDetector()
@@ -55,8 +59,20 @@ def create_app():
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(api)
 
-    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    user_home_dir = os.path.expanduser("~")
+    user_home_dir = user_home_dir.replace("\\", "/")
+    
+    option = webdriver.ChromeOptions()
+    option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data --headless')
+    option.add_experimental_option("detach", True)
+    option.add_experimental_option("excludeSwitches", ["enable-automation"])
+    option.add_experimental_option('useAutomationExtension', False)
+    app.driver = webdriver.Chrome(options=option)
+    app.driver.get("https://web.whatsapp.com/")
+    app.wait = WebDriverWait(app.driver, 100)
+
+    threading.Thread(target=start_detector, args=(ppe_detector,)).start()
     # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
 
     return app

@@ -27,6 +27,9 @@ guide_bot = Blueprint('guide_bot', __name__)
 
 GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 
+def sanitize_filename(filename):
+    return re.sub(r'[<>:"/\\|?*\t\n]', '_', filename)
+
 # Don't forget to update the manage_documents route to save documents with their ids
 @guide_bot.route('/guide-bot/documents', methods=['GET', 'POST'])
 @login_required
@@ -53,10 +56,10 @@ def manage_documents():
     # Proses penambahan dokumen
     if file_form.validate_on_submit() or folder_form.validate_on_submit():
         files = request.files.getlist('files')
+        allowed_roles = ','.join(file_form.allowed_roles.data)
         for file in files:
             filename = secure_filename(file.filename)
-            # Simpan dokumen dalam database
-            new_document = Document(title=filename, file=file.read())
+            new_document = Document(title=filename, file=file.read(), allowed_roles=allowed_roles)
             db.session.add(new_document)
             db.session.commit()
 
@@ -72,22 +75,22 @@ def manage_documents():
         return redirect(url_for('guide_bot.manage_documents', page=page, items_per_page=items_per_page, search_query=search_query))
 
     # Proses penambahan dokumen
-    # if folder_form.validate_on_submit():
-    #     files = request.files.getlist('files')
-    #     for file in files:
-    #         filename = secure_filename(file.filename)
-    #         # Simpan dokumen dalam database
-    #         new_document = Document(title=filename, file=file.read())
-    #         db.session.add(new_document)
-    #         db.session.commit()
+    if folder_form.validate_on_submit():
+        files = request.files.getlist('files')
+        for file in files:
+            filename = secure_filename(file.filename)
+            # Simpan dokumen dalam database
+            new_document = Document(title=filename, file=file.read(), allowed_roles=allowed_roles)
+            db.session.add(new_document)
+            db.session.commit()
 
-    #         # Save the file to disk with its document ID
-    #         save_dir = 'data'
-    #         if not os.path.exists(save_dir):
-    #             os.makedirs(save_dir)
-    #         file_path = os.path.join(save_dir, f"{filename}")
-    #         with open(file_path, 'wb') as f:
-    #             f.write(new_document.file)
+            # Save the file to disk with its document ID
+            save_dir = 'data'
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            file_path = os.path.join(save_dir, f"{filename}")
+            with open(file_path, 'wb') as f:
+                f.write(new_document.file)
 
         # flash('Document added successfully!')
         # return redirect(url_for('guide_bot.manage_documents', page=page, items_per_page=items_per_page, search_query=search_query))
@@ -169,9 +172,14 @@ def delete_document(id):
     return redirect(url_for('guide_bot.manage_documents'))
 
 @guide_bot.route('/guide-bot/documents/view/<int:id>')
+@login_required
 def view_document(id):
     document = Document.query.get_or_404(id)
-    return render_template('guide_bot/view_document.html', document=document)
+    if current_user.is_manager() or document.is_accessible_by(current_user):
+        return render_template('guide_bot/view_document.html', document=document)
+    else:
+        flash('You do not have permission to view this document.', 'error')
+        return redirect(url_for('guide_bot.manage_documents'))
 
 @guide_bot.route('/guide-bot/document/file/<int:document_id>')
 def get_document_file(document_id):

@@ -134,6 +134,7 @@
       </thead>
       <tbody>
         {% for doc in documents.items %}
+        {% if current_user.is_manager() or doc.is_accessible_by(current_user) %}
         <tr>
           <td class="border border-gray-300 px-4 py-2">{{ doc.id }}</td>
           <td class="border border-gray-300 px-4 py-2">{{ doc.title }}</td>
@@ -159,6 +160,7 @@
           </td>
           {% endif %}
         </tr>
+        {% endif %}
         {% endfor %}
       </tbody>
     </table>
@@ -209,6 +211,10 @@
           {{ file_form.files.label(class="block text-gray-700 font-medium mb-2") }}
           {{ file_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
         </div>
+        <div class="mb-4">
+          {{ file_form.allowed_roles.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ file_form.allowed_roles(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+        </div>
         <div class="flex justify-end">
           <button
             type="button"
@@ -231,40 +237,44 @@
 
   <!-- Add Document Folder Modal -->
   <div
-    id="addDocumentFolderModal"
-    class="fixed inset-0 flex items-center justify-center z-50"
-    style="display: none;"
-  >
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
-      <h2 class="text-xl font-semibold mb-4">Upload Folder</h2>
-      <form
-        method="POST"
-        action="{{ url_for('guide_bot.manage_documents') }}"
-        enctype="multipart/form-data"
-      >
-        {{ folder_form.hidden_tag() }}
-        <div class="mb-4">
-          {{ folder_form.files.label(class="block text-gray-700 font-medium mb-2") }}
-          {{ folder_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
-        </div>
-        <div class="flex justify-end">
-          <button
-            type="button"
-            onclick="document.getElementById('addDocumentFolderModal').style.display='none'"
-            class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-300"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="ml-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
-          >
-            Save
-          </button>
-        </div>
-      </form>
-    </div>
+  id="addDocumentFolderModal"
+  class="fixed inset-0 flex items-center justify-center z-50"
+  style="display: none;"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">Upload Folder</h2>
+    <form
+      method="POST"
+      action="{{ url_for('guide_bot.manage_documents') }}"
+      enctype="multipart/form-data"
+    >
+      {{ folder_form.hidden_tag() }}
+      <div class="mb-4">
+        {{ folder_form.files.label(class="block text-gray-700 font-medium mb-2") }}
+        {{ folder_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+      </div>
+      <div class="mb-4">
+        {{ folder_form.allowed_roles.label(class="block text-gray-700 font-medium mb-2") }}
+        {{ folder_form.allowed_roles(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+      </div>
+      <div class="flex justify-end">
+        <button
+          type="button"
+          onclick="document.getElementById('addDocumentFolderModal').style.display='none'"
+          class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="ml-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+        >
+          Save
+        </button>
+      </div>
+    </form>
   </div>
+</div>
   <!-- Delete Documents Form -->
   <form id="deleteDocumentsForm" action="{{ url_for('guide_bot.delete_multiple_documents') }}" method="post" style="display: none;">
     <input type="hidden" name="items_per_page" value="{{ items_per_page }}">
