@@ -13,7 +13,7 @@ import time
 
 class GestureForHelpDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/gesture.pt", "Gesture")
+        super().__init__("weights/yolov8m-gesture.pt", "Gesture")
 
     def process_results(self, results, frame, camera_id):
         with self.app.app_context():

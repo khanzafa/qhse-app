@@ -14,8 +14,8 @@ import time
 class PPEDetector(BaseDetector):
     def __init__(self):
         super().__init__("weights/ppe-detection.pt", "PPE")
-
-    def process_results(self, results, frame, camera_id):       
+        
+    def process_results(self, results, frame, camera_id):
         with self.app.app_context():
             objects = ""
             for c in results[0].boxes.cls:
@@ -64,6 +64,6 @@ class PPEDetector(BaseDetector):
         annotated_frame = results[0].plot()
         with self.lock:
             self.frames[camera_id] = annotated_frame
-            
-        time_interval = 30
+        
+        time_interval = 45
         time.sleep(time_interval)

@@ -71,6 +71,6 @@ def create_app():
 
     threading.Thread(target=start_detector, args=(ppe_detector,)).start()
     # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
 
     return app

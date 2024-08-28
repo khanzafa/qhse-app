@@ -14,7 +14,7 @@ import time
 
 class UnfocusedDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/reckless-driver.pt", "Unfocused")
+        super().__init__("weights/best_weight_drowsiness.pt", "Unfocused")
 
     # def process_results(self, results, frame, camera_id):
     #     if 'unfocused' in [results[0].names[int(cls)] for cls in results[0].boxes.cls]:
