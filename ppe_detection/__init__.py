@@ -17,16 +17,19 @@ class PPEDetector(BaseDetector):
         
     def process_results(self, results, frame, camera_id):
         with self.app.app_context():
-            objects = ""
+            objects = set()  # Use a set to avoid duplicates
             for c in results[0].boxes.cls:
                 name = self.model.names[int(c)]
                 if name == "No helmet" or name == "No vest":
-                    objects += f"{name}, - "
+                    objects.add(name)  # Add to the set to ensure uniqueness
+
             if objects:
+                # Convert set to comma-separated string
+                objects_str = ", - ".join(objects)
                 print(f"PPE violation detected on camera {camera_id}.")
                 detected_obj = DetectedObject(
                     detector_id=camera_id,
-                    name=objects,
+                    name=objects_str,
                     frame=cv2.imencode('.jpg', frame)[1].tobytes(),
                     timestamp=datetime.now()
                 )

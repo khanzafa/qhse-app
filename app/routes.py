@@ -113,9 +113,13 @@ def index():
     num_detectors = Detector.query.count()
 
     # Assuming 'name' field in DetectedObject indicates no PPE
-    num_no_ppe = DetectedObject.query.filter(DetectedObject.name == 'no_ppe').count()
-    num_reckless = DetectedObject.query.filter(DetectedObject.name == 'reckless_driver').count()
-    num_gesture_help = DetectedObject.query.filter(DetectedObject.name == 'gesture_help').count()
+    # Count "No helmet" violations
+    num_no_helmet = DetectedObject.query.filter(DetectedObject.name.like('%No helmet%')).count()
+    # Count "No vest" violations
+    num_no_vest = DetectedObject.query.filter(DetectedObject.name.like('%No vest%')).count()
+    num_no_ppe = num_no_helmet + num_no_vest
+    num_reckless = DetectedObject.query.filter(DetectedObject.name == 'sleepy').count()
+    num_gesture_help = DetectedObject.query.filter(DetectedObject.name == 'cross-hands').count()
 
     # Example data for charts (this would normally be queried from the database)
     today = datetime.today()
