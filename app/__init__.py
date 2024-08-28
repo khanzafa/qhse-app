@@ -10,6 +10,7 @@ from ppe_detection.routes import ppe
 from gesture_detection.routes import gesture
 from unfocused_detection.routes import unfocused
 from guide_bot.routes import guide_bot
+from api.routes import api
 from flask_login import LoginManager
 from app.models import User
 
@@ -52,6 +53,7 @@ def create_app():
     app.register_blueprint(unfocused)
     app.register_blueprint(guide_bot)
     app.register_blueprint(auth_blueprint)
+    app.register_blueprint(api)
 
     # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
     # threading.Thread(target=start_detector, args=(gesture_detector,)).start()

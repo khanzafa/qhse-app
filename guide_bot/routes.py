@@ -2,6 +2,7 @@
 import getpass
 import io
 import re
+from uuid import uuid4
 from flask import Blueprint, abort, render_template, redirect, send_file, url_for, flash, request, session
 from langchain_chroma import Chroma
 import markdown
@@ -20,7 +21,7 @@ import bcrypt
 from langchain_core.documents import Document as ChatDocument
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
-from guide_bot import conversation_chat, create_conversational_chain, load_vector_store, save_uploaded_file, load_saved_files, split_documents
+from guide_bot import conversation_chat, create_conversational_chain, load_vector_store, save_uploaded_file, load_saved_files, split_documents, extract_text_from_file
 
 guide_bot = Blueprint('guide_bot', __name__)
 
@@ -50,7 +51,7 @@ def manage_documents():
         documents = Document.query.paginate(page=page, per_page=items_per_page)
     
     # Proses penambahan dokumen
-    if file_form.validate_on_submit():
+    if file_form.validate_on_submit() or folder_form.validate_on_submit():
         files = request.files.getlist('files')
         for file in files:
             filename = secure_filename(file.filename)
@@ -63,7 +64,7 @@ def manage_documents():
             save_dir = 'data'
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-            file_path = os.path.join(save_dir, f"{new_document.id}_{filename}")
+            file_path = os.path.join(save_dir, f"{filename}")
             with open(file_path, 'wb') as f:
                 f.write(new_document.file)
 
@@ -71,25 +72,25 @@ def manage_documents():
         return redirect(url_for('guide_bot.manage_documents', page=page, items_per_page=items_per_page, search_query=search_query))
 
     # Proses penambahan dokumen
-    if folder_form.validate_on_submit():
-        files = request.files.getlist('files')
-        for file in files:
-            filename = secure_filename(file.filename)
-            # Simpan dokumen dalam database
-            new_document = Document(title=filename, file=file.read())
-            db.session.add(new_document)
-            db.session.commit()
+    # if folder_form.validate_on_submit():
+    #     files = request.files.getlist('files')
+    #     for file in files:
+    #         filename = secure_filename(file.filename)
+    #         # Simpan dokumen dalam database
+    #         new_document = Document(title=filename, file=file.read())
+    #         db.session.add(new_document)
+    #         db.session.commit()
 
-            # Save the file to disk with its document ID
-            save_dir = 'data'
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-            file_path = os.path.join(save_dir, f"{new_document.id}_{filename}")
-            with open(file_path, 'wb') as f:
-                f.write(new_document.file)
+    #         # Save the file to disk with its document ID
+    #         save_dir = 'data'
+    #         if not os.path.exists(save_dir):
+    #             os.makedirs(save_dir)
+    #         file_path = os.path.join(save_dir, f"{filename}")
+    #         with open(file_path, 'wb') as f:
+    #             f.write(new_document.file)
 
-        flash('Document added successfully!')
-        return redirect(url_for('guide_bot.manage_documents', page=page, items_per_page=items_per_page, search_query=search_query))
+        # flash('Document added successfully!')
+        # return redirect(url_for('guide_bot.manage_documents', page=page, items_per_page=items_per_page, search_query=search_query))
     
     # Render halaman dengan form dan dokumen terpaginate
     return render_template('guide_bot/manage_documents.html', 
@@ -99,47 +100,6 @@ def manage_documents():
                            items_per_page=items_per_page, 
                            search_query=search_query,
                            user_role=user_role)
-
-
-# @guide_bot.route('/guide-bot/documents/edit/<int:id>', methods=['GET', 'POST'])
-# def edit_document(id):
-#     document = Document.query.get_or_404(id)
-#     form = DocumentForm(obj=document)
-
-#     if form.validate_on_submit():
-#         document.title = form.title.data
-#         document.file = form.file.data.read()
-#         db.session.commit()
-#         flash('Document updated successfully!')
-#         return redirect(url_for('guide_bot.manage_documents'))
-
-#     return render_template('guide_bot/edit_document.html', form=form, document=document)
-
-# @guide_bot.route('/guide-bot/documents/delete/<int:id>', methods=['POST'])
-# def delete_document(id):
-#     document = Document.query.get_or_404(id)
-    
-#     # # Load the vector store
-#     # embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-#     # vector_store = load_vector_store(embeddings)
-    
-#     # # Remove the vector corresponding to the document from FAISS
-#     # if vector_store:
-#     #     # Assuming document.title is unique and was used as an identifier
-#     #     vector_store.delete(ids=[str(id)])
-#     #     save_vector_store(vector_store)
-    
-#     # Delete the document from the database
-#     db.session.delete(document)
-#     db.session.commit()
-
-#     # delete the file from the server
-#     file_path = os.path.join('data', sanitize_filename(document.title))
-#     if os.path.exists(file_path):
-#         os.remove(file_path)
-    
-#     flash('Document deleted successfully, and vector store updated!')
-#     return redirect(url_for('guide_bot.manage_documents'))\
     
 @guide_bot.route('/guide-bot/documents/delete-multiple', methods=['POST'])
 @login_required
@@ -250,7 +210,7 @@ def chat():
             print("Conversation completed"  )
             past.append(user_input)
             generated.append({
-                "message": output,
+                "message": markdown.markdown(output),
                 "source_documents": source_documents
             })
         else:
@@ -271,6 +231,7 @@ def reload_vector_db():
     documents = Document.query.all()
     document_ids = [str(document.id) for document in documents]    
     vector_store_ids = vector_store.get()['ids']    
+    vector_metadatas = vector_store.get()['metadatas']
     print("Documents:", document_ids)    
     print("Vector store IDs:", vector_store_ids)
 
@@ -280,74 +241,55 @@ def reload_vector_db():
         print("Vector store IDs:", vector_store_ids)
         # Check if document already exists in the vector store
         if str(document.id) in vector_store_ids:
-            continue           
+            continue  
 
+        #  Save         
         file_path = os.path.join('data', secure_filename(document.title))
+        with open(file_path, 'wb') as f:
+            f.write(document.file)
         
         # Extract text based on file type
-        all_text = ""
-        if file_path.endswith('.pdf'):
-            pdf_reader = PdfReader(file_path)
-            for page in pdf_reader.pages:
-                text = page.extract_text()
-                if text:
-                    all_text += text
-        elif file_path.endswith('.docx'):
-            all_text = docx2txt.process(file_path)        
-        elif file_path.endswith('.ods') or file_path.endswith('.xls') or file_path.endswith('.xlsx'):
-            df = pandas.read_excel(file_path)
-            all_text = df.to_string()
-        elif file_path.endswith('.pptx'):
-            presentation = Presentation(file_path)
-            for slide in presentation.slides:
-                for shape in slide.shapes:
-                    if hasattr(shape, "text"):
-                        all_text += shape.text        
-        elif file_path.endswith('.txt'):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                all_text = file.read()
-        
+        all_text = extract_text_from_file(file_path)
+
         if not all_text.strip():
             print("Failed to extract text from the document.")
             flash("Failed to extract text from the document.")
             continue
 
-        document_obj = ChatDocument(
-             page_content= all_text,
-             metadata = {
-                    "title": document.title,
-                    "file_path": file_path,
-                    "id": document.id
-                }
-        )
-        
-        if len(vector_store_ids) == 0:
-            print("Vector store is empty")
-            vector_store = Chroma.from_documents(
-                embedding=embeddings,
-                collection_name="SPIL",
-                documents=[document_obj], 
-                persist_directory="vector_store",
-                ids=[str(document.id)])
-            print("Vector store created")
-        else:
-            print("Vector store is not empty")
-            vector_store.add_documents(
-                documents=[document_obj], 
-                ids=[str(document.id)]
-            )
-            print("Document with ID", document.id, "added to vector store")
+        splitted_text = split_documents(all_text)
+        for text in splitted_text:
 
-    for vector_id in vector_store_ids:
-        if vector_id not in document_ids:
-            vector_store.delete(ids=[vector_id])
-            print(f"Deleted vector with id {vector_id}")
+            document_obj = ChatDocument(
+                page_content= text,
+                metadata = {
+                        "id": str(uuid4()),
+                        "title": document.title,
+                        "file_path": file_path,
+                        "document_id": document.id,                        
+                    }
+            )
+            
+            if len(vector_store_ids) == 0:
+                print("Vector store is empty")
+                vector_store = Chroma.from_documents(
+                    embedding=embeddings,
+                    collection_name="SPIL",
+                    documents=[document_obj], 
+                    persist_directory="vector_store",
+                    ids=[document_obj.metadata['id']])
+                print("Vector store created")
+            else:
+                print("Vector store is not empty")
+                vector_store.add_documents(
+                    documents=[document_obj], 
+                    ids=[document_obj.metadata['id']]
+                )
+                print("Document with ID", document.id, "added to vector store")
+
+    for metadata in vector_metadatas:
+        if metadata['document_id'] not in document_ids:
+            vector_store.delete(ids=[metadata['id']])
+            print(f"Deleted vector with id {metadata['id']}")
 
     flash('Vector database reloaded successfully!')
     return redirect(url_for('guide_bot.manage_documents'))
-
-
-
-
-
-

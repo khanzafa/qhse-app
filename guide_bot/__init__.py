@@ -5,9 +5,17 @@ from langchain.memory import ConversationBufferMemory
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
+from langchain_groq import ChatGroq
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEmbeddings, HuggingFaceEndpoint, HuggingFacePipeline
 from langchain_google_genai import ChatGoogleGenerativeAI
+from unstructured.partition.auto import partition
+import PIL
+import cv2
 
+# Extracting text from uploaded file
+def extract_text_from_file(file_path):    
+    elements = partition(filename=file_path)
+    return "\n\n".join([str(el) for el in elements])
 
 # Function to handle conversation with the chatbot
 def conversation_chat(query, chain, history):
@@ -35,6 +43,7 @@ def create_conversational_chain(vector_store):
          """)
     ])
 
+    # LLAMA GROQ
     # llm = ChatGroq(
     #     groq_api_key=os.getenv('GROQ_API_KEY'), 
     #     model_name='llama3-70b-8192'
@@ -44,15 +53,17 @@ def create_conversational_chain(vector_store):
     #     os.environ["HUGGINGFACEHUB_API_TOKEN"] = getpass.getpass("Enter your token: ")
 
     # endpoint = HuggingFaceEndpoint(
-    #     repo_id="meta-llama/Meta-Llama-3-70B-Instruct",
+    #     repo_id="bigscience/bloom",
     #     task="text-generation",
     #     max_new_tokens=4096,
     #     do_sample=False,
     #     repetition_penalty=1.03,
     # )
 
+    # # LLAMA HUGGING FACE
     # llm = ChatHuggingFace(llm=endpoint)    
 
+    # GEMINI
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-pro",
         temperature=0,

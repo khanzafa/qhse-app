@@ -57,7 +57,7 @@
           >
             <div class="flex items-center space-x-2">
               <span class="material-icons text-xl text-gray-600">smart_toy</span>
-              <pre class="whitespace-pre-wrap font-medium font-sans">{{ generated[i+1]['message'] }}</pre>
+              <pre class="whitespace-pre-wrap font-medium font-sans">{{ generated[i+1]['message'] | safe }}</pre>
             </div>
 
             <!-- Related Documents -->
