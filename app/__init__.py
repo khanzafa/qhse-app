@@ -27,6 +27,7 @@ login_manager.login_view = 'auth.login'
 def create_app():
     
     app = Flask(__name__)
+    print("App created.")
     app.config.from_object('config.Config')
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
@@ -38,9 +39,11 @@ def create_app():
     app.jinja_env.filters['b64encode'] = base64_encode
 
     db.init_app(app)
+    print("Database initialized.")
     migrate.init_app(app, db)
+    print("Migration initialized.")
     login_manager.init_app(app)
-
+    print("Login manager initialized.")
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
@@ -52,27 +55,37 @@ def create_app():
     from app.routes import main
     from app.auth import auth as auth_blueprint
     app.register_blueprint(main)
+    print("Main blueprint registered.")
     app.register_blueprint(ppe)
+    print("PPE blueprint registered.")
     app.register_blueprint(gesture)
+    print("Gesture blueprint registered.")
     app.register_blueprint(unfocused)
+    print("Unfocused blueprint registered.")
     app.register_blueprint(guide_bot)
+    print("Guide bot blueprint registered.")
     app.register_blueprint(auth_blueprint)
-    app.register_blueprint(api)
+    print("Auth blueprint registered.")
+    # app.register_blueprint(api)
+    # print("API blueprint registered.")
 
     user_home_dir = os.path.expanduser("~")
     user_home_dir = user_home_dir.replace("\\", "/")
     
-    option = webdriver.ChromeOptions()
-    option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data --headless')
-    option.add_experimental_option("detach", True)
-    option.add_experimental_option("excludeSwitches", ["enable-automation"])
-    option.add_experimental_option('useAutomationExtension', False)
-    app.driver = webdriver.Chrome(options=option)
-    app.driver.get("https://web.whatsapp.com/")
-    app.wait = WebDriverWait(app.driver, 100)
+    # option = webdriver.ChromeOptions()
+    # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data --headless')
+    # option.add_experimental_option("detach", True)
+    # option.add_experimental_option("excludeSwitches", ["enable-automation"])
+    # option.add_experimental_option('useAutomationExtension', False)
+    # app.driver = webdriver.Chrome(options=option)
+    # app.driver.get("https://web.whatsapp.com/")
+    # app.wait = WebDriverWait(app.driver, 100)
 
     threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    print("PPE detector started.")
     threading.Thread(target=start_detector, args=(gesture_detector,)).start()
+    print("Gesture detector started.")
     threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    print("Unfocused detector started.")
 
     return app

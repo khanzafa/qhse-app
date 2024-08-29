@@ -21,7 +21,7 @@ import bcrypt
 from langchain_core.documents import Document as ChatDocument
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
-from guide_bot import conversation_chat, create_conversational_chain, load_vector_store, save_uploaded_file, load_saved_files, split_documents, extract_text_from_file
+from guide_bot import conversation_chat, create_conversational_chain, load_vector_store, save_uploaded_file, load_saved_files, split_documents, extract_text_from_file, embeddings
 
 guide_bot = Blueprint('guide_bot', __name__)
 
@@ -216,6 +216,7 @@ def chat():
             print("History:", history)
             output, source_documents = conversation_chat(user_input, chain, history)
             print("Output:", output)
+            print("Source documents:", source_documents)
             print("Conversation completed"  )
             past.append(user_input)
             generated.append({
@@ -227,9 +228,7 @@ def chat():
 
     return render_template('guide_bot/index.html', past=past, generated=generated)
 
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
-
-@guide_bot.route('/guide-bot/reload-vector-db', methods=['GET'])
+@guide_bot.route('/guide-bot/reload-vector-db', methods=['GET'])    
 def reload_vector_db():
     vector_store = Chroma(
         collection_name="SPIL",
