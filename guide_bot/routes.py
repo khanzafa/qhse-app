@@ -77,6 +77,7 @@ def manage_documents():
     # Proses penambahan dokumen
     if folder_form.validate_on_submit():
         files = request.files.getlist('files')
+        allowed_roles = ','.join(folder_form.allowed_roles.data)  # Handle roles similarly for folder form
         for file in files:
             filename = secure_filename(file.filename)
             # Simpan dokumen dalam database

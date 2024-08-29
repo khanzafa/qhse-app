@@ -51,7 +51,10 @@
       <!-- User Profile -->
       <div class="flex items-center space-x-2">
         <img src="/static/img/corporate-user-icon.png" alt="User Avatar" class="w-8 h-8 rounded-full" />
-        <span class="text-gray-700 font-medium">John Doe</span>
+        <!-- <span class="text-gray-700 font-medium">John Doe</span> -->
+        <span class="text-gray-700 font-medium">{{ current_user.name }}</span>
+        <!-- Logout Button -->
+        <a href="{{ url_for('auth.logout') }}" class="logout-button">Logout</a>
       </div>
     </div>
   </header>
