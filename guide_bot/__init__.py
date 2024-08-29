@@ -12,6 +12,9 @@ from unstructured.partition.auto import partition
 import PIL
 import cv2
 
+# Embeddings
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
+
 # Extracting text from uploaded file
 def extract_text_from_file(file_path):    
     elements = partition(filename=file_path)
@@ -65,7 +68,7 @@ def create_conversational_chain(vector_store):
 
     # GEMINI
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-pro",
+        model="gemini-1.5-flash",
         temperature=0,
         max_tokens=None,
         timeout=None,
