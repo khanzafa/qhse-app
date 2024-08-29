@@ -2,8 +2,8 @@ import base64
 import io
 import cv2
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.io as pio
+# import plotly.graph_objects as go
+# import plotly.io as pio
 import requests
 from datetime import datetime, timedelta
 from collections import Counter
