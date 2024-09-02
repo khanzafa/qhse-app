@@ -16,7 +16,7 @@ from utils.wa import send_whatsapp_message
 
 class GestureForHelpDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/yolov8m-gesture.pt", "Gesture")
+        super().__init__("weights/Fall Detection Model.pt", "Gesture")
 
     def process_results(self, results, frame, camera_id):
         with self.app.app_context():
@@ -51,5 +51,5 @@ class GestureForHelpDetector(BaseDetector):
             self.frames[camera_id] = annotated_frame
         
         time_interval = 15    
-        time.sleep(time_interval)
+        # time.sleep(time_interval)
         
