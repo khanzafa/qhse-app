@@ -10,3 +10,4 @@ playground.ipynb
 runs/
 vector_store/*
 data
+/vector_store
