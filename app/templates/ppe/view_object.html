@@ -20,7 +20,7 @@ block content %}
 
   <div class="mb-4">
     <h3 class="text-lg font-semibold">Timestamp:</h3>
-    <p>{{ detected_object.timestamp }}</p>
+    <p>{{ detected_object.timestamp.strftime('%d %B %Y, %H:%M:%S') }}</p>
   </div>
 
   <div class="mb-4">

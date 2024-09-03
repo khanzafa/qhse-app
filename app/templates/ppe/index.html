@@ -30,7 +30,7 @@
           {{ obj.name }}
         </td>
         <td class="border border-gray-300 px-4 py-2 text-center">
-          {{ obj.timestamp }}
+          {{ obj.timestamp.strftime('%d %B %Y, %H:%M:%S') }}
         </td>
         <td class="border border-gray-300 px-4 py-2 text-center">
           <a
