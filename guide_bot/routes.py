@@ -201,7 +201,7 @@ history = []
 generated = ["Selamat datang di GuideBot! Tanyakan sesuatu pada saya 😊️"]
 past = []
 
-@guide_bot.route('/guide-bot/chat', methods=['GET', 'POST'])
+@guide_bot.route('/aios/guide-bot/chat', methods=['GET', 'POST'])
 def chat():
     global history, generated, past
 

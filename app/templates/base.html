@@ -12,8 +12,7 @@
 
 <body class="bg-gray-100">
   <!-- Header -->
-  <header
-    class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 h-16 flex items-center justify-between px-6">
+  <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 h-16 flex items-center justify-between px-6">
     <!-- Logo and App Name -->
     <div class="flex items-center">
       <div id="logo" class="text-xl font-semibold">
@@ -115,12 +114,6 @@
             </a>
           </div>
         </div>
-        <!-- GuideBot -->
-        <a href="{{ url_for('guide_bot.manage_documents') }}"
-          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-          <i class="fas fa-robot mr-3"></i>
-          GuideBot
-        </a>
         <!-- Contact -->
         <a href="{{ url_for('main.manage_contact') }}"
           class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
@@ -128,128 +121,81 @@
           Contact
         </a>
 
-        <!-- HRMS -->
+        <!-- QHSE -->
         <div x-data="{ open: false }">
           <a href="#" @click.prevent="open = !open"
             class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-            <i class="fas fa-shield-alt mr-3"></i>
-            HRMS
+            <i class="fa-solid fa-user-nurse mr-3"></i>
+            QHSE
             <span :class="open ? 'rotate-90' : 'rotate-0'"
               class="inline-block transform transition-transform duration-200 ml-auto">
               >
-            </span>
           </a>
 
           <div x-show="open" class="pl-10">
-            <div x-data="{ open: false }">
-              <!-- QHSE -->
-              <a href="#" @click.prevent="open = !open"
+            <div x-data="{ transactionOpen: false }">
+              <!-- Transaction -->
+              <a href="#" @click.prevent="transactionOpen = !transactionOpen"
                 class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                <i class="fas fa-shield-alt mr-3"></i>
-                QHSE
-                <span :class="open ? 'rotate-90' : 'rotate-0'"
+                <i class="fa-regular fa-cash-register mr-3"></i>
+                Transaction
+                <span :class="transactionOpen ? 'rotate-90' : 'rotate-0'"
                   class="inline-block transform transition-transform duration-200 ml-auto">
                   >
               </a>
 
-              <div x-show="open" class="pl-10">
-                <div x-data="{ transactionOpen: false }">
-                  <!-- Transaction -->
-                  <a href="#" @click.prevent="transactionOpen = !transactionOpen"
+              <div x-show="transactionOpen" class="pl-10">
+                <div x-data="{ uploadOpen: false }">
+                  <!-- Upload -->
+                  <a href="#" @click.prevent="uploadOpen = !uploadOpen"
                     class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                    <i class="fas fa-shield-alt mr-3"></i>
-                    Transaction
-                    <span :class="transactionOpen ? 'rotate-90' : 'rotate-0'"
-                      class="inline-block transform transition-transform duration-200 ml-auto">
-                      >
+                    <i class="fas fa-crosshairs mr-3"></i>
+                    Upload
                   </a>
 
-                  <div x-show="transactionOpen" class="pl-10">
-                    <div x-data="{ uploadOpen: false }">
-                      <!-- Upload -->
-                      <a href="#" @click.prevent="uploadOpen = !uploadOpen"
-                        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                        <i class="fas fa-crosshairs mr-3"></i>
-                        Upload
-                      </a>
-
-                      <div x-show="uploadOpen" class="pl-10">
-                        <!-- Procedure -->
-                        <a href="#"
-                          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                          <i class="fas fa-crosshairs mr-3"></i>
-                          Procedure
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Report -->
-                  <div x-data="{ reportOpen: false }">
-                    <a href="#" @click.prevent="reportOpen  = !reportOpen"
+                  <div x-show="uploadOpen" class="pl-10">
+                    <!-- Procedure -->
+                    <a href="#"
                       class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                      <i class="fas fa-shield-alt mr-3"></i>
-                      Report
-                      <span :class="reportOpen ? 'rotate-90' : 'rotate-0'"
-                        class="inline-block transform transition-transform duration-200 ml-auto">
-                        >
+                      <i class="fas fa-crosshairs mr-3"></i>
+                      Procedure
                     </a>
-
-                    <div x-show="reportOpen" class="pl-10">
-                      <!-- Docs -->
-                      <a href="#"
-                        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                        <i class="fas fa-crosshairs mr-3"></i>
-                        Docs
-                      </a>
-                    </div>
                   </div>
+                </div>
+              </div>
 
+              <!-- Report -->
+              <div x-data="{ reportOpen: false }">
+                <a href="#" @click.prevent="reportOpen  = !reportOpen"
+                  class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                  <i class="fa-regular fa-file-contract mr-3"></i>
+                  Report
+                  <span :class="reportOpen ? 'rotate-90' : 'rotate-0'"
+                    class="inline-block transform transition-transform duration-200 ml-auto">
+                    >
+                </a>
 
-
+                <div x-show="reportOpen" class="pl-10">
+                  <!-- Docs / Guide Bot -->
+                  <a href="{{ url_for('guide_bot.manage_documents') }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+                    <i class="fa-solid fa-file-lines mr-3"></i>
+                    Docs
+                  </a>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+
         <!-- AIOS -->
-        <div x-data="{ open: false }">
-          <a href="#" @click.prevent="open = !open"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-            <i class="fas fa-shield-alt mr-3"></i>
-            AIOS
-            <span :class="open ? 'rotate-90' : 'rotate-0'"
-              class="inline-block transform transition-transform duration-200 ml-auto">
-              >
-            </span>
-          </a>
+        <a href="{{ url_for('aios.index') }}"
+          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+          <i class="fa-solid fa-file-lines mr-3"></i>
+          AIOS
+        </a>
 
-          <div x-show="open" class="pl-10">
-            <!-- My Activity -->
-            <div x-data="{ myactivityOpen: false }">
-              <a href="#" @click.prevent="myactivityOpen  = !myactivityOpen"
-                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                <i class="fas fa-crosshairs mr-3"></i>
-                My Activity
-                <span :class="myactivityOpen ? 'rotate-90' : 'rotate-0'"
-                  class="inline-block transform transition-transform duration-200 ml-auto">
-                  >
-              </a>
-
-              <div x-show="myactivityOpen" class="pl-10">
-                <!-- Procedure -->
-                <a href="#"
-                  class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                  <i class="fas fa-crosshairs mr-3"></i>
-                  Procedure
-                </a>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
 
       </nav>
     </aside>

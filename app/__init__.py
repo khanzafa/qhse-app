@@ -13,6 +13,7 @@ from guide_bot.routes import guide_bot
 from api.routes import api
 from flask_login import LoginManager
 from app.models import User
+from aios.routes import aios
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -68,6 +69,8 @@ def create_app():
     print("Auth blueprint registered.")
     # app.register_blueprint(api)
     # print("API blueprint registered.")
+    app.register_blueprint(aios)
+    print("Auth blueprint registered.")
 
     user_home_dir = os.path.expanduser("~")
     user_home_dir = user_home_dir.replace("\\", "/")
