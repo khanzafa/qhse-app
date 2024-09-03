@@ -14,7 +14,7 @@ def send_whatsapp_message(app, target_name, message, image_path):
     - message: Message to be sent.
     - image_path: Path of the image to be attached (optional).
     """
-    driver = app.driver
+    # driver = app.driver
     wait = app.wait
 
     try:

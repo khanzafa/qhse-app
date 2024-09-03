@@ -21,6 +21,14 @@
   >
     Upload Folder
   </button>
+
+  <!-- Reload Vector DB -->
+  <a
+    href="{{ url_for('guide_bot.reload_vector_db') }}"
+    class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+  >
+    Reload Vector DB
+  </a>
   {% endif %}
 
   <!-- Demo GuideBot -->
@@ -29,14 +37,6 @@
     class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
   >
     Demo GuideBot
-  </a>
-
-  <!-- Reload Vector DB -->
-  <a
-    href="{{ url_for('guide_bot.reload_vector_db') }}"
-    class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
-  >
-    Reload Vector DB
   </a>
 
   <!-- Search Bar -->

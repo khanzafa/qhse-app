@@ -48,7 +48,8 @@ class RegistrationForm(FlaskForm):
         ('HR', 'HR'),
         ('Finance', 'Finance'),
         ('Accounting', 'Accounting'),
-        ('Security', 'Security')
+        ('Security', 'Security'),
+        ('Manager', 'Manager')
     ], validators=[DataRequired()])
     submit = SubmitField('Register')
 
