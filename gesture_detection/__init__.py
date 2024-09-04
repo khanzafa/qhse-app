@@ -79,7 +79,8 @@ class GestureForHelpDetector(BaseDetector):
             
             for obj_idx in range(len(pose_results[0].keypoints)):
                 keypoints = pose_results[0].keypoints[obj_idx].data[0]
-                if keypoints is not None:
+                # Ensure keypoints exist and are not empty
+                if keypoints is not None and keypoints.size(0) > 0:
                     right_shoulder = keypoints[BODY_KEYPOINTS["right_shoulder"]][:2].tolist()
                     right_elbow = keypoints[BODY_KEYPOINTS["right_elbow"]][:2].tolist()
                     right_wrist = keypoints[BODY_KEYPOINTS["right_wrist"]][:2].tolist()
