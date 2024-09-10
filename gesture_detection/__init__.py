@@ -67,9 +67,9 @@ class GestureForHelpDetector(BaseDetector):
     def __init__(self):
         super().__init__("weights/yolov8n-pose.pt", "Gesture")
         self.pose_model = YOLO('yolov8n-pose.pt')
-        self.pose_model.to('cuda')
+        # self.pose_model.to('cuda')
 
-    def process_results(self, results, frame, camera_id):
+    def process_results(self, results, frame, detector_id):
         with self.app.app_context():
             objects = ""
 
@@ -137,7 +137,7 @@ class GestureForHelpDetector(BaseDetector):
                             
                             # capture
                             detected_obj = DetectedObject(
-                                detector_id=camera_id,
+                                detector_id=detector_id,
                                 name='cross-hands',
                                 frame=cv2.imencode('.jpg', frame)[1].tobytes(),
                                 timestamp=datetime.now()
@@ -146,16 +146,16 @@ class GestureForHelpDetector(BaseDetector):
                             db.session.commit()
 
                             target = '"Nomerku"'
-                            message = f"Subject: *SOS DETECTED*||• Camera ID: {camera_id}||• Violation: cross-hands||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
+                            message = f"Subject: *SOS DETECTED*||• Camera ID: {detector_id}||• Violation: cross-hands||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
 
-                            image_filename = f"unfocused_{camera_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+                            image_filename = f"unfocused_{detector_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                             image_path = os.path.join(os.getcwd(), image_filename)
                             cv2.imwrite(image_path, frame)
 
-                            threading.Thread(target=send_whatsapp_message, args=(current_app._get_current_object(), target, message, image_path)).start()
+                            # threading.Thread(target=send_whatsapp_message, args=(current_app._get_current_object(), target, message, image_path)).start()
             
             with self.lock:
-                self.frames[camera_id] = annotated_frame
+                self.frames[detector_id] = annotated_frame
 
             time_interval = 15
             # time.sleep(time_interval)

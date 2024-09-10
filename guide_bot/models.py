@@ -6,6 +6,7 @@ from app.models import User
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), index=True)
+    dir = db.Column(db.String(120), index=True)
     file = db.Column(db.LargeBinary)
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
@@ -15,6 +16,7 @@ class Document(db.Model):
         return {
             'id': self.id,
             'title': self.title,
+            'dir': self.dir,
             'file': self.file,
             'created_at': self.created_at,
             'updated_at': self.updated_at,

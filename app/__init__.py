@@ -30,7 +30,14 @@ def create_app():
     print("App created.")
     app.config.from_object('config.Config')
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    # Konfigurasi direktori upload
+    UPLOAD_FOLDER = 'uploads'
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+    # Membuat direktori upload jika belum ada
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+        
     # Define the b64encode filter
     def base64_encode(data):
         return b64encode(data).decode('utf-8')
@@ -69,11 +76,12 @@ def create_app():
     # app.register_blueprint(api)
     # print("API blueprint registered.")
 
-    user_home_dir = os.path.expanduser("~")
-    user_home_dir = user_home_dir.replace("\\", "/")
+    # user_home_dir = os.path.expanduser("~")
+    # user_home_dir = user_home_dir.replace("\\", "/")
     
-    option = webdriver.ChromeOptions()
-    # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data --headless')
+    # option = webdriver.ChromeOptions()
+    # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data')
+    # option.add_argument("--headless")
     # option.add_experimental_option("detach", True)
     # option.add_experimental_option("excludeSwitches", ["enable-automation"])
     # option.add_experimental_option('useAutomationExtension', False)
@@ -81,11 +89,11 @@ def create_app():
     # app.driver.get("https://web.whatsapp.com/")
     # app.wait = WebDriverWait(app.driver, 100)
 
-    threading.Thread(target=start_detector, args=(ppe_detector,)).start()
-    print("PPE detector started.")
-    threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    print("Gesture detector started.")
-    threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
-    print("Unfocused detector started.")
+    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    # print("PPE detector started.")
+    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
+    # print("Gesture detector started.")
+    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    # print("Unfocused detector started.")
 
     return app

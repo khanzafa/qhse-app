@@ -22,3 +22,17 @@ class DocumentFolderForm(FlaskForm):
         ('Accounting', 'Accounting'),
         ('Security', 'Security')
     ])
+
+class NewFolderForm(FlaskForm):
+    folder_name = StringField('Folder Name', validators=[DataRequired()])
+
+class EditFileForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    file = FileField('File', validators=[DataRequired()])
+    allowed_roles = SelectMultipleField('Allowed Roles', choices=[
+        ('IT', 'IT'),
+        ('HR', 'HR'),
+        ('Finance', 'Finance'),
+        ('Accounting', 'Accounting'),
+        ('Security', 'Security')
+    ])

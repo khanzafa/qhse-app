@@ -9,6 +9,7 @@ from langchain_groq import ChatGroq
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEmbeddings, HuggingFaceEndpoint, HuggingFacePipeline
 from langchain_google_genai import ChatGoogleGenerativeAI
 from unstructured.partition.auto import partition
+from flask_login import current_user
 import PIL
 import cv2
 
@@ -120,8 +121,8 @@ def split_documents(text):
 
 def load_vector_store(embeddings):
     vector_store = Chroma(
-        collection_name="SPIL",
-        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}, clean_up_tokenization_spaces=True), 
-        persist_directory="vector_store"
+        collection_name=f"SPIL-{current_user.role}",
+        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
+        persist_directory=f"vector_store/{current_user.role}"
     )
     return vector_store

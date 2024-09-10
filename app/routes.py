@@ -18,104 +18,18 @@ main = Blueprint('main', __name__)
 current_user = {'name': 'John'}
 GRAPHICS_DIR = 'app/static/graphics'
 
-# @main.route('/')
-# def index():    
-#     # Read dummy data from CSV
-#     cctv_data = pd.read_csv('app/static/data/data.csv')
-#     graph_data = pd.read_csv('app/static/data/graphs_data.csv')
-
-#     total_cctv = cctv_data[cctv_data['type'] == 'total_cctv']['value'].values[0]
-#     active_cctv = cctv_data[cctv_data['type'] == 'active_cctv']['value'].values[0]
-#     inactive_cctv = cctv_data[cctv_data['type'] == 'inactive_cctv']['value'].values[0]
-
-#     # Generate Bar Chart for PPE Undetected
-#     fig1 = go.Figure()
-#     fig1.add_trace(go.Bar(
-#         x=graph_data['date'],
-#         y=graph_data['ppe_undetected'],
-#         name='PPE Undetected'
-#     ))
-#     fig1.update_layout(title='PPE Undetected Per Day in One Week',
-#                        xaxis_title='Date',
-#                        yaxis_title='Count')
-    
-#     # Convert Plotly graph to Base64 image
-#     img1 = pio.to_image(fig1, format='png')
-#     buffer1 = io.BytesIO(img1)
-#     graph1 = base64.b64encode(buffer1.getvalue()).decode()
-
-#     # Generate Pie Chart for PPE Detection Categories
-#     categories = graph_data[['no_helmet', 'no_vest', 'no_boots']].sum()
-#     fig2 = go.Figure()
-#     fig2.add_trace(go.Pie(
-#         labels=categories.index,
-#         values=categories.values,
-#         hole=0.3
-#     ))
-#     fig2.update_layout(title='PPE Detection Categories')
-
-#     # Convert Plotly graph to Base64 image
-#     img2 = pio.to_image(fig2, format='png')
-#     buffer2 = io.BytesIO(img2)
-#     graph2 = base64.b64encode(buffer2.getvalue()).decode()
-    
-    
-#  # Generate Bar Chart for Gesture Warning Detected
-#     fig3 = go.Figure()
-#     fig3.add_trace(go.Bar(
-#         x=graph_data['gesture_warning_location'].value_counts().index,
-#         y=graph_data['gesture_warning_location'].value_counts().values,
-#         name='Gesture Warning Detected',
-#         marker=dict(color='greenyellow')  # Change the bar color here
-#     ))
-#     fig3.update_layout(title='Gesture Warning Detected Per Location',
-#                        xaxis_title='Location',
-#                        yaxis_title='Count')
-    
-#     # Convert Plotly graph to Base64 image
-#     img3 = pio.to_image(fig3, format='png')
-#     buffer3 = io.BytesIO(img3)
-#     graph3 = base64.b64encode(buffer3.getvalue()).decode()
-    
-#      # Generate Horizontal Bar Chart for Drowsiness Warning
-#     fig4 = go.Figure()
-#     fig4.add_trace(go.Bar(
-#         x=graph_data['drowsiness_warning'],
-#         y=graph_data['date'],
-#         orientation='h',  # Horizontal bars
-#         name='Drowsiness Warning Detected',
-#         marker=dict(color='purple')  # Optional: Set color
-#     ))
-#     fig4.update_layout(title='Drowsiness Warning Detected Per Day in One Week',
-#                        xaxis_title='Count',
-#                        yaxis_title='Date')
-
-#     # Convert Plotly graph to Base64 image
-#     img4 = pio.to_image(fig4, format='png')
-#     buffer4 = io.BytesIO(img4)
-#     graph4 = base64.b64encode(buffer4.getvalue()).decode()
-
-
-#     return render_template('dashboard.html', 
-#                            total_cctv=total_cctv, 
-#                            active_cctv=active_cctv, 
-#                            inactive_cctv=inactive_cctv, 
-#                            graph1=graph1, 
-#                            graph2=graph2,
-#                            graph3=graph3,
-#                            graph4=graph4)
-
 @main.route('/')
-@login_required
 def index():
+    return render_template('index.html', title='Home', current_user=current_user)
+
+@main.route('/report/dashboard')
+@login_required
+def dashboard():
     # Fetching data
     num_cctv = Camera.query.count()
     num_detectors = Detector.query.count()
 
-    # Assuming 'name' field in DetectedObject indicates no PPE
-    # Count "No helmet" violations
     num_no_helmet = DetectedObject.query.filter(DetectedObject.name.like('%No helmet%')).count()
-    # Count "No vest" violations
     num_no_vest = DetectedObject.query.filter(DetectedObject.name.like('%No vest%')).count()
     num_no_ppe = num_no_helmet + num_no_vest
     num_reckless = DetectedObject.query.filter(DetectedObject.name == 'sleepy').count()
@@ -158,23 +72,27 @@ def view_detector_feed(detector_id):
 
 @main.route('/detector/stream/<int:detector_id>')
 def detector_stream(detector_id):
-    detector = Detector.query.get_or_404(detector_id)
-    camera = Camera.query.get_or_404(detector.camera_id)
+    detector = Detector.query.get_or_404(detector_id)    
+    detector_type = detector.type
     detector_types = {
         'PPE': ppe_detector,
         'Gesture': gesture_detector,
         'Unfocused': unfocused_detector
     }
-    detector = detector_types[detector.type]
+    detector = detector_types[detector_type]
     def generate_frames():
         while True:
             if detector_id in detector.frames:
-                frame = detector.frames[detector_id]
+                print(f"Detector {detector_id} dengan tipe {detector_type} terdapat frame")
+                frame = detector.frames[detector_id]            
+                print("Frame:", frame)
+                # cv2.imshow("Frame", frame)
                 ret, buffer = cv2.imencode('.jpg', frame)
                 frame = buffer.tobytes()
-                yield (b'--frame\r\n'
+                yield (b'--frame\r\n'   
                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
             else:
+                print(f"Detector {detector_id} dengan tipe {detector_type} TIDAK terdapat frame")
                 continue
     
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -218,8 +136,8 @@ def delete_cctv(id):
     flash('CCTV deleted successfully!', 'success')
     return redirect(url_for('main.manage_cctv'))
 
-@main.route('/detector/manage', methods=['GET', 'POST'])
-@main.route('/detector/manage/<int:id>', methods=['GET', 'POST'])
+@main.route('/object-detection/detector/manage', methods=['GET', 'POST'])
+@main.route('/object-detection/detector/manage/<int:id>', methods=['GET', 'POST'])
 def manage_detector(id=None):
     if id:
         detector = Detector.query.get_or_404(id)
@@ -253,7 +171,7 @@ def manage_detector(id=None):
     detectors = Detector.query.all()
     return render_template('manage_detector.html', form=form, detectors=detectors, detector=detector, title=title)
 
-@main.route('/detector/delete/<int:id>')
+@main.route('/object-detection/detector/delete/<int:id>')
 def delete_detector(id):
     detector = Detector.query.get_or_404(id)
     db.session.delete(detector)
@@ -261,8 +179,8 @@ def delete_detector(id):
     flash('Detector entry deleted successfully!')
     return redirect(url_for('main.manage_detector'))
 
-@main.route('/contact/manage', methods=['GET', 'POST'])
-@main.route('/contact/manage/<int:id>', methods=['GET', 'POST'])
+@main.route('/object-detection/contact/manage', methods=['GET', 'POST'])
+@main.route('/object-detection/contact/manage/<int:id>', methods=['GET', 'POST'])
 def manage_contact(id=None):
     if id:
         contact = Contact.query.get_or_404(id)
@@ -291,10 +209,32 @@ def manage_contact(id=None):
     whas = Contact.query.all()
     return render_template('manage_contact.html', form=form, whas=whas, contact=contact, title=title)
 
-@main.route('/contact/delete/<int:id>')
+@main.route('/object-detection/contact/delete/<int:id>')
 def delete_contact(id):
     contact = Contact.query.get_or_404(id)
     db.session.delete(contact)
     db.session.commit()
     flash('Contact entry deleted successfully!')
     return redirect(url_for('main.manage_contact'))
+
+# Manage model
+@main.route('/object-detection/model/manage', methods=['GET', 'POST'])
+@main.route('/object-detection/model/manage/<int:id>', methods=['GET', 'POST'])
+def manage_model(id=None):
+    return render_template('manage_model.html', title='Manage Model', current_user=current_user)
+    
+# Manage message
+@main.route('/object-detection/message/manage', methods=['GET', 'POST'])
+@main.route('/object-detection/message/manage/<int:id>', methods=['GET', 'POST'])
+def manage_message(id=None):
+    return render_template('manage_message.html', title='Manage Message', current_user=current_user)
+
+@main.route('/report/detected-object', methods=['GET'])
+def detected_object():
+    detected_objects = DetectedObject.query.join(Detector).filter(Detector.type == 'PPE').order_by(DetectedObject.timestamp.desc()).all()
+    return render_template('ppe/index.html', detected_objects=detected_objects)
+
+@main.route('/report/detected-object/view-object/<int:object_id>', methods=['GET'])
+def view_object(object_id):
+    detected_object = DetectedObject.query.get_or_404(object_id)    
+    return render_template('ppe/view_object.html', detected_object=detected_object)

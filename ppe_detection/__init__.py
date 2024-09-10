@@ -17,7 +17,7 @@ class PPEDetector(BaseDetector):
     def __init__(self):
         super().__init__("weights/ppe-detection.pt", "PPE")
         
-    def process_results(self, results, frame, camera_id):
+    def process_results(self, results, frame, detector_id):
         with self.app.app_context():
             objects = set()  # Use a set to avoid duplicates
             for c in results[0].boxes.cls:
@@ -28,9 +28,9 @@ class PPEDetector(BaseDetector):
             if objects:
                 # Convert set to comma-separated string
                 objects_str = ", - ".join(objects)
-                print(f"PPE violation detected on camera {camera_id}.")
+                print(f"PPE violation detected on camera {detector_id}.")
                 detected_obj = DetectedObject(
-                    detector_id=camera_id,
+                    detector_id=detector_id,
                     name=objects_str,
                     frame=cv2.imencode('.jpg', frame)[1].tobytes(),
                     timestamp=datetime.now()
@@ -39,18 +39,18 @@ class PPEDetector(BaseDetector):
                 db.session.commit()
                 
                 target = '"You "' # Kontak WA sesuai nama
-                message = f"Subject: *PPE Violation*||• Camera ID: {camera_id}||• Violation: {objects}||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
+                message = f"Subject: *PPE Violation*||• Camera ID: {detector_id}||• Violation: {objects}||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
                 
-                image_filename = f"ppe_violation_{camera_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+                image_filename = f"ppe_violation_{detector_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                 image_path = os.path.join(os.getcwd(), image_filename)
-                cv2.imwrite(image_path, frame)
+                cv2.imwrite(image_path, frame)                
                 
                 # Send the WhatsApp message using the helper function
-                threading.Thread(target=send_whatsapp_message, args=(current_app._get_current_object(), target, message, image_path)).start()
+                # threading.Thread(target=send_whatsapp_message, args=(current_app._get_current_object(), target, message, image_path)).start()
 
         annotated_frame = results[0].plot()
         with self.lock:
-            self.frames[camera_id] = annotated_frame
+            self.frames[detector_id] = annotated_frame
         
         time_interval = 45
         time.sleep(time_interval)
