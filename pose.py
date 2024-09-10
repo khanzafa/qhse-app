@@ -77,11 +77,14 @@
 #     return keypoint[CONF] >= min_confidence
 
 
-# # Load the YOLOv8 model for pose detection
+# Load the YOLOv8 model for pose detection
 # model = YOLO('yolov8n-pose.pt')  # Ensure you have the YOLOv8 pose model downloaded
 # model.to('cuda')
+
+# url = 'http://192.168.8.9:4747/video'
+
 # # Open the webcam
-# cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture(url)
 
 # while True:
 #     # Read frame from webcam
@@ -95,12 +98,15 @@
 #     # Draw results on the frame
 #     annotated_frame = results[0].plot()
     
-#     # Loop through each detected object
-#     for obj_idx in range(len(results[0].keypoints)):
-#         keypoints = results[0].keypoints[obj_idx].data[0]
+    # Loop through each detected object
+    # for obj_idx in range(len(results[0].keypoints)):
+    #     keypoints = results[0].keypoints[obj_idx].data[0]
+        
+    #     print('keypointssssssss')
+    #     print(keypoints)
 
-#         # Ensure keypoints exist and confidence is sufficient for the relevant joints
-#         if keypoints is not None:
+    #     # Ensure keypoints exist and are not empty
+    #     if keypoints is not None and keypoints.size(0) > 0:
             
 #             # Get the keypoints for the right shoulder, right elbow, and right wrist
 #             right_shoulder = keypoints[BODY_KEYPOINTS["right_shoulder"]][:2].tolist()

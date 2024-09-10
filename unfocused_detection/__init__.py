@@ -17,7 +17,7 @@ from utils.wa import send_whatsapp_message
 
 class UnfocusedDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/best_weight_drowsiness.pt", "Unfocused")
+        super().__init__("weights/ApiAsapTidur.pt", "Unfocused")
 
     # def process_results(self, results, frame, camera_id):
     #     if 'unfocused' in [results[0].names[int(cls)] for cls in results[0].boxes.cls]:
@@ -36,8 +36,8 @@ class UnfocusedDetector(BaseDetector):
 
     def process_results(self, results, frame, detector_id):
         # Ensure that app context is available
-        with self.app.app_context():
-            objects = set()  # Use a set to avoid duplicates
+        with self.app.app_context():            
+            objects = ""
             for c in results[0].boxes.cls:
                 name = self.model.names[int(c)]
                 objects.add(name)
@@ -52,18 +52,19 @@ class UnfocusedDetector(BaseDetector):
                 db.session.add(detected_obj)
                 db.session.commit()
                 
-                target = '"Nomerku"'
+                target = 'eh'
                 message = f"Subject: *Unfocused Driver*||• Camera ID: {detector_id}||• Violation: {objects}||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
                 
                 image_filename = f"unfocused_{detector_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                 image_path = os.path.join(os.getcwd(), image_filename)
                 cv2.imwrite(image_path, frame)
                 
-                # Send the WhatsApp message using the helper function
-                # threading.Thread(target=send_whatsapp_message, args=(current_app._get_current_object(), target, message, image_path)).start()
+                # Add the message to the shared queue
+                self.add_message_to_queue(current_app._get_current_object(), target, message, image_path)
+                
         annotated_frame = results[0].plot()
         with self.lock:
             self.frames[detector_id] = annotated_frame
             
-        time_interval = 15
+        time_interval = 45
         time.sleep(time_interval)

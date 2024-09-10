@@ -5,8 +5,13 @@ from app.models import Camera, Detector, DetectedObject
 import threading
 from datetime import datetime
 import time
+import queue
+from utils.wa import send_whatsapp_message
+from collections import defaultdict
 
 class BaseDetector:    
+    message_queue = queue.Queue()  # Shared message queue for all detectors
+    
     def __init__(self, model_path, detector_name):
         self.model = YOLO(model_path).to('cpu') # tambahi .to('cpu')
         self.detector_name = detector_name
@@ -14,8 +19,27 @@ class BaseDetector:
         self.frames = {}
         self.cctv_caps = {}
         self.lock = threading.Lock()  # Thread-safe access to frames
+        self.frame_number = 0
+        self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_frame": -1})
         print(f"Initialized {detector_name} detector.")
         
+        # Start the worker thread to process the message queue
+        if not hasattr(BaseDetector, 'worker_started'):
+            BaseDetector.worker_started = True
+            threading.Thread(target=self.message_worker, daemon=True).start()
+        
+    @staticmethod
+    def message_worker():
+        while True:
+            app, target, message, image_path = BaseDetector.message_queue.get()  # Get the next message from the queue
+            if app and target and message and image_path:
+                send_whatsapp_message(app, target, message, image_path)  # Send WhatsApp message using Selenium
+            BaseDetector.message_queue.task_done()  # Mark the task as done
+            time.sleep(1)  # Delay to prevent message collisions
+
+    def add_message_to_queue(self, app, target, message, image_path):
+        BaseDetector.message_queue.put((app, target, message, image_path))  # Add the message to the shared queue
+    
     def run(self, app):
         self.running = True
         self.app = app
@@ -124,7 +148,7 @@ class BaseDetector:
             if success:
                 print(f"Frame captured for camera {camera_ip}, detector ID {detector_id}. Running model {self.detector_name}.")
                 # time.sleep(3)
-                results = self.model(frame, stream=False)
+                results = self.model.track(frame, stream=False, persist=True)
                 self.process_results(results, frame, detector_id)
             else:
                 print(f"Error: Lost connection to {camera_ip} for detector ID {detector_id}.")

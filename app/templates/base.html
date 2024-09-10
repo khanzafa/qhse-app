@@ -14,6 +14,7 @@
 <body class="bg-gray-100">
   <!-- Header -->
   <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 h-16 flex items-center justify-between px-6">
+  <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 h-16 flex items-center justify-between px-6">
     <!-- Logo and App Name -->
     <div class="flex items-center">
       <div id="logo" class="text-xl font-semibold">
@@ -134,7 +135,6 @@
             <span :class="open ? 'rotate-90' : 'rotate-0'"
               class="inline-block transform transition-transform duration-200 ml-auto">
               >
-            </span>
           </a>
 
           <!-- Dropdown: Report -->
@@ -178,9 +178,23 @@
             </a>
           </div>
         </div>
+        <!-- End PAIER -->
 
-      </nav>
-    </aside>
+        <!-- AIOS -->
+        <a href="{{ url_for('aios.index') }}"
+          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+          <i class="fa-solid fa-file-lines mr-3"></i>
+          AIOS
+        </a>
+
+  </div>
+
+
+
+
+
+  </nav>
+  </aside>
 
     <!-- Main Content -->
     <main class="flex-1 p-10 ml-64">{% block content %}{% endblock %}</main>
