@@ -126,7 +126,9 @@
           <th class="border border-gray-300 px-4 py-2">ID</th>
           <th class="border border-gray-300 px-4 py-2">Title</th>
           <th class="border border-gray-300 px-4 py-2">Created At</th>
+          {% if user_role == 'manager' %}
           <th class="border border-gray-300 px-4 py-2">Accessible by</th>
+          {% endif %}
           <th class="border border-gray-300 px-4 py-2">Actions</th>
           {% if user_role == 'manager' %}
           <th class="border border-gray-300 px-4 py-2">Select</th>
@@ -140,7 +142,9 @@
           <td class="border border-gray-300 px-4 py-2 text-center">{{ doc.id }}</td>
           <td class="border border-gray-300 px-4 py-2 text-center">{{ doc.title }}</td>
           <td class="border border-gray-300 px-4 py-2 text-center">{{ doc.created_at.strftime('%d %B %Y, %H:%M:%S') }}</td>
+          {% if user_role == 'manager' %}
           <td class="border border-gray-300 px-4 py-2 text-center">{{ doc.allowed_roles }}</td>
+          {% endif %}
           <td class="border border-gray-300 px-4 py-2 flex justify-center items-center space-x-2">
             <a
               href="{{ url_for('guide_bot.view_document', id=doc.id) }}"

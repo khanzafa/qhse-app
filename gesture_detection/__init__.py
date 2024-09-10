@@ -65,8 +65,8 @@ def is_keypoint_confident(keypoint, min_confidence=0.5):
 
 class GestureForHelpDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/yolov8n-pose.pt", "Gesture")
-        self.pose_model = YOLO('yolov8n-pose.pt')
+        super().__init__("weights/pose.pt", "Gesture")
+        self.pose_model = YOLO('pose.pt')
         self.pose_model.to('cuda')
 
     def process_results(self, results, frame, camera_id):
@@ -146,7 +146,7 @@ class GestureForHelpDetector(BaseDetector):
                             db.session.add(detected_obj)
                             db.session.commit()
 
-                            target = '"Nomerku"'
+                            target = "Y0L0"
                             message = f"Subject: *SOS DETECTED*||• Camera ID: {camera_id}||• Violation: cross-hands||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
 
                             image_filename = f"unfocused_{camera_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
