@@ -50,25 +50,43 @@ class Camera(db.Model):
     
     def __repr__(self):
         return f'<Camera {self.location}>'
-    
+
 class Detector(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'))
     camera = db.relationship('Camera', backref=db.backref('detector', uselist=False))
-    type = db.Column(db.String(120), index=True)
+    detector_type = db.relationship('DetectorType', backref=db.backref('detector', uselist=False))
+    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
+    weight = db.relationship('Weight', backref=db.backref('detector', uselist=False))
+    weight_id = db.Column(db.Integer, db.ForeignKey('weight.id'))
     running = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         return {
             'id': self.id,
             'camera_id': self.camera_id,
-            'type': self.type,
+            'detector_type_id': self.detector_type_id,
             'running': self.running
+        }
+    
+    def __repr__(self):
+        return f'<Detector {self.id}>'
+
+class DetectorType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), index=True, unique=True)
+    description = db.Column(db.String(120))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description
         }
 
     def __repr__(self):
-        return f'<Detector {self.camera_id}>'
-    
+        return f'<DetectorType {self.name}>'
+
 class DetectedObject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     detector = db.relationship('Detector', backref=db.backref('detected_objects', lazy=True))
@@ -89,6 +107,15 @@ class DetectedObject(db.Model):
     def __repr__(self):
         return f'<DetectedObject {self.id}>'    
 
+class Weight(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), index=True)
+    file = db.Column(db.LargeBinary)    
+    path = db.Column(db.String(120), index=True)
+    detector_type = db.relationship('DetectorType', backref=db.backref('weights', lazy=True))
+    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
+    created_at = db.Column(db.DateTime, index=True)
+
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     phone_number = db.Column(db.String(20), unique=True, nullable=False)
@@ -103,3 +130,18 @@ class Contact(db.Model):
 
     def __repr__(self):
         return f'<Contact {self.phone_number}>'
+
+class GroupContact(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    status = db.Column(db.Boolean, default=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'status': self.status
+        }
+    
+    def __repr__(self):
+        return f'<GroupContact {self.name}>'

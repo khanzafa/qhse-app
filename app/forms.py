@@ -1,8 +1,10 @@
 # app/forms.py
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, StringField, SubmitField, SelectField, TextAreaField, PasswordField
+from wtforms import BooleanField, IntegerField, StringField, SubmitField, SelectField, TextAreaField, PasswordField, FileField
 from wtforms.validators import DataRequired, IPAddress, Length, URL, EqualTo, ValidationError
 from app.models import Camera, User
+from app.extensions import db
+from app.models import DetectorType, Weight
 
 class AddCCTVForm(FlaskForm):
     location = StringField('Location', validators=[DataRequired()])    
@@ -23,10 +25,16 @@ class SelectCCTVForm(FlaskForm):
 
 class DetectorForm(FlaskForm):
     id = IntegerField('ID')
-    camera_id = SelectField('Camera', coerce=int, validators=[DataRequired()])
-    type = SelectField('Type', choices=[('PPE', 'PPE'), ('Gesture', 'Gesture'), ('Unfocused', 'Unfocused')], coerce=str, validators=[DataRequired()])
+    camera_id = SelectField('Camera', coerce=int, validators=[DataRequired()])    
+    types = SelectField('Type', coerce=int, validators=[DataRequired()])
+    weights = SelectField('Weight', coerce=int, validators=[DataRequired()])
     running = BooleanField('Running')
     submit = SubmitField('Save')
+
+class ModelForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    detector_type = SelectField('Detector Type', coerce=int, validators=[DataRequired()])
+    file = FileField('File', validators=[DataRequired()])
 
 class ContactForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=20)])

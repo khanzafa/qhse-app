@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 import cv2
 import pandas as pd
 # import plotly.graph_objects as go
@@ -9,8 +10,8 @@ from datetime import datetime, timedelta
 from collections import Counter
 from flask import Blueprint, render_template, flash, redirect, request, url_for, Response, stream_with_context, abort, jsonify
 from app.extensions import db
-from app.models import Camera, Contact, DetectedObject, Detector, User
-from app.forms import AddCCTVForm, EditCCTVForm, SelectCCTVForm, ContactForm, DetectorForm, LoginForm, RegistrationForm 
+from app.models import Camera, Contact, DetectedObject, Detector, DetectorType, User, Weight
+from app.forms import AddCCTVForm, EditCCTVForm, ModelForm, SelectCCTVForm, ContactForm, DetectorForm, LoginForm, RegistrationForm 
 from app import gesture_detector, ppe_detector, unfocused_detector
 from flask_login import current_user, login_user, logout_user, login_required
 
@@ -73,7 +74,7 @@ def view_detector_feed(detector_id):
 @main.route('/detector/stream/<int:detector_id>')
 def detector_stream(detector_id):
     detector = Detector.query.get_or_404(detector_id)    
-    detector_type = detector.type
+    detector_type = detector_type
     detector_types = {
         'PPE': ppe_detector,
         'Gesture': gesture_detector,
@@ -136,6 +137,12 @@ def delete_cctv(id):
     flash('CCTV deleted successfully!', 'success')
     return redirect(url_for('main.manage_cctv'))
 
+@main.route('/get_weights/<int:detector_type_id>')
+def get_weights(detector_type_id):
+    weights = Weight.query.filter_by(detector_type_id=detector_type_id).all()
+    weight_list = [{'id': weight.id, 'name': weight.name} for weight in weights]
+    return jsonify(weight_list)
+
 @main.route('/object-detection/detector/manage', methods=['GET', 'POST'])
 @main.route('/object-detection/detector/manage/<int:id>', methods=['GET', 'POST'])
 def manage_detector(id=None):
@@ -149,13 +156,36 @@ def manage_detector(id=None):
         title = "Add New Detector"
 
     cameras = Camera.query.all()
+    detector_types = DetectorType.query.all()
+    if len(detector_types) == 0:
+        detector_types = [
+            DetectorType(
+                name='PPE',
+                description='Personal Protective Equipment'                
+            ),
+            DetectorType(
+                name='Gesture',
+                description='Gesture for Help'                
+            ),
+            DetectorType(
+                name='Unfocused',
+                description='Unfocused'
+            )
+        ]
+        db.session.add_all(detector_types)
+        db.session.commit()
+
+    weights = Weight.query.all()
+    form.weights.choices = [(weight.id, weight.name) for weight in weights]
     form.camera_id.choices = [(camera.id, camera.location) for camera in cameras]
+    form.types.choices = [(detector_type.id, detector_type.name) for detector_type in detector_types]
+    
 
     if form.validate_on_submit():
         if detector:
             detector.camera_id = form.camera_id.data
-            detector.type = form.type.data
-            detector.running = form.running.data
+            detector_type = form.types.data
+            detector.running = form.running.data            
         else:
             new_detector = Detector(
                 camera_id=form.camera_id.data,
@@ -221,8 +251,49 @@ def delete_contact(id):
 @main.route('/object-detection/model/manage', methods=['GET', 'POST'])
 @main.route('/object-detection/model/manage/<int:id>', methods=['GET', 'POST'])
 def manage_model(id=None):
-    return render_template('manage_model.html', title='Manage Model', current_user=current_user)
+    if id:
+        model = Weight.query.get_or_404(id)
+        form = ModelForm(obj=model)
+        title = "Edit Model"
+    else:
+        model = None
+        form = ModelForm()
+        title = "Add New Model"
+
+    detector_types = DetectorType.query.all()
+    form.detector_type.choices = [(detector_type.id, detector_type.name) for detector_type in detector_types]
+
+    weights_dir = 'weights'    
+    if form.validate_on_submit():
+        print("Model:", model)
+        if model:                        
+            model.name = form.name.data
+        else:
+            form.file.data.save(os.path.join(weights_dir, form.file.data.filename))
+            new_model = Weight(
+                name=form.name.data,
+                detector_type_id=form.detector_type.data,
+                file=form.file.data.read(),
+                path=os.path.join(weights_dir, form.file.data.filename),
+                created_at=datetime.now()
+            )
+            db.session.add(new_model)                    
+
+        db.session.commit()
+        flash('Model entry updated successfully!' if model else 'Model entry added successfully!')
+        return redirect(url_for('main.manage_model'))
     
+    models = Weight.query.all()
+    return render_template('manage_model.html', form=form, models=models, model=model, title=title)
+
+@main.route('/object-detection/model/delete/<int:id>', methods=['POST'])
+def delete_model(id):
+    model = Weight.query.get_or_404(id)
+    db.session.delete(model)
+    db.session.commit()
+    flash('Model deleted successfully!')
+    return redirect(url_for('main.manage_model'))
+
 # Manage message
 @main.route('/object-detection/message/manage', methods=['GET', 'POST'])
 @main.route('/object-detection/message/manage/<int:id>', methods=['GET', 'POST'])
@@ -231,10 +302,23 @@ def manage_message(id=None):
 
 @main.route('/report/detected-object', methods=['GET'])
 def detected_object():
-    detected_objects = DetectedObject.query.join(Detector).filter(Detector.type == 'PPE').order_by(DetectedObject.timestamp.desc()).all()
-    return render_template('ppe/index.html', detected_objects=detected_objects)
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Jumlah objek per halaman
+    search_query = request.args.get('search_query')
+
+    if search_query:
+        detected_objects = DetectedObject.query.join(Detector).join(Camera) \
+            .filter(DetectedObject.name.like(f'%{search_query}%')) \
+            .order_by(DetectedObject.timestamp.desc()) \
+            .paginate(page=page, per_page=per_page)
+    else:
+        detected_objects = DetectedObject.query.join(Detector).join(Camera) \
+            .order_by(DetectedObject.timestamp.desc()) \
+            .paginate(page=page, per_page=per_page)
+
+    return render_template('detected_object.html', detected_objects=detected_objects, search_query=search_query)
 
 @main.route('/report/detected-object/view-object/<int:object_id>', methods=['GET'])
 def view_object(object_id):
     detected_object = DetectedObject.query.get_or_404(object_id)    
-    return render_template('ppe/view_object.html', detected_object=detected_object)
+    return render_template('view_object.html', detected_object=detected_object)

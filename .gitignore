@@ -13,3 +13,4 @@ data
 /vector_store
 uploads/*
 notes
+weights/*

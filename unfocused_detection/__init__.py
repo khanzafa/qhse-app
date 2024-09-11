@@ -17,7 +17,7 @@ from utils.wa import send_whatsapp_message
 
 class UnfocusedDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/ApiAsapTidur.pt", "Unfocused")
+        super().__init__("Unfocused")
 
     # def process_results(self, results, frame, camera_id):
     #     if 'unfocused' in [results[0].names[int(cls)] for cls in results[0].boxes.cls]:
@@ -35,6 +35,7 @@ class UnfocusedDetector(BaseDetector):
     #         self.frames[camera_id] = annotated_frame
 
     def process_results(self, results, frame, detector_id):
+        self.load_weight(detector_id)
         # Ensure that app context is available
         with self.app.app_context():            
             objects = ""

@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from datetime import datetime
 from utils.detector import BaseDetector
-from app.models import DetectedObject
+from app.models import DetectedObject, Detector
 from app.extensions import db
 from flask import current_app
 from selenium.webdriver.support import expected_conditions as EC
@@ -65,16 +65,16 @@ def is_keypoint_confident(keypoint, min_confidence=0.5):
 
 class GestureForHelpDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/pose.pt", "Gesture")
-        self.pose_model = YOLO('pose.pt')
-        self.pose_model.to('cuda')
+        super().__init__("Gesture")
 
-    def process_results(self, results, frame, detector_id):
+    def process_results(self, results, frame, detector_id):   
+        self.load_weight(detector_id)
+
         with self.app.app_context():
             objects = ""
 
             # Run pose detection
-            pose_results = self.pose_model(frame)
+            pose_results = self.model(frame)
             annotated_frame = pose_results[0].plot()
             
             for obj_idx in range(len(pose_results[0].keypoints)):

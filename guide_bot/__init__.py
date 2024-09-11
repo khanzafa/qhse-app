@@ -48,10 +48,10 @@ def create_conversational_chain(vector_store):
     ])
 
     # LLAMA GROQ
-    # llm = ChatGroq(
-    #     groq_api_key=os.getenv('GROQ_API_KEY'), 
-    #     model_name='llama3-70b-8192'
-    # )
+    llm = ChatGroq(
+        groq_api_key=os.getenv('GROQ_API_KEY'), 
+        model_name='llama3-70b-8192'
+    )
 
     # if not os.getenv("HUGGINGFACEHUB_API_TOKEN"):
     #     os.environ["HUGGINGFACEHUB_API_TOKEN"] = getpass.getpass("Enter your token: ")
@@ -68,13 +68,13 @@ def create_conversational_chain(vector_store):
     # llm = ChatHuggingFace(llm=endpoint)    
 
     # GEMINI
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-    )
+    # llm = ChatGoogleGenerativeAI(
+    #     model="gemini-1.5-flash",
+    #     temperature=0,
+    #     max_tokens=None,
+    #     timeout=None,
+    #     max_retries=2,
+    # )
 
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, output_key='answer')
 

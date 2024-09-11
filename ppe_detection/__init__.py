@@ -15,9 +15,11 @@ from colorama import Fore, Back, Style
 
 class PPEDetector(BaseDetector):
     def __init__(self):
-        super().__init__("weights/ppe-detection.pt", "PPE")
+        super().__init__("PPE")
         
     def process_results(self, results, frame, detector_id):       
+        self.load_weight(detector_id)
+
         with self.lock: 
             self.frame_number += 1
             

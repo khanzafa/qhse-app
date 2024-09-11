@@ -1,3 +1,4 @@
+import os
 import time
 import cv2
 from ultralytics import YOLO
@@ -12,8 +13,8 @@ from collections import defaultdict
 class BaseDetector:    
     message_queue = queue.Queue()  # Shared message queue for all detectors
     
-    def __init__(self, model_path, detector_name):
-        self.model = YOLO(model_path).to('cpu') # tambahi .to('cpu')
+    def __init__(self, detector_name):
+        self.model = None
         self.detector_name = detector_name
         self.running = False
         self.frames = {}
@@ -46,16 +47,16 @@ class BaseDetector:
         active_threads = {}
         
         while self.running: 
-            detectors = Detector.query.join(Camera).filter(Detector.type == self.detector_name, Detector.running == True).all()
+            detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == True).all()
             if detectors:
                 print(f"Active detector type: {detectors[0].type}")  # Print the type of the first detector
             else:
                 print("No active detectors found.")
             # Determine currently active detector IDs
             active_detector_ids = [detector.id for detector in detectors]
-            active_detector_types = [detector.type for detector in detectors]
+            active_detector_types = [detector.detector_type for detector in detectors]
             
-            inactive_detectors = Detector.query.join(Camera).filter(Detector.type == self.detector_name, Detector.running == False).all()
+            inactive_detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == False).all()
             inactive_detector_ids = [detector.id for detector in inactive_detectors]
             
             print('===========================')
@@ -70,7 +71,7 @@ class BaseDetector:
             for detector in detectors:
                 detector_id = detector.id
                 camera_ip = detector.camera.ip_address
-                detector_type = detector.type
+                detector_type = detector.detector_type
                 
                 print(f"Detector ID: {detector_id}, Detector Type: {detector_type}, Camera IP: {camera_ip}")
 
@@ -105,7 +106,6 @@ class BaseDetector:
        # Cleanup all threads when stopping
         self.cleanup_threads(active_threads)
             
-
     def process_video(self, camera_ip, detector_id, stop_event):
         max_retries = 5
         retry_interval = 5  # Interval between retries
@@ -158,6 +158,19 @@ class BaseDetector:
             cap.release()
             self.cctv_caps.pop(camera_ip, None)  # Remove the cap from the dictionary when done
             print(f"Released VideoCapture for camera {camera_ip}, detector ID {detector_id}.")
+
+    def load_weight(self, detector_id):
+        detector = Detector.query.get(detector_id)
+        weight_path = detector.weight.path
+
+        if os.path.exists(weight_path):
+            print(f"Loading weight from {weight_path}.")
+            self.model = YOLO(weight_path).to('cpu')
+        else:
+            with open(weight_path, 'wb') as f:
+                f.write(detector.weight.file)
+            print(f"Weight saved to {weight_path}.")
+            self.model = YOLO(weight_path).to('cpu')
 
 
     def process_results(self, results, frame, detector_id):

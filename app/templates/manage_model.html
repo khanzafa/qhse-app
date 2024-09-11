@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
+    <h2 class="text-2xl font-semibold mb-6">
+        Manage Models
+    </h2>
+
+    <!-- Instructions for Uploading Model -->
+    <div class="mb-6">
+        <h3 class="text-xl font-semibold mb-2">How to Get a .pt Model File</h3>
+        <p class="text-gray-700">
+            To get a model `.pt` file, you can train your model using popular deep learning frameworks such as PyTorch.
+            After training, save your model using the following code:
+        </p>
+        <pre class="bg-gray-200 p-4 rounded-md text-sm">
+      torch.save(model.state_dict(), "model_weights.pt")
+    </pre>
+    </div>
+
+    <!-- Add New Model Button -->
+    <button type="button"
+        class="mb-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+        data-modal-target="#modelModal" data-modal-toggle="modelModal">
+        + Add New Model
+    </button>
+
+    <!-- Models Table -->
+    <table class="w-auto table-auto border-collapse border border-gray-200">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="border border-gray-300 px-4 py-2">Model Name</th>
+                <th class="border border-gray-300 px-4 py-2">Detector Type</th>
+                <th class="border border-gray-300 px-4 py-2">Date Created</th>
+                <th class="border border-gray-300 px-4 py-2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for model in models %}
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">{{ model.name }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ model.detector_type.name }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ model.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td class="border border-gray-300 px-4 py-2 flex space-x-2">
+
+                    <!-- Rename -->
+                    <button type="button"
+                        class="text-blue-500 hover:text-blue-700"
+                        data-modal-target="#editModelModal-{{ model.id }}"
+                        data-modal-toggle="editModelModal">
+                        <i class="fas fa-edit"></i> 
+                    </button>
+
+                    <!-- Delete -->
+                    <form action="{{ url_for('main.delete_model', id=model.id) }}" method="POST" class="inline-block">
+                        <button type="submit" class="text-red-500 hover:text-red-700"
+                            onclick="return confirm('Are you sure you want to delete this model?');">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for Adding -->
+<div id="modelModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-lg shadow-xl w-1/3 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">{{ title }}</h3>
+                <button class="text-gray-400 hover:text-gray-600 focus:outline-none" id="closeAddModal">
+                    ✖
+                </button>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data"
+                action="{{ url_for('main.manage_model', id=model.id if model else None) }}">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-4">
+                    {{ form.name.label(class="block text-gray-700") }}
+                    {{ form.name(class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm") }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.detector_type.label(class="block text-gray-700") }}
+                    {{ form.detector_type(class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm") }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.file.label(class="block text-gray-700") }}
+                    {{ form.file(class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm") }}
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">
+                        Save
+                    </button>
+                    <button type="button" id="cancelAddModal"
+                        class="ml-2 px-4 py-2 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition duration-300">
+                        Close
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Editing -->
+{% for model in models %}
+<div id="editModelModal-{{ model.id }}" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-lg shadow-xl w-1/3 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">{{ title }}</h3>
+                <button class="text-gray-400 hover:text-gray-600 focus:outline-none" data-close-modal="#editModelModal-{{ model.id }}">
+                    ✖
+                </button>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data"
+                action="{{ url_for('main.manage_model', id=model.id) }}">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-4">
+                    {{ form.name.label(class="block text-gray-700") }}
+                    {{ form.name(class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm") }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.detector_type.label(class="block text gray-700") }}
+                    {{ form.detector_type(class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm") }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.file.label(class="block text-gray-700") }}
+                    {{ form.file(class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm") }}
+                </div>
+
+                <button type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">
+                    Save
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Open modal when Add button is clicked
+    document.querySelectorAll('[data-modal-toggle]').forEach(button => {
+        button.addEventListener('click', function () {
+            const target = document.querySelector(button.getAttribute('data-modal-target'));
+            target.classList.remove('hidden');
+        });
+    });
+
+    // Close modal when close button or "Close" is clicked
+    document.querySelectorAll('[data-close-modal]').forEach(button => {
+        button.addEventListener('click', function () {
+            const target = document.querySelector(button.getAttribute('data-close-modal'));
+            target.classList.add('hidden');
+        });
+    });
+
+    document.getElementById('closeAddModal').addEventListener('click', function () {
+        document.getElementById('modelModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelAddModal').addEventListener('click', function () {
+        document.getElementById('modelModal').classList.add('hidden');
+    });
+</script>
+{% endblock %}
