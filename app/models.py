@@ -32,6 +32,28 @@ class User(db.Model, UserMixin):
     def get_id(self):
         return str(self.id)
     
+class Guest(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(64), index=True, unique=True)
+    otp = db.Column(db.String(256))
+    otp_expiry = db.Column(db.DateTime)  # Expiry time for the OTP
+    
+    def get_id(self):
+        return str(self.id)  # Implement this method to return a unique identifier for the guest
+
+    @property
+    def is_active(self):
+        # Assuming all guests are considered active
+        return True
+    
+    @property
+    def is_authenticated(self):
+        # Assuming all guests are considered active
+        return True
+    
+    def __repr__(self):
+        return f'<Guest {self.id}>'
+    
 class Camera(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     location = db.Column(db.String(120), index=True, unique=True)
