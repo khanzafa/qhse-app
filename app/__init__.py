@@ -14,6 +14,7 @@ from api.routes import api
 from flask_login import LoginManager
 from app.models import User
 from aios.routes import aios
+from flask_mail import Mail
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -24,6 +25,9 @@ gesture_detector = GestureForHelpDetector()
 unfocused_detector = UnfocusedDetector()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
+# Initialize Flask-Mail
+mail = Mail()
+
 
 def create_app():
     
@@ -55,6 +59,9 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+    
+    # Initialize Flask-Mail with the app instance
+    mail.init_app(app)
 
     def start_detector(detector):
         with app.app_context():

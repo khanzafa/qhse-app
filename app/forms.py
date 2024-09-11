@@ -41,6 +41,11 @@ class ContactForm(FlaskForm):
     name = TextAreaField('Name', validators=[Length(max=100)])  # Ganti 'description' dengan 'name'
     submit = SubmitField('Save')
 
+class OTPForm(FlaskForm):
+    email = StringField('Email Address', validators=[DataRequired()])
+    otp = PasswordField('Password')
+    submit = SubmitField('Login')
+
 class LoginForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=20)])
     password = PasswordField('Password', validators=[DataRequired()])

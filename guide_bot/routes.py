@@ -1,23 +1,17 @@
 # guide_bot/routes.py
-import getpass
 import io
 import re
 from uuid import uuid4
 from flask import Blueprint, abort, render_template, redirect, send_file, send_from_directory, url_for, flash, request, session
 from langchain_chroma import Chroma
 import markdown
+from app.auth import otp_required
 from guide_bot.models import Document
 from guide_bot.forms import DocumentFileForm, DocumentFolderForm, NewFolderForm, EditFileForm
 from app import db
-from PyPDF2 import PdfReader
-import docx2txt
-from pptx import Presentation
-import pandas
+
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_groq import ChatGroq
-from dotenv import load_dotenv
 import os
-import bcrypt
 from langchain_core.documents import Document as ChatDocument
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
@@ -386,7 +380,13 @@ generated = ["Selamat datang di GuideBot! Tanyakan sesuatu pada saya 😊️"]
 past = []
 
 @guide_bot.route('/guide-bot/chat', methods=['GET', 'POST'])
+@guide_bot.route('/aios/guide-bot/chat', methods=['GET', 'POST'])
+@otp_required
 def chat():
+    # Clear OTP data from session after successful login
+    session.pop('otp', None)
+    session.pop('otp_expiry', None)
+    session.pop('otp_email', None)
     global history, generated, past
 
     if request.method == 'POST':
