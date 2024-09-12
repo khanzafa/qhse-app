@@ -16,7 +16,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.su'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(phone_number=form.phone_number.data).first()
@@ -24,7 +24,7 @@ def login():
             flash('Invalid phone number or password')
             return redirect(url_for('auth.login'))
         login_user(user)
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.su'))
     return render_template('login.html', form=form)
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -98,7 +98,7 @@ def guidebot_login():
 
             print("LOGIN")
             # Redirect to the chat page after successful login
-            return redirect(url_for('guide_bot.chat'))
+            return redirect(url_for('aios.index'))
         
         elif action == 'request_otp':
             # Handle OTP request action

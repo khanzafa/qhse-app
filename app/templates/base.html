@@ -47,6 +47,7 @@
         <!-- Logout Button -->
         <a href="{{ url_for('auth.logout') }}" class="logout-button">Logout</a>
       </div>
+
     </div>
   </header>
 
@@ -168,6 +169,13 @@
             </a>
           </div>
         </div>
+
+        <!-- AIOS -->
+        <a href="{{ url_for('aios.index') }}"
+          class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
+          <i class="fas fa-comments mr-3"></i>
+          AIOS
+        </a>
     </aside>
   </div>
 

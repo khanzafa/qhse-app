@@ -7,10 +7,6 @@ from app.auth import otp_required
 aios = Blueprint('aios', __name__)
 
 @aios.route('/aios')
-@login_required
+@otp_required
 def index():
-    # Clear OTP data from session after successful login
-    session.pop('otp', None)
-    session.pop('otp_expiry', None)
-    session.pop('otp_email', None)
     return render_template('aios/base.html')

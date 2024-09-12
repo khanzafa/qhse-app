@@ -129,15 +129,17 @@ def get_file_structure_db(current_dir, document_dirs):
     dirs = []
     files = []
     print('ROOT: ', '/'.join(current_dir.split('/')[1:]))
-    for dir in document_dirs:
-        if '/'.join(dir.split('/')[:-1]) == '/'.join(current_dir.split('/')[1:]):        
-            files.append(dir.split('/')[-1])
-        elif len(dir.split('/')) > 0 and dir.split('/')[0] not in dirs:
-            dirs.append(dir.split('/')[0])
-        print('/'.join(dir.split('/')[:-1]))
 
-    file_structure[''] = {'dirs': dirs, 'files': files}
-    # print("File structure from DB:", file_structure)
+    if not document_dirs:
+        for dir in document_dirs:
+            if '/'.join(dir.split('/')[:-1]) == '/'.join(current_dir.split('/')[1:]):        
+                files.append(dir.split('/')[-1])
+            elif len(dir.split('/')) > 0 and dir.split('/')[0] not in dirs:
+                dirs.append(dir.split('/')[0])
+            print('/'.join(dir.split('/')[:-1]))
+
+        file_structure[''] = {'dirs': dirs, 'files': files}
+        # print("File structure from DB:", file_structure)
     return file_structure
 
 def get_file_structure(root_dir):
@@ -162,22 +164,23 @@ def get_next_folder(current_dir, document_dirs):
     next_folders = set()
     
     # Iterate over all document directories
-    for doc_dir in document_dirs:
-        print("Comparing:", doc_dir, current_dir)
-        # Check if the path starts with the current directory
-        if doc_dir.startswith(current_dir):
-            print("Found:", doc_dir)
-            # Get the relative path after the current directory
-            relative_path = doc_dir[len(current_dir):].strip('/')
-            print("Relative path:", relative_path)
-            # Split the relative path into parts
-            path_parts = relative_path.split('/')
-            print("Path parts:", path_parts)
-            # If there's at least one part, the first part is the next folder
-            if len(path_parts) > 1:
-                next_folders.add(path_parts[0])
+    if not document_dirs:
+        for doc_dir in document_dirs:
+            print("Comparing:", doc_dir, current_dir)
+            # Check if the path starts with the current directory
+            if doc_dir.startswith(current_dir):
+                print("Found:", doc_dir)
+                # Get the relative path after the current directory
+                relative_path = doc_dir[len(current_dir):].strip('/')
+                print("Relative path:", relative_path)
+                # Split the relative path into parts
+                path_parts = relative_path.split('/')
+                print("Path parts:", path_parts)
+                # If there's at least one part, the first part is the next folder
+                if len(path_parts) > 1:
+                    next_folders.add(path_parts[0])
 
-    # Return next folders as sorted list
+        # Return next folders as sorted list
     return sorted(next_folders)
 
 def create_folder(current_dir, folder_name):
@@ -383,10 +386,6 @@ past = []
 @guide_bot.route('/aios/guide-bot/chat', methods=['GET', 'POST'])
 @otp_required
 def chat():
-    # Clear OTP data from session after successful login
-    session.pop('otp', None)
-    session.pop('otp_expiry', None)
-    session.pop('otp_email', None)
     global history, generated, past
 
     if request.method == 'POST':
