@@ -6,15 +6,160 @@ from app.models import DetectorType, Weight
 from app import db
 from app.forms import ModelForm
 import logging
+from flasgger import swag_from
 
 from utils.auth import get_allowed_permission_ids
 
 logging.basicConfig(level=logging.DEBUG)
+
+weight_api_docs = {
+    "view" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": False,
+                "description": "Numeric ID of the weight to get"
+            }
+        ],
+        "definitions": {
+            "Weight": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "detector_type_id": {
+                        "type": "integer"
+                    },
+                    "file": {
+                        "type": "string"
+                    },
+                    "path": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "responses": {
+            "200": {
+                "description": "A list of weights or a specific weight",
+                "schema": {
+                    "$ref": "#/definitions/Weight"
+                }
+            },
+            "404": {
+                "description": "Weight not found"
+            }
+        }
+    },
+    "create" : {
+        "parameters": [
+            {
+                "name": "name",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Name of the weight"
+            },
+            {
+                "name": "detector_type",
+                "in": "formData",
+                "type": "integer",
+                "required": True,
+                "description": "ID of the detector type"
+            },
+            {
+                "name": "file",
+                "in": "formData",
+                "type": "file",
+                "required": True,
+                "description": "Weight file"
+            }
+        ],
+        "responses": {
+            "201": {
+                "description": "Weight added successfully"
+            },
+            "400": {
+                "description": "Invalid data"
+            }
+        }
+    },
+    "edit" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": True,
+                "description": "Numeric ID of the weight to edit"
+            },
+            {
+                "name": "name",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Name of the weight"
+            },
+            {
+                "name": "detector_type",
+                "in": "formData",
+                "type": "integer",
+                "required": True,
+                "description": "ID of the detector type"
+            },
+            {
+                "name": "file",
+                "in": "formData",
+                "type": "file",
+                "required": True,
+                "description": "Weight file"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Weight updated successfully"
+            },
+            "400": {
+                "description": "Invalid data"
+            }
+        }
+    },
+    "delete" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": True,
+                "description": "Numeric ID of the weight to delete"
+            }
+        ],
+        "responses": {
+            "204": {
+                "description": "Weight deleted successfully"
+            }
+        }
+    }
+}   
+
 weight_bp = Blueprint('weight', __name__, url_prefix='/weight')
 
 # MODEL
 @weight_bp.route('/', methods=['GET'])
 @weight_bp.route('/<int:id>', methods=['GET'])
+@swag_from(weight_api_docs['view'])
 def view(id=None):
     if id:
         weight = Weight.query.get_or_404(id)
@@ -43,6 +188,7 @@ def view(id=None):
         return jsonify(weights), 200
     
 @weight_bp.route('/', methods=['POST'])
+@swag_from(weight_api_docs['create'])
 def create():
     form = ModelForm()
     if form.validate_on_submit():
@@ -67,6 +213,7 @@ def create():
     abort(400)
 
 @weight_bp.route('/<int:id>', methods=['PUT'])
+@swag_from(weight_api_docs['edit'])
 def edit(id):
     model = Weight.query.get_or_404(id)
     form = ModelForm(obj=model)
@@ -85,6 +232,7 @@ def edit(id):
     abort(400)
 
 @weight_bp.route('/<int:id>', methods=['DELETE'])
+@swag_from(weight_api_docs['delete'])
 def delete(id):
     model = Weight.query.get_or_404(id)
     db.session.delete(model)

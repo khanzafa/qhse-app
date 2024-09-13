@@ -4,14 +4,136 @@ from app.models import NotificationRule
 from app import db
 from app.forms import NotificationRuleForm
 from utils.auth import get_allowed_permission_ids
+from flasgger import swag_from
 
 logging.basicConfig(level=logging.DEBUG)
+
+notification_api_docs = {
+    "view" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": False,
+                "description": "Numeric ID of the notification to get"
+            }
+        ],
+        "definitions": {
+            "Notification": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "responses": {
+            "200": {
+                "description": "A list of notifications or a specific notification",
+                "schema": {
+                    "$ref": "#/definitions/Notification"
+                }
+            },
+            "404": {
+                "description": "Notification not found"
+            }
+        }
+    },
+    "create" : {
+        "parameters": [
+            {
+                "name": "name",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Name of the notification"
+            },
+            {
+                "name": "description",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Description of the notification"
+            }
+        ],
+        "responses": {
+            "201": {
+                "description": "Notification rule created"
+            },
+            "400": {
+                "description": "Form validation failed"
+            }
+        }
+    },
+    "edit" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": True,
+                "description": "Numeric ID of the notification to edit"
+            },
+            {
+                "name": "name",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Name of the notification"
+            },
+            {
+                "name": "description",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Description of the notification"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Notification rule edited"
+            },
+            "400": {
+                "description": "Form validation failed"
+            }
+        }
+    },
+    "delete" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": True,
+                "description": "Numeric ID of the notification to delete"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Notification rule deleted"
+            }
+        }
+    }
+}
+
 
 notification_bp = Blueprint('notification', __name__, url_prefix='/notification')
 
 # NOTIFICATION
 @notification_bp.route('/', methods=['GET'])
 @notification_bp.route('/<int:id>', methods=['GET'])
+@swag_from(notification_api_docs['view'])
 def view(id=None):
     if id:
         notification = NotificationRule.query.get_or_404(id)
@@ -34,6 +156,7 @@ def view(id=None):
         return jsonify(notifications), 200
     
 @notification_bp.route('/', methods=['POST'])
+@swag_from(notification_api_docs['create'])
 def create():
     form = NotificationRuleForm()
     if form.validate_on_submit():
@@ -51,6 +174,7 @@ def create():
     abort(400)
 
 @notification_bp.route('/<int:id>', methods=['PUT'])
+@swag_from(notification_api_docs['edit'])
 def edit(id):
     notification = NotificationRule.query.get_or_404(id)
     form = NotificationRuleForm(obj=notification)
@@ -63,6 +187,7 @@ def edit(id):
     abort(400)
 
 @notification_bp.route('/<int:id>', methods=['DELETE'])
+@swag_from(notification_api_docs['delete'])
 def delete(id):
     notification = NotificationRule.query.get_or_404(id)
     db.session.delete(notification)

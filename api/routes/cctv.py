@@ -4,17 +4,150 @@ from app import db
 from app.forms import AddCCTVForm, CCTVForm, EditCCTVForm
 import cv2
 import logging
+from flasgger import swag_from
 
 from utils.auth import get_allowed_permission_ids
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+cctv_api_docs = {
+    "view" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": False,
+                "description": "Numeric ID of the CCTV to get"
+            }
+        ],
+        "definitions": {
+            "CCTV": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "ip_address": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "responses": {
+            "200": {
+                "description": "A list of CCTVs or a specific CCTV",
+                "schema": {
+                    "$ref": "#/definitions/CCTV"
+                }
+            },
+            "404": {
+                "description": "CCTV not found"
+            }
+        }
+    },
+    "create" : {
+        "parameters": [
+            {
+                "name": "location",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Location of the CCTV"
+            },
+            {
+                "name": "type",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "Type of the CCTV"
+            },
+            {
+                "name": "ip_address",
+                "in": "formData",
+                "type": "string",
+                "required": True,
+                "description": "IP address of the CCTV"
+            }
+        ],
+        "responses": {
+            "201": {
+                "description": "CCTV added successfully"
+            },
+            "400": {
+                "description": "Form validation failed"
+            }
+        }
+    },
+    "edit" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": True,
+                "description": "Numeric ID of the CCTV to edit"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "CCTV edited successfully"
+            },
+            "400": {
+                "description": "Form validation failed"
+            }
+        }
+    },
+    "delete" : {
+        "parameters": [
+            {
+                "name": "id",
+                "in": "path",
+                "type": "integer",
+                "required": True,
+                "description": "Numeric ID of the CCTV to delete"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "CCTV deleted successfully"
+            }
+        }
+    },
+    "stream" : {
+        "parameters": [
+            {
+                "name": "cctv_id",
+                "in": "path",
+                "type": "integer",
+                "required": True,
+                "description": "Numeric ID of the CCTV to stream"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "CCTV stream"
+            }
+        }
+    }
+}
+
 cctv_bp = Blueprint('cctv', __name__, url_prefix='/cctv')
 
 # CCTV    
 @cctv_bp.route('/', methods=['GET'])
 @cctv_bp.route('/<int:id>', methods=['GET'])
+@swag_from(cctv_api_docs['view'])
 def view(id=None):
     if id:
         cctv = CCTV.query.get_or_404(id)
@@ -39,6 +172,7 @@ def view(id=None):
         return jsonify(cctvs), 200
 
 @cctv_bp.route('/', methods=['POST'])
+@swag_from(cctv_api_docs['create'])
 def create():
     form = CCTVForm()    
     if form.validate_on_submit():
@@ -58,6 +192,7 @@ def create():
     abort(400)
 
 @cctv_bp.route('/<int:id>', methods=['PUT'])
+@swag_from(cctv_api_docs['edit'])
 def edit(id):
     cctv = CCTV.query.get_or_404(id)
     form = CCTVForm(obj=cctv)
@@ -75,6 +210,7 @@ def edit(id):
     abort(400)
 
 @cctv_bp.route('/<int:id>', methods=['DELETE'])
+@swag_from(cctv_api_docs['delete'])
 def delete(id):
     cctv = CCTV.query.get_or_404(id)
     db.session.delete(cctv)
@@ -83,6 +219,7 @@ def delete(id):
     return Response(status=204)
 
 @cctv_bp.route('/<int:cctv_id>/stream')
+@swag_from(cctv_api_docs['stream'])
 def stream(cctv_id):
     cctv = CCTV.query.get_or_404(cctv_id)
     def generate_frames():

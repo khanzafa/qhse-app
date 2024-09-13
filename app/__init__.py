@@ -2,7 +2,7 @@
 # import threading
 from flask import Flask, current_app
 from base64 import b64encode
-from app.extensions import db, migrate
+from app.extensions import db, migrate, swagger
 # from ppe_detection import PPEDetector
 # from gesture_detection import GestureForHelpDetector
 # from unfocused_detection import UnfocusedDetector
@@ -11,8 +11,8 @@ from app.extensions import db, migrate
 # from unfocused_detection.routes import unfocused
 # from guide_bot.routes import guide_bot
 from api.routes import api_routes
-# from flask_login import LoginManager
-# from app.models import User
+from flask_login import LoginManager
+from app.models import User
 # from aios.routes import aios
 # from flask_mail import Mail
 
@@ -23,8 +23,8 @@ import os
 # ppe_detector = PPEDetector()
 # gesture_detector = GestureForHelpDetector()
 # unfocused_detector = UnfocusedDetector()
-# login_manager = LoginManager()
-# login_manager.login_view = 'auth.login'
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
 # # Initialize Flask-Mail
 # mail = Mail()
 
@@ -54,11 +54,13 @@ def create_app():
     print("Database initialized.")
     migrate.init_app(app, db)
     print("Migration initialized.")
-    # login_manager.init_app(app)
-    # print("Login manager initialized.")
-    # @login_manager.user_loader
-    # def load_user(user_id):
-    #     return User.query.get(int(user_id))
+    swagger.init_app(app)
+    print("Swagger initialized.")
+    login_manager.init_app(app)
+    print("Login manager initialized.")
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
     
     # # Initialize Flask-Mail with the app instance
     # mail.init_app(app)
@@ -83,7 +85,7 @@ def create_app():
     # print("Auth blueprint registered.")
     for route in api_routes:
         app.register_blueprint(route)
-        
+
     # app.register_blueprint(aios)
     # print("AIOS blueprint registered.")
 
