@@ -1,6 +1,7 @@
 import base64
 import io
 import os
+from colorama import Back, Style
 import cv2
 import pandas as pd
 # import plotly.graph_objects as go
@@ -12,8 +13,7 @@ from flask import Blueprint, render_template, flash, redirect, request, url_for,
 from app.extensions import db
 from app.models import Camera, Contact, DetectedObject, Detector, DetectorType, NotificationRule, User, Weight, MessageTemplate
 from app.forms import AddCCTVForm, EditCCTVForm, MessageTemplateForm, ModelForm, NotificationRuleForm, SelectCCTVForm, ContactForm, DetectorForm, LoginForm, RegistrationForm 
-from app import gesture_detector, ppe_detector, unfocused_detector
-from flask_login import login_user, logout_user, login_required
+from flask_login import current_user, login_user, logout_user, login_required
 
 from utils.wa import Message
 
@@ -29,15 +29,18 @@ def index():
 @login_required
 def dashboard():
     print("Role:", session.get('role'))
+    print(Back.GREEN + '**************************************************************')
+    print("CURRENT USER:", current_user)
+    print(Style.RESET_ALL)        
     # Fetching data 
-    num_cctv = Camera.query.filter(Camera.role == session.get('role')).count()
-    num_detectors = Detector.query.filter(Detector.role == session.get('role')).count()
+    num_cctv = Camera.query.filter(Camera.permission_id.in_(get_allowed_permission_ids())).count()
+    num_detectors = Detector.query.filter(Detector.permission_id.in_(get_allowed_permission_ids())).count()
 
-    num_no_helmet = DetectedObject.query.filter(DetectedObject.name.like('%No helmet%'), DetectedObject.role == session.get('role')).count()
-    num_no_vest = DetectedObject.query.filter(DetectedObject.name.like('%No vest%'), DetectedObject.role == session.get('role')).count()
+    num_no_helmet = DetectedObject.query.filter(DetectedObject.name.like('%No helmet%'), DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
+    num_no_vest = DetectedObject.query.filter(DetectedObject.name.like('%No vest%'), DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
     num_no_ppe = num_no_helmet + num_no_vest
-    num_reckless = DetectedObject.query.filter(DetectedObject.name == 'sleepy', DetectedObject.role == session.get('role')).count()
-    num_gesture_help = DetectedObject.query.filter(DetectedObject.name == 'cross-hands', DetectedObject.role == session.get('role')).count()
+    num_reckless = DetectedObject.query.filter(DetectedObject.name == 'sleepy', DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
+    num_gesture_help = DetectedObject.query.filter(DetectedObject.name == 'cross-hands', DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
 
     # Example data for charts (this would normally be queried from the database)
     today = datetime.today()
@@ -60,7 +63,7 @@ def manage_cctv():
         db.session.commit()
         flash('CCTV added successfully!')
         return redirect(url_for('main.manage_cctv'))
-    cameras = Camera.query.filter(Camera.role == session.get('role')).all()
+    cameras = Camera.query.filter(Camera.permission_id.in_(get_allowed_permission_ids())).all()
     return render_template('manage_cctv.html', title='Manage CCTV', form=form, cameras=cameras)
 
 @main.route('/cctv/edit/<int:id>', methods=['GET', 'POST'])
@@ -120,7 +123,7 @@ def manage_detector(id=None):
         form = DetectorForm()
         title = "Add New Detector"
 
-    cameras = Camera.query.filter(Camera.role == session.get('role')).all()
+    cameras = Camera.query.filter(Camera.permission_id.in_(get_allowed_permission_ids())).all()
     detector_types = DetectorType.query.all()
     if len(detector_types) == 0:
         detector_types = [
@@ -140,7 +143,7 @@ def manage_detector(id=None):
         db.session.add_all(detector_types)
         db.session.commit()
 
-    weights = Weight.query.filter(Weight.role == session.get('role')).all()
+    weights = Weight.query.filter(Weight.permission_id.in_(get_allowed_permission_ids())).all()
     form.weight_id.choices = [(weight.id, weight.name) for weight in weights]
     form.camera_id.choices = [(camera.id, camera.location) for camera in cameras]
     # form.types.choices = [(detector_type.id, detector_type.name) for detector_type in detector_types]
@@ -166,7 +169,7 @@ def manage_detector(id=None):
         flash('Detector entry updated successfully!' if detector else 'Detector entry added successfully!')
         return redirect(url_for('main.manage_detector'))
     
-    detectors = Detector.query.filter(Detector.role == session.get('role')).all()
+    detectors = Detector.query.filter(Detector.permission_id.in_(get_allowed_permission_ids())).all()
     return render_template('manage_detector.html', form=form, detectors=detectors, detector=detector, title=title)
 
 @main.route('/object-detection/detector/delete/<int:id>')
@@ -248,7 +251,7 @@ def manage_model(id=None):
         flash('Model entry updated successfully!' if model else 'Model entry added successfully!')
         return redirect(url_for('main.manage_model'))
     
-    models = Weight.query.filter(Weight.role == session.get('role')).all()
+    models = Weight.query.filter(Weight.permission_id.in_(get_allowed_permission_ids())).all()
     return render_template('manage_model.html', form=form, models=models, model=model, title=title)
 
 @main.route('/object-detection/model/delete/<int:id>', methods=['POST'])
@@ -301,7 +304,7 @@ def manage_contact(id=None):
         flash('Contact entry updated successfully!' if contact else 'Contact entry added successfully!')
         return redirect(url_for('main.manage_contact'))
     
-    whas = Contact.query.filter(Contact.role == session.get('role')).all()
+    whas = Contact.query.filter(Contact.permission_id.in_(get_allowed_permission_ids())).all()
     return render_template('manage_contact.html', form=form, whas=whas, contact=contact, title=title)
 
 @main.route('/object-detection/contact/delete/<int:id>')
@@ -321,12 +324,12 @@ def detected_object():
 
     if search_query:
         detected_objects = DetectedObject.query.join(Detector).join(Camera) \
-            .filter(DetectedObject.name.like(f'%{search_query}%'), DetectedObject.role == session.get('role')) \
+            .filter(DetectedObject.name.like(f'%{search_query}%'), DetectedObject.permission_id.in_(get_allowed_permission_ids())) \
             .order_by(DetectedObject.timestamp.desc()) \
             .paginate(page=page, per_page=per_page)
     else:
         detected_objects = DetectedObject.query.join(Detector).join(Camera) \
-            .filter(DetectedObject.role == session.get('role')) \
+            .filter(DetectedObject.permission_id.in_(get_allowed_permission_ids())) \
             .order_by(DetectedObject.timestamp.desc()) \
             .paginate(page=page, per_page=per_page)
 
@@ -396,8 +399,8 @@ def manage_notification_rules(rule_id=None):
         flash('Rule updated!' if rule else 'Rule added!', 'success')
         return redirect(url_for('main.manage_notification_rules'))
 
-    messages = MessageTemplate.query.filter(MessageTemplate.role == session.get('role')).all()
-    rules = NotificationRule.query.filter(NotificationRule.role == session.get('role')).all()
+    messages = MessageTemplate.query.filter(MessageTemplate.permission_id.in_(get_allowed_permission_ids())).all()
+    rules = NotificationRule.query.filter(NotificationRule.permission_id.in_(get_allowed_permission_ids())).all()
     
     return render_template(
         'manage_notification_rules.html', 

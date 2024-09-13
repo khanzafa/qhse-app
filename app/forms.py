@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from flask import session
 from wtforms import BooleanField, IntegerField, StringField, SubmitField, SelectField, TextAreaField, PasswordField, FileField
 from wtforms.validators import DataRequired, IPAddress, Length, URL, EqualTo, ValidationError
-from app.models import Camera, Contact, Detector, MessageTemplate, User
+from app.models import CCTV, Contact, Detector, MessageTemplate, User
 from app.extensions import db
 from app.models import DetectorType, Weight
 
@@ -21,13 +21,20 @@ class EditCCTVForm(FlaskForm):
     status = SelectField('Status', choices=[('0', 'Inactive'), ('1', 'Active')], coerce=int)
     submit = SubmitField('Edit CCTV')
 
+class CCTVForm(FlaskForm):
+    location = StringField('Location', validators=[DataRequired()])    
+    type = StringField('Type')
+    ip_address = StringField('IP Address', validators=[URL(), DataRequired()])    
+    status = SelectField('Status', choices=[('0', 'Inactive'), ('1', 'Active')], coerce=int, default=0)
+    submit = SubmitField('Save')
+
 class SelectCCTVForm(FlaskForm):
-    camera = SelectField('Select CCTV', coerce=int, validators=[DataRequired()])
+    cctv = SelectField('Select CCTV', coerce=int, validators=[DataRequired()])
     submit = SubmitField('View Feed')
 
 class DetectorForm(FlaskForm):
     id = IntegerField('ID')
-    camera_id = SelectField('Camera', coerce=int, validators=[DataRequired()])    
+    cctv_id = SelectField('cctv', coerce=int, validators=[DataRequired()])    
     # types = SelectField('Type', coerce=int, validators=[DataRequired()])
     weight_id = SelectField('Weight', coerce=int, validators=[DataRequired()])
     running = BooleanField('Running')
@@ -57,9 +64,9 @@ class NotificationRuleForm(FlaskForm):
 
     def __init__(self, session_role=None    , *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.detector_id.choices = [(detector.id, detector.id) for detector in Detector.query.filter(Detector.role == session_role).all()]
-        self.contact_id.choices = [(contact.id, contact.name) for contact in Contact.query.filter(Contact.role == session_role).all()]
-        self.message_template_id.choices = [(template.id, template.name) for template in MessageTemplate.query.filter(MessageTemplate.role == session_role).all()]
+        self.detector_id.choices = [(detector.id, detector.id) for detector in Detector.query.filter(Detector.role == "QHSE").all()]
+        self.contact_id.choices = [(contact.id, contact.name) for contact in Contact.query.filter(Contact.role == "QHSE").all()]
+        self.message_template_id.choices = [(template.id, template.name) for template in MessageTemplate.query.filter(MessageTemplate.role == "QHSE").all()]
 
 class OTPForm(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired()])

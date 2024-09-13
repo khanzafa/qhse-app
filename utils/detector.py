@@ -1,5 +1,6 @@
 import os
 import time
+from colorama import Back, Style
 import cv2
 from flask import current_app, session
 from flask_login import current_user
@@ -15,7 +16,7 @@ from collections import defaultdict
 class BaseDetector:    
     message_queue = queue.Queue()  # Shared message queue for all detectors
     
-    def __init__(self, detector_name):
+    def __init__(self, detector_name):        
         self.model = None
         self.detector_name = detector_name
         self.running = False
@@ -50,10 +51,8 @@ class BaseDetector:
         active_threads = {}
             
         while self.running:
-            with app.app_context():
-                session_role = session.get('role') 
             # detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == True).all()
-            detectors = Detector.query.join(Camera).join(DetectorType).filter(DetectorType.name == self.detector_name, Detector.running == True, Detector.role == session_role).all()
+            detectors = Detector.query.join(Camera).join(DetectorType).filter(DetectorType.name == self.detector_name, Detector.running == True, Detector.role == "QHSE").all()
             # if detectors:
             #     print(f"Active detector type: {detectors[0].type}")  # Print the type of the first detector
             # else:
@@ -63,7 +62,7 @@ class BaseDetector:
             active_detector_types = [detector.detector_type.name for detector in detectors]
             
             # inactive_detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == False).all()
-            inactive_detectors = Detector.query.join(Camera).join(DetectorType).filter(DetectorType.name == self.detector_name, Detector.running == False, Detector.role == session_role).all()
+            inactive_detectors = Detector.query.join(Camera).join(DetectorType).filter(DetectorType.name == self.detector_name, Detector.running == False, Detector.role == "QHSE").all()
             inactive_detector_ids = [detector.id for detector in inactive_detectors]
             
             # print('===========================')
@@ -187,7 +186,7 @@ class BaseDetector:
     def load_notification_rules(self, detector_id):
         with self.app.app_context():
             # rules = NotificationRule.query.filter_by(detector_id=detector_id).all()
-            rules = NotificationRule.query.join(Detector).join(MessageTemplate).join(Contact).filter(Detector.id == detector_id, Detector.role == session.get('role')).all()
+            rules = NotificationRule.query.join(Detector).join(MessageTemplate).join(Contact).filter(Detector.id == detector_id, Detector.permission_id.in_(get_allowed_permission_ids())).all()
             self.notification_rules[detector_id] = rules
 
     def release_caps(self):
