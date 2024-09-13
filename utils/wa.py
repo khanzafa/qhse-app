@@ -4,6 +4,29 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import os
 
+
+import re
+
+class Message:
+    def __init__(self, message_template, detected_object):
+        self.message_template = message_template
+        self.detected_object = detected_object
+
+    def render(self):
+        # Replace placeholders in the template with actual data from detected_object
+        rendered_message = self.message_template
+        
+        for key, value in self.detected_object.items():
+            placeholder = "@" + key
+            # print("Placeholder: ", placeholder)
+            rendered_message = rendered_message.replace(placeholder, str(value))
+
+        # Remove any remaining placeholders that were not replaced
+        rendered_message = re.sub(r'\{\{.*?\}\}', '', rendered_message)
+        
+        return rendered_message
+    
+
 def send_whatsapp_message(app, target_name, message, image_path):
     """
     Sends a message and an image to a specified WhatsApp contact using Selenium.
@@ -39,7 +62,8 @@ def send_whatsapp_message(app, target_name, message, image_path):
             caption_box = wait.until(EC.presence_of_element_located((By.XPATH, caption_box_path)))
 
             # Send the message as a caption
-            for part in message.split('||'):
+            # Send the message in parts
+            for part in message.split('\n\n'):  # Double newlines to split paragraphs
                 caption_box.send_keys(part)
                 caption_box.send_keys(Keys.SHIFT + Keys.ENTER)
             caption_box.send_keys(Keys.ENTER)
@@ -51,9 +75,10 @@ def send_whatsapp_message(app, target_name, message, image_path):
             text_box_path = '//*[@id="main"]/footer/div[1]/div[2]/div/div[2]/div[1]/div/div[2]/div/div[2]'
             text_box = wait.until(EC.presence_of_element_located((By.XPATH, text_box_path)))
 
-            for part in message.split('||'):
-                text_box.send_keys(part)
-                text_box.send_keys(Keys.SHIFT + Keys.ENTER)
-            text_box.send_keys(Keys.ENTER)
+            # Send the message in parts
+            for part in message.split('\n\n'):  # Double newlines to split paragraphs
+                caption_box.send_keys(part)
+                caption_box.send_keys(Keys.SHIFT + Keys.ENTER)
+            caption_box.send_keys(Keys.ENTER)
     except Exception as e:
         print(f"Error while sending WhatsApp message: {e}")

@@ -1,8 +1,10 @@
 import os
 import time
 import cv2
+from flask import current_app, session
+from flask_login import current_user
 from ultralytics import YOLO
-from app.models import Camera, Detector, DetectedObject
+from app.models import Camera, Contact, Detector, DetectedObject, DetectorType, MessageTemplate, NotificationRule
 import threading
 from datetime import datetime
 import time
@@ -22,7 +24,8 @@ class BaseDetector:
         self.lock = threading.Lock()  # Thread-safe access to frames
         self.frame_number = 0
         self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_frame": -1})
-        print(f"Initialized {detector_name} detector.")
+        self.notification_rules = {}
+        # print(f"Initialized {detector_name} detector.")
         
         # Start the worker thread to process the message queue
         if not hasattr(BaseDetector, 'worker_started'):
@@ -40,40 +43,44 @@ class BaseDetector:
 
     def add_message_to_queue(self, app, target, message, image_path):
         BaseDetector.message_queue.put((app, target, message, image_path))  # Add the message to the shared queue
-    
+
     def run(self, app):
         self.running = True
         self.app = app
         active_threads = {}
-        
-        while self.running: 
-            detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == True).all()
-            if detectors:
-                print(f"Active detector type: {detectors[0].type}")  # Print the type of the first detector
-            else:
-                print("No active detectors found.")
+            
+        while self.running:
+            with app.app_context():
+                session_role = session.get('role') 
+            # detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == True).all()
+            detectors = Detector.query.join(Camera).join(DetectorType).filter(DetectorType.name == self.detector_name, Detector.running == True, Detector.role == session_role).all()
+            # if detectors:
+            #     print(f"Active detector type: {detectors[0].type}")  # Print the type of the first detector
+            # else:
+            #     print("No active detectors found.")
             # Determine currently active detector IDs
             active_detector_ids = [detector.id for detector in detectors]
-            active_detector_types = [detector.detector_type for detector in detectors]
+            active_detector_types = [detector.detector_type.name for detector in detectors]
             
-            inactive_detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == False).all()
+            # inactive_detectors = Detector.query.join(Camera).filter(Detector.detector_type == self.detector_name, Detector.running == False).all()
+            inactive_detectors = Detector.query.join(Camera).join(DetectorType).filter(DetectorType.name == self.detector_name, Detector.running == False, Detector.role == session_role).all()
             inactive_detector_ids = [detector.id for detector in inactive_detectors]
             
-            print('===========================')
-            print(f"Active detector IDs: {active_detector_ids}")
-            print(f"Active detector types: {active_detector_types}")
-            print('===========================')
-            print(f"Self detector name: {self.detector_name}")
-            print(f"Inactive detector IDs: {inactive_detector_ids}")
-            print('===========================')
+            # print('===========================')
+            # print(f"Active detector IDs: {active_detector_ids}")
+            # print(f"Active detector types: {active_detector_types}")
+            # print('===========================')
+            # print(f"Self detector name: {self.detector_name}")
+            # print(f"Inactive detector IDs: {inactive_detector_ids}")
+            # print('===========================')
             
             time.sleep(5)
             for detector in detectors:
                 detector_id = detector.id
                 camera_ip = detector.camera.ip_address
-                detector_type = detector.detector_type
+                detector_type = detector.detector_type.name
                 
-                print(f"Detector ID: {detector_id}, Detector Type: {detector_type}, Camera IP: {camera_ip}")
+                # print(f"Detector ID: {detector_id}, Detector Type: {detector_type}, Camera IP: {camera_ip}")
 
                 # This should clarify what detector is being processed and associated
                 if detector_type != self.detector_name:
@@ -84,7 +91,7 @@ class BaseDetector:
                         cap = cv2.VideoCapture(0 if camera_ip == "http://0.0.0.0" else camera_ip)
                         if cap.isOpened():
                             self.cctv_caps[camera_ip] = cap
-                            print(f"VideoCapture created for camera {camera_ip}.")
+                            # print(f"VideoCapture created for camera {camera_ip}.")
                         else:
                             print(f"Failed to open video stream for {camera_ip}.")
                             continue
@@ -107,10 +114,11 @@ class BaseDetector:
         self.cleanup_threads(active_threads)
             
     def process_video(self, camera_ip, detector_id, stop_event):
+        self.load_weight(detector_id)
         max_retries = 5
         retry_interval = 5  # Interval between retries
         
-        print(f"Starting video processing for camera {camera_ip}, detector ID {detector_id}, model {self.detector_name}.")
+        # print(f"Starting video processing for camera {camera_ip}, detector ID {detector_id}, model {self.detector_name}.")
 
         for attempt in range(max_retries):
             with self.lock:
@@ -146,7 +154,7 @@ class BaseDetector:
             
             success, frame = cap.read()
             if success:
-                print(f"Frame captured for camera {camera_ip}, detector ID {detector_id}. Running model {self.detector_name}.")
+                # print(f"Frame captured for camera {camera_ip}, detector ID {detector_id}. Running model {self.detector_name}.")
                 # time.sleep(3)
                 results = self.model.track(frame, stream=False, persist=True)
                 self.process_results(results, frame, detector_id)
@@ -160,22 +168,28 @@ class BaseDetector:
             print(f"Released VideoCapture for camera {camera_ip}, detector ID {detector_id}.")
 
     def load_weight(self, detector_id):
-        detector = Detector.query.get(detector_id)
-        weight_path = detector.weight.path
+        with self.app.app_context():
+            detector = Detector.query.get(detector_id)
+            weight_path = detector.weight.path
 
-        if os.path.exists(weight_path):
-            print(f"Loading weight from {weight_path}.")
-            self.model = YOLO(weight_path).to('cpu')
-        else:
-            with open(weight_path, 'wb') as f:
-                f.write(detector.weight.file)
-            print(f"Weight saved to {weight_path}.")
-            self.model = YOLO(weight_path).to('cpu')
-
+            if os.path.exists(weight_path):
+                # print(f"Loading weight from {weight_path}.")
+                self.model = YOLO(weight_path).to('cpu')
+            else:
+                with open(weight_path, 'wb') as f:
+                    f.write(detector.weight.file)
+                # print(f"Weight saved to {weight_path}.")
+                self.model = YOLO(weight_path).to('cpu')
 
     def process_results(self, results, frame, detector_id):
         raise NotImplementedError("This method should be overridden by subclasses")
-    
+
+    def load_notification_rules(self, detector_id):
+        with self.app.app_context():
+            # rules = NotificationRule.query.filter_by(detector_id=detector_id).all()
+            rules = NotificationRule.query.join(Detector).join(MessageTemplate).join(Contact).filter(Detector.id == detector_id, Detector.role == session.get('role')).all()
+            self.notification_rules[detector_id] = rules
+
     def release_caps(self):
         with self.lock:
             for camera_ip, cap in self.cctv_caps.items():
@@ -197,14 +211,14 @@ class BaseDetector:
                 print(f"Detector ID {detector_id} not found in active threads. Skipping.")
             
     def cleanup_threads(self, active_threads):
-        print("Cleaning up all remaining threads.")
+        # print("Cleaning up all remaining threads.")
         # Cleanup: Stop all remaining threads
         for detector_id, (t, stop_event) in active_threads.items():
-            print(f"Stopping detection for camera {detector_id} during cleanup.")
+            # print(f"Stopping detection for camera {detector_id} during cleanup.")
             if t and stop_event:
                 stop_event.set()
                 t.join()
-                print(f"Thread for detector {detector_id} stopped and joined.")
+                # print(f"Thread for detector {detector_id} stopped and joined.")
 
         # Release all caps
         self.release_caps()

@@ -58,8 +58,9 @@ class Camera(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     location = db.Column(db.String(120), index=True, unique=True)
     type = db.Column(db.String(120), index=True)
-    ip_address = db.Column(db.String(120), unique=True)
+    ip_address = db.Column(db.String(120))
     status = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(10))
 
     def to_dict(self):
         return {
@@ -67,7 +68,8 @@ class Camera(db.Model):
             'location': self.location,
             'type': self.type,
             'ip_address': self.ip_address,
-            'status': self.status
+            'status': self.status,
+            'role': self.role
         }
     
     def __repr__(self):
@@ -82,13 +84,15 @@ class Detector(db.Model):
     weight = db.relationship('Weight', backref=db.backref('detector', uselist=False))
     weight_id = db.Column(db.Integer, db.ForeignKey('weight.id'))
     running = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(10))
 
     def to_dict(self):
         return {
             'id': self.id,
             'camera_id': self.camera_id,
             'detector_type_id': self.detector_type_id,
-            'running': self.running
+            'running': self.running,
+            'role': self.role
         }
     
     def __repr__(self):
@@ -97,13 +101,13 @@ class Detector(db.Model):
 class DetectorType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), index=True, unique=True)
-    description = db.Column(db.String(120))
+    description = db.Column(db.String(120))    
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
-            'description': self.description
+            'description': self.description 
         }
 
     def __repr__(self):
@@ -116,6 +120,7 @@ class DetectedObject(db.Model):
     name = db.Column(db.String(120), index=True)
     frame = db.Column(db.LargeBinary)
     timestamp = db.Column(db.DateTime, index=True)
+    role = db.Column(db.String(10))
 
     def to_dict(self):
         return {
@@ -123,11 +128,51 @@ class DetectedObject(db.Model):
             'detector_id': self.detector_id,
             'name': self.name,
             'frame': self.frame,
-            'timestamp': self.timestamp
+            'timestamp': self.timestamp,
+            'role': self.role
         }
 
     def __repr__(self):
         return f'<DetectedObject {self.id}>'    
+    
+class MessageTemplate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), index=True, unique=True)
+    template = db.Column(db.String(480))
+    role = db.Column(db.String(10))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'template': self.template,
+            'role': self.role
+        }
+
+    def __repr__(self):
+        return f'<MessageTemplate {self.name}>'
+
+class NotificationRule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    detector_id = db.Column(db.Integer, db.ForeignKey('detector.id'))
+    detector = db.relationship('Detector', backref=db.backref('notification_rules', lazy=True))
+    message_template_id = db.Column(db.Integer, db.ForeignKey('message_template.id'))
+    message_template = db.relationship('MessageTemplate', backref=db.backref('notification_rules', lazy=True))
+    contact_id = db.Column(db.Integer, db.ForeignKey('contact.id'))
+    contact = db.relationship('Contact', backref=db.backref('notification_rules', lazy=True))
+    role = db.Column(db.String(10))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'detector_id': self.detector_id,
+            'message_template_id': self.message_template_id,
+            'contact_id': self.contact_id,
+            'role': self.role
+        }
+
+    def __repr__(self):
+        return f'<NotificationRule {self.id}>'
 
 class Weight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -137,33 +182,26 @@ class Weight(db.Model):
     detector_type = db.relationship('DetectorType', backref=db.backref('weights', lazy=True))
     detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
     created_at = db.Column(db.DateTime, index=True)
+    role = db.Column(db.String(10))
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    phone_number = db.Column(db.String(20), unique=True, nullable=False)
-    name = db.Column(db.String(100))  # Ganti 'description' dengan 'name'
+    phone_number = db.Column(db.String(20), unique=True)
+    name = db.Column(db.String(100), unique=True)
+    description = db.Column(db.String(100))
+    is_group = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(10))
 
     def to_dict(self):
         return {
             'id': self.id,
             'phone_number': self.phone_number,
-            'name': self.name
-        }
-
-    def __repr__(self):
-        return f'<Contact {self.phone_number}>'
-
-class GroupContact(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-    status = db.Column(db.Boolean, default=True)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
             'name': self.name,
-            'status': self.status
+            'description': self.description,
+            'is_group': self.is_group,
+            'role': self.role
         }
     
     def __repr__(self):
-        return f'<GroupContact {self.name}>'
+        return f'<Contact {self.name}>'
+    

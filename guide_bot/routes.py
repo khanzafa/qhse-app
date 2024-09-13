@@ -39,7 +39,7 @@ def sanitize_filename(filename):
 #     search_query = request.args.get('search_query', '', type=str)
 
 #     # Get the current user's role
-#     user_role = current_user.role
+#     user_role = session_role
     
 #     # Filter dokumen berdasarkan search query jika ada
 #     if search_query:
@@ -209,7 +209,8 @@ def manage_documents(subdir=''):
     search_query = request.args.get('search_query', '', type=str)
 
     # Get the current user's role
-    user_role = current_user.role
+    session_role = session.get('role')
+    user_role = session_role
     
     # Filter dokumen berdasarkan search query jika ada
     if search_query:
@@ -414,13 +415,14 @@ def chat():
 
 @guide_bot.route('/guide-bot/reload-vector-db', methods=['GET'])    
 def reload_vector_db():
+    session_role = session.get('role')
     vector_store = Chroma(
-        collection_name=f"SPIL-{current_user.role}",
+        collection_name=f"SPIL-{session_role}",
         embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
-        persist_directory=f"vector_store/{current_user.role}"
+        persist_directory=f"vector_store/{session_role}"
     )
     # Load all documents from the SQL database
-    documents = Document.query.filter(Document.allowed_roles.ilike(f'%{current_user.role}%')).all()
+    documents = Document.query.filter(Document.allowed_roles.ilike(f'%{session_role}%')).all()
     document_ids = [str(document.id) for document in documents]    
     vector_store_ids = vector_store.get()['ids']    
     vector_metadatas = vector_store.get()['metadatas']
@@ -471,9 +473,9 @@ def reload_vector_db():
                 print("Vector store is empty")
                 vector_store = Chroma.from_documents(
                     embedding=embeddings,
-                    collection_name=f"SPIL-{current_user.role}",
+                    collection_name=f"SPIL-{session_role}",
                     documents=[document_obj], 
-                    persist_directory=f"vector_store/{current_user.role}",
+                    persist_directory=f"vector_store/{session_role}",
                     ids=[document_obj.metadata['id']])
                 print("Vector store created")
             else:

@@ -1,17 +1,18 @@
 import threading
 import cv2
+from flask_login import current_user
 import numpy as np
 from datetime import datetime
 from utils.detector import BaseDetector
 from app.models import DetectedObject, Detector
 from app.extensions import db
-from flask import current_app
+from flask import current_app, session
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import os
 import time
-from utils.wa import send_whatsapp_message
+from utils.wa import Message, send_whatsapp_message
 from ultralytics import YOLO
 
 BODY_KEYPOINTS = {
@@ -71,6 +72,7 @@ class GestureForHelpDetector(BaseDetector):
         self.load_weight(detector_id)
 
         with self.app.app_context():
+            session_role = session.get('role')
             objects = ""
 
             # Run pose detection
@@ -141,18 +143,21 @@ class GestureForHelpDetector(BaseDetector):
                                 detector_id=detector_id,
                                 name='cross-hands',
                                 frame=cv2.imencode('.jpg', frame)[1].tobytes(),
-                                timestamp=datetime.now()
+                                timestamp=datetime.now(),
+                                role=session_role
                             )
                             db.session.add(detected_obj)
                             db.session.commit()
 
-                            target = "Y0L0"
-                            message = f"Subject: *SOS DETECTED*||• Camera ID: {detector_id}||• Violation: cross-hands||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
+                            # target = "Y0L0"
+                            # message = f"Subject: *SOS DETECTED*||• Camera ID: {detector_id}||• Violation: cross-hands||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
 
                             image_filename = f"unfocused_{detector_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                             image_path = os.path.join(os.getcwd(), image_filename)
                             cv2.imwrite(image_path, frame)
-
+                            for rule in self.notification_rules[detector_id]:                    
+                                message = Message(rule.message_template.template, detected_obj.to_dict()).render()
+                                self.add_message_to_queue(current_app._get_current_object(), rule.contact.name, message, image_path)
                             # threading.Thread(target=send_whatsapp_message, args=(current_app._get_current_object(), target, message, image_path)).start()
             
             with self.lock:

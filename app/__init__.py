@@ -71,12 +71,12 @@ def create_app():
     from app.auth import auth as auth_blueprint
     app.register_blueprint(main)
     print("Main blueprint registered.")
-    app.register_blueprint(ppe)
-    print("PPE blueprint registered.")
-    app.register_blueprint(gesture)
-    print("Gesture blueprint registered.")
-    app.register_blueprint(unfocused)
-    print("Unfocused blueprint registered.")
+    # app.register_blueprint(ppe)
+    # print("PPE blueprint registered.")
+    # app.register_blueprint(gesture)
+    # print("Gesture blueprint registered.")
+    # app.register_blueprint(unfocused)
+    # print("Unfocused blueprint registered.")
     app.register_blueprint(guide_bot)
     print("Guide bot blueprint registered.")
     app.register_blueprint(auth_blueprint)
@@ -99,11 +99,25 @@ def create_app():
     # app.driver.get("https://web.whatsapp.com/")
     # app.wait = WebDriverWait(app.driver, 100)
 
-    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
-    # print("PPE detector started.")
-    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    # print("Gesture detector started.")
-    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
-    # print("Unfocused detector started.")
+    # Tentukan direktori data pengguna untuk Firefox
+    # user_home_dir = os.path.expanduser("~")
+    # profile_dir = f"{user_home_dir}/.mozilla/firefox"
+
+    # # Konfigurasi opsi Firefox
+    # options = webdriver.FirefoxOptions()
+    # # Menentukan profil pengguna Firefox, jika Anda menggunakan profil khusus
+    # # Jika tidak menggunakan profil khusus, Anda bisa menghapus atau menyesuaikan baris ini
+    # options.set_preference("profile", profile_dir)
+    # # options.add_argument("--headless")
+    # app.driver = webdriver.Firefox(options=options)
+    # app.driver.get("https://web.whatsapp.com/")
+    # app.wait = WebDriverWait(app.driver, 100)
+
+    threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    print("PPE detector started.")
+    threading.Thread(target=start_detector, args=(gesture_detector,)).start()
+    print("Gesture detector started.")
+    threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    print("Unfocused detector started.")
 
     return app

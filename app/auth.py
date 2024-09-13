@@ -24,6 +24,7 @@ def login():
             flash('Invalid phone number or password')
             return redirect(url_for('auth.login'))
         login_user(user)
+        session['role'] = user.role
         return redirect(url_for('main.index'))
     return render_template('login.html', form=form)
 
@@ -45,6 +46,7 @@ def register():
 @login_required
 def logout():
     logout_user()
+    session.pop('role', None)
     return redirect(url_for('auth.login'))
 
 

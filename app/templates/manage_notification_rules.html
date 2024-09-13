@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Manage Notification Rules{% endblock %}
+{% block content %}
+<!-- Main Content -->
+<div class="container mx-auto py-4 flex flex-col lg:flex-row lg:space-x-8">
+
+    <!-- Existing Messages -->
+    <div class="w-full lg:w-1/2 mb-8 lg:mb-0">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">
+                Template Messages
+                <span>
+                    <i class="fas fa-plus-circle text-red-600 cursor-pointer" onclick="openMessageModal()"></i>
+                </span>
+            </h2>
+            <ul class="space-y-2">
+                {% for message in messages %}
+                <li class="flex justify-between items-center p-4 bg-gray-50 rounded-md shadow">
+                    <span>{{ message.name }}</span>
+                    <button
+                        onclick="openMessageModal('{{ message.id }}', '{{ message.name | escape }}', '{{ message.template | escape }}')"
+                        class="bg-red-600 text-white px-4 py-1 rounded-md hover:bg-red-700 transition">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Existing Notification Rules -->
+    <div class="w-full lg:w-1/2">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">
+                Notification Rules
+                <span>
+                    <i class="fas fa-plus-circle text-red-600 cursor-pointer" onclick="openRuleModal()"></i>
+                </span>
+            </h2>
+            <table class="space-y-2">
+                <thead>
+                    <tr class="flex justify-between items-center p-4 bg-gray-100 rounded-md shadow">
+                        <th>ID</th>
+                        <th>Detector</th>
+                        <th>Contact</th>
+                        <th>Template</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                    <tr class="flex justify-between items-center p-4 bg-gray-50 rounded-md shadow">
+                        <td>{{ rule.id }}</td>
+                        <td>{{ rule.detector.id }}</td>
+                        <td>{{ rule.contact.name }}</td>
+                        <td>{{ rule.message_template.name }}</td>
+                        <td>
+                            <button
+                                onclick="openRuleModal('{{ rule.id }}', '{{ rule.detector.id }}', '{{ rule.contact.id }}', '{{ rule.message_template.id }}')"
+                                class="bg-red-600 text-white px-4 py-1 rounded-md hover:bg-red-700 transition">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Message Template Modal -->
+<div id="messageModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6 relative">
+        <button onclick="closeMessageModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+            ✖
+        </button>
+        <h2 class="text-xl font-semibold mb-4" id="messageModalTitle">Add New Message</h2>
+        <form id="messageForm" method="POST" action="{{ url_for('main.manage_notification_rules') }}" class="space-y-4">
+            {{ message_form.hidden_tag() }}
+            <input type="hidden" name="rule_id" id="message_id" value="">
+            <div>
+                <label for="name" class="block font-medium text-gray-700">Message Name</label>
+                {{ message_form.name(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500
+                focus:ring-red-500') }}
+            </div>
+            <div>
+                <label for="template" class="block font-medium text-gray-700">Message Template</label>
+                {{ message_form.template(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm
+                focus:border-red-500 focus:ring-red-500') }}
+            </div>
+            <!-- Cancel -->
+            <button type="button" onclick="closeMessageModal()"
+                class="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400 transition">
+                Back
+            </button>
+            <!-- Submit -->
+            <button type="submit" name="submit_message"
+                class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+                Submit
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Notification Rule Modal -->
+<div id="ruleModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6 relative">
+        <button onclick="closeRuleModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+            ✖
+        </button>
+        <h2 class="text-xl font-semibold mb-4" id="ruleModalTitle">Add New Notification Rule</h2>
+        <form id="ruleForm" method="POST" action="{{ url_for('main.manage_notification_rules') }}" class="space-y-4">
+            {{ rule_form.hidden_tag() }}
+            <input type="hidden" name="rule_id" id="rule_id" value="">
+            <div>
+                <label for="detector_id" class="block font-medium text-gray-700">Detector</label>
+                {{ rule_form.detector_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm
+                focus:border-red-500 focus:ring-red-500') }}
+            </div>
+            <div>
+                <label for="contact_id" class="block font-medium text-gray-700">Contact</label>
+                {{ rule_form.contact_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm
+                focus:border-red-500 focus:ring-red-500') }}
+            </div>
+            <div>
+                <label for="message_template_id" class="block font-medium text-gray-700">Message Template</label>
+                {{ rule_form.message_template_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm
+                focus:border-red-500 focus:ring-red-500') }}
+            </div>
+            <button type="submit" name="submit_rule"
+                class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+                Submit
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts for Modals -->
+<script>
+    // Message Modal Functions
+    function openMessageModal(id = null, name = '', template = '') {
+        const modal = document.getElementById('messageModal');
+        const title = document.getElementById('messageModalTitle');
+        const form = document.getElementById('messageForm');
+        const messageIdInput = document.getElementById('message_id');
+
+        if (id) {
+            title.textContent = 'Edit Message';
+            messageIdInput.value = id;
+            form.name.value = name;
+            form.template.value = template;
+        } else {
+            title.textContent = 'Add New Message';
+            messageIdInput.value = '';
+            form.name.value = '';
+            form.template.value = '';
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeMessageModal() {
+        const modal = document.getElementById('messageModal');
+        modal.classList.add('hidden');
+    }
+
+    // Rule Modal Functions
+    function openRuleModal(id = null, detector_id = '', contact_id = '', message_template_id = '') {
+        const modal = document.getElementById('ruleModal');
+        const title = document.getElementById('ruleModalTitle');
+        const form = document.getElementById('ruleForm');
+        const ruleIdInput = document.getElementById('rule_id');
+
+        if (id) {
+            title.textContent = 'Edit Notification Rule';
+            ruleIdInput.value = id;
+            form.detector_id.value = detector_id;
+            form.contact_id.value = contact_id;
+            form.message_template_id.value = message_template_id;
+        } else {
+            title.textContent = 'Add New Notification Rule';
+            ruleIdInput.value = '';
+            form.detector_id.value = '';
+            form.contact_id.value = '';
+            form.message_template_id.value = '';
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeRuleModal() {
+        const modal = document.getElementById('ruleModal');
+        modal.classList.add('hidden');
+    }
+
+    // Close modals when clicking outside the modal content
+    window.onclick = function (event) {
+        const messageModal = document.getElementById('messageModal');
+        const ruleModal = document.getElementById('ruleModal');
+
+        if (event.target == messageModal) {
+            closeMessageModal();
+        }
+
+        if (event.target == ruleModal) {
+            closeRuleModal();
+        }
+    }
+</script>
+
+{% endblock %}

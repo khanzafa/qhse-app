@@ -1,8 +1,10 @@
 # app/forms.py
+from flask_login import current_user
 from flask_wtf import FlaskForm
+from flask import session
 from wtforms import BooleanField, IntegerField, StringField, SubmitField, SelectField, TextAreaField, PasswordField, FileField
 from wtforms.validators import DataRequired, IPAddress, Length, URL, EqualTo, ValidationError
-from app.models import Camera, User
+from app.models import Camera, Contact, Detector, MessageTemplate, User
 from app.extensions import db
 from app.models import DetectorType, Weight
 
@@ -26,8 +28,8 @@ class SelectCCTVForm(FlaskForm):
 class DetectorForm(FlaskForm):
     id = IntegerField('ID')
     camera_id = SelectField('Camera', coerce=int, validators=[DataRequired()])    
-    types = SelectField('Type', coerce=int, validators=[DataRequired()])
-    weights = SelectField('Weight', coerce=int, validators=[DataRequired()])
+    # types = SelectField('Type', coerce=int, validators=[DataRequired()])
+    weight_id = SelectField('Weight', coerce=int, validators=[DataRequired()])
     running = BooleanField('Running')
     submit = SubmitField('Save')
 
@@ -37,9 +39,27 @@ class ModelForm(FlaskForm):
     file = FileField('File', validators=[DataRequired()])
 
 class ContactForm(FlaskForm):
-    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=20)])
-    name = TextAreaField('Name', validators=[Length(max=100)])  # Ganti 'description' dengan 'name'
+    phone_number = StringField('Phone Number', validators=[Length(max=20)])
+    name = StringField('Name', validators=[Length(max=30)])
+    description = TextAreaField('Description', validators=[Length(max=100)])
     submit = SubmitField('Save')
+
+class MessageTemplateForm(FlaskForm):
+    name = StringField('Name', validators=[Length(max=30)])
+    template = TextAreaField('Template', validators=[Length(max=4096)])
+
+class NotificationRuleForm(FlaskForm):
+    detector_id = SelectField('Detector', coerce=int, validators=[DataRequired()])
+    contact_id = SelectField('Contact', coerce=int, validators=[DataRequired()])
+    message_template_id = SelectField('Message Template', coerce=int, validators=[DataRequired()])
+    
+    submit = SubmitField('Save')
+
+    def __init__(self, session_role=None    , *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.detector_id.choices = [(detector.id, detector.id) for detector in Detector.query.filter(Detector.role == session_role).all()]
+        self.contact_id.choices = [(contact.id, contact.name) for contact in Contact.query.filter(Contact.role == session_role).all()]
+        self.message_template_id.choices = [(template.id, template.name) for template in MessageTemplate.query.filter(MessageTemplate.role == session_role).all()]
 
 class OTPForm(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired()])
@@ -56,13 +76,10 @@ class RegistrationForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=20)])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128)])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    role = SelectField('Role', choices=[
-        ('IT', 'IT'),
-        ('HR', 'HR'),
-        ('Finance', 'Finance'),
-        ('Accounting', 'Accounting'),
-        ('Security', 'Security'),
-        ('Manager', 'Manager')
+    role = SelectField('Role', choices=[        
+        ('Manager', 'Manager'),
+        ('QHSE', 'QHSE'),
+        ('PAIER', 'PAIER')      
     ], validators=[DataRequired()])
     submit = SubmitField('Register')
 

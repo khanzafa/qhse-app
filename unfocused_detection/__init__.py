@@ -1,12 +1,13 @@
 import threading
 from flask import current_app
+from flask_login import current_user
 from utils.detector import BaseDetector
 from app.models import DetectedObject
 from app.extensions import db
 from datetime import datetime
 import cv2
 
-from flask import current_app
+from flask import current_app, session
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -38,6 +39,7 @@ class UnfocusedDetector(BaseDetector):
         self.load_weight(detector_id)
         # Ensure that app context is available
         with self.app.app_context():            
+            session_role = session.get('role')
             objects = ""
             for c in results[0].boxes.cls:
                 name = self.model.names[int(c)]
@@ -48,7 +50,8 @@ class UnfocusedDetector(BaseDetector):
                     detector_id=detector_id,
                     name=objects,
                     frame=cv2.imencode('.jpg', frame)[1].tobytes(),
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
+                    role=session_role
                 )
                 db.session.add(detected_obj)
                 db.session.commit()
