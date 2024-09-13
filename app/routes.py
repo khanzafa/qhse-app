@@ -550,6 +550,43 @@ def uploaded_file(filename):
     return send_from_directory('static', filename)
 
 
+@main.route('/su/approval', methods=['GET'])
+def su_approval():
+    # Query users where approval is None or Null
+    applicants = User.query.filter((User.approved.is_(None))).all()
+    return render_template('su_approval.html', applicants=applicants)
+
+@main.route('/su/update_approval', methods=['POST', 'GET'])
+def su_update_approval():
+    # Get the JSON data from the request
+    data = request.get_json()
+    approved_applicants = data.get('approvedApplicants', [])
+    print(approved_applicants)
+    
+    # Iterate over the approved applicants and update the database
+    for applicant in approved_applicants:
+        if 'name' in applicant and 'email' in applicant and 'role' in applicant:
+            # Query the database for the applicant
+            applicant_record = User.query.filter_by(
+                name=applicant['name'],
+                phone_number=applicant['email'],
+                role=applicant['role']
+            ).first()
+
+            if applicant_record:
+                print(applicant_record)
+                # Update the record
+                applicant_record.approved = applicant['approved']
+                db.session.commit()
+            else:
+                # Handle case where applicant is not found, if needed
+                print(f"Applicant not found: {applicant}")
+                
+    return jsonify({"status": "success", "message": "Approval data updated successfully"})
+    # Redirect to the approval page with a success message
+    # flash('Approval data updated successfully', 'success')
+    # return redirect(url_for('main.su_approval'))
+
 # test ajax
 # @main.route('/dum', methods=['POST'])
 # def dum():

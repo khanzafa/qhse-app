@@ -12,7 +12,7 @@
         <!-- Flash Messages Section -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-4 rounded-md w-full max-w-sm">
+                <div id="flash-message" class="absolute top-0 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-4 rounded-md w-full max-w-sm">
                     <ul>
                         {% for category, message in messages %}
                             <li class="mb-2">{{ message }}</li>
@@ -43,5 +43,15 @@
             </p>
         </form>
     </div>
+
+    <!-- Add JavaScript to hide the flash message after 3 seconds -->
+    <script>
+        setTimeout(function() {
+            var flashMessage = document.getElementById('flash-message');
+            if (flashMessage) {
+                flashMessage.style.display = 'none';
+            }
+        }, 3000); // 3 seconds
+    </script>
 </body>
 </html>

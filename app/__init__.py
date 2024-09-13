@@ -38,6 +38,8 @@ def create_app():
     # Konfigurasi direktori upload
     UPLOAD_FOLDER = 'uploads'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    
+    app.secret_key='haho'
 
     # Membuat direktori upload jika belum ada
     if not os.path.exists(UPLOAD_FOLDER):

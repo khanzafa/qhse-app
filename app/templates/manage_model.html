@@ -5,70 +5,106 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
-    <h2 class="text-2xl font-semibold mb-6">
-        Manage Models
-    </h2>
+<div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md grid grid-cols-3 gap-6">
+    <!-- left div -->
+    <div class="col-span-2 bg-gray-100 p-6 over h-sreen overflow-y-auto">
+        <h2 class="text-2xl font-semibold mb-6">
+            Manage Models
+        </h2>
 
-    <!-- Instructions for Uploading Model -->
-    <div class="mb-6">
-        <h3 class="text-xl font-semibold mb-2">How to Get a .pt Model File</h3>
-        <p class="text-gray-700">
-            To get a model `.pt` file, you can train your model using popular deep learning frameworks such as PyTorch.
-            After training, save your model using the following code:
-        </p>
-        <pre class="bg-gray-200 p-4 rounded-md text-sm">
-      torch.save(model.state_dict(), "model_weights.pt")
-    </pre>
+        <!-- Instructions for Uploading Model -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-2">How to Get a .pt Model File</h3>
+            <p class="text-gray-700">
+                To get a model `.pt` file, you can train your model using popular deep learning frameworks such as
+                PyTorch.
+                After training, save your model using the following code:
+            </p>
+            
+            <div class="mt-6 mb-4">
+                <p class="font-semibold">Get dataset from Roboflow</p>
+                <p class="text-gray-700">
+                    You can get this code from Roboflow. Go to the project versions, select a version, click 'Download Dataset,' choose the desired YOLO version format, then select the 'Show download code' option and click 'Continue.' After that, you will be prompted with a copyable code to download the dataset.
+                </p>
+                <pre class="bg-gray-200 p-4 rounded-md text-sm whitespace-pre-wrap break-words mt-2">
+!pip install roboflow
+
+from roboflow import Roboflow
+rf = Roboflow(api_key="6LlLWsyq0DStxF9WgrZ1")
+project = rf.workspace("seekhelp").project("seek-help-detection")
+version = project.version(3)
+dataset = version.download("yolov8")
+            </pre>
+            </div>
+
+            <div class="my-4">
+                <p class="font-semibold">Steps to train a YOLO model</p>
+                <p class="text-gray-700">
+                    Fill the data parameter with the path to the data.yaml file extracted from the Roboflow code earlier, and adjust the epochs parameter as needed.
+                </p>
+                <pre class="bg-gray-200 p-4 rounded-md text-sm whitespace-pre-wrap break-words mt-2">
+from ultralytics import YOLO
+model = YOLO("yolov8n.pt")
+model.train(data="/content/seek-help-detection-3/data.yaml", epochs=100, imgsz=640, patience=10, save=True, seed=42)
+            </pre>
+            </div>
+        </div>
     </div>
 
-    <!-- Add New Model Button -->
-    <button type="button"
-        class="mb-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
-        data-modal-target="#modelModal" data-modal-toggle="modelModal">
-        + Add New Model
-    </button>
+    <!-- right div -->
+    <div class="col-span-1 bg-gray-100 p-6 h-screen sticky top-0">
+        <!-- Add New Model Button -->
+        <button type="button"
+            class="mb-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+            data-modal-target="#modelModal" data-modal-toggle="modelModal">
+            + Add New Model
+        </button>
 
-    <!-- Models Table -->
-    <table class="w-auto table-auto border-collapse border border-gray-200">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="border border-gray-300 px-4 py-2">Model Name</th>
-                <th class="border border-gray-300 px-4 py-2">Detector Type</th>
-                <th class="border border-gray-300 px-4 py-2">Date Created</th>
-                <th class="border border-gray-300 px-4 py-2">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for model in models %}
-            <tr>
-                <td class="border border-gray-300 px-4 py-2">{{ model.name }}</td>
-                <td class="border border-gray-300 px-4 py-2">{{ model.detector_type.name }}</td>
-                <td class="border border-gray-300 px-4 py-2">{{ model.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td class="border border-gray-300 px-4 py-2 flex space-x-2">
+        <!-- Models Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full max-w-full table-auto border-collapse border border-gray-200 text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="border border-gray-300 px-2 py-1">Model Name</th>
+                        <th class="border border-gray-300 px-2 py-1">Detector Type</th>
+                        <th class="border border-gray-300 px-2 py-1">Date Created</th>
+                        <th class="border border-gray-300 px-2 py-1">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model in models %}
+                    <tr>
+                        <td class="border border-gray-300 px-2 py-1">{{ model.name }}</td>
+                        <td class="border border-gray-300 px-2 py-1">{{ model.detector_type.name }}</td>
+                        <td class="border border-gray-300 px-2 py-1">{{ model.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                            }}</td>
+                        <td class="border border-gray-300 px-2 py-1 flex space-x-2">
 
-                    <!-- Rename -->
-                    <button type="button"
-                        class="text-blue-500 hover:text-blue-700"
-                        data-modal-target="#editModelModal-{{ model.id }}"
-                        data-modal-toggle="editModelModal">
-                        <i class="fas fa-edit"></i> 
-                    </button>
+                            <!-- Rename -->
+                            <button type="button" class="text-blue-500 hover:text-blue-700"
+                                data-modal-target="#editModelModal-{{ model.id }}" data-modal-toggle="editModelModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
 
-                    <!-- Delete -->
-                    <form action="{{ url_for('main.delete_model', id=model.id) }}" method="POST" class="inline-block">
-                        <button type="submit" class="text-red-500 hover:text-red-700"
-                            onclick="return confirm('Are you sure you want to delete this model?');">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
+                            <!-- Delete -->
+                            <form action="{{ url_for('main.delete_model', id=model.id) }}" method="POST"
+                                class="inline-block">
+                                <button type="submit" class="text-red-500 hover:text-red-700"
+                                    onclick="return confirm('Are you sure you want to delete this model?');">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
 
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+
 
 <!-- Modal for Adding -->
 <div id="modelModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
@@ -122,13 +158,13 @@
         <div class="bg-white rounded-lg shadow-xl w-1/3 p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">{{ title }}</h3>
-                <button class="text-gray-400 hover:text-gray-600 focus:outline-none" data-close-modal="#editModelModal-{{ model.id }}">
+                <button class="text-gray-400 hover:text-gray-600 focus:outline-none"
+                    data-close-modal="#editModelModal-{{ model.id }}">
                     ✖
                 </button>
             </div>
 
-            <form method="POST" enctype="multipart/form-data"
-                action="{{ url_for('main.manage_model', id=model.id) }}">
+            <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.manage_model', id=model.id) }}">
                 {{ form.hidden_tag() }}
 
                 <div class="mb-4">

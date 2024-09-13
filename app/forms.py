@@ -63,7 +63,7 @@ class RegistrationForm(FlaskForm):
         ('Accounting', 'Accounting'),
         ('Security', 'Security'),
         ('Manager', 'Manager')
-    ], validators=[DataRequired()])
+    ], validators=[DataRequired()]) 
     submit = SubmitField('Register')
 
     def validate_phone_number(self, phone_number):

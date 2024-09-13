@@ -20,9 +20,16 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(phone_number=form.phone_number.data).first()
+        
         if user is None or not user.check_password(form.password.data):
             flash('Invalid phone number or password')
             return redirect(url_for('auth.login'))
+        
+        if not user.approved:
+            print('Not Approved')
+            flash('Your account is not approved. Please contact the administrator.')
+            return redirect(url_for('auth.login'))
+        
         login_user(user)
         return redirect(url_for('main.su'))
     return render_template('login.html', form=form)
@@ -140,7 +147,7 @@ def guidebot_login():
 def generate_otp():
     return str(random.randint(100000, 999999))  # 6-digit OTP
 
-OTP_EXPIRY_TIME = 5  # minutes
+OTP_EXPIRY_TIME = 1  # minutes
 
 @auth.route("/guidebot_logout", methods=['GET', 'POST'])
 def guidebot_logout():
