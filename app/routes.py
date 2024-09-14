@@ -51,6 +51,7 @@ main = Blueprint("main", __name__)
 # current_user = {'name': 'John'}
 GRAPHICS_DIR = "app/static/graphics"
 
+
 @main.route("/")
 def index():
     return render_template("index.html", title="Home", current_user=current_user)
@@ -507,12 +508,13 @@ def sanitize_filename(filename):
     return re.sub(r'[<>:"/\\|?*\t\n]', "_", filename)
 
 
-UPLOAD_FOLDER = 'static/suMenus'
+UPLOAD_FOLDER = "static/suMenus"
+
 
 @main.route("/su/upload", methods=["POST"])
 def su_upload():
     title = request.form.get("title")
-    file_url = request.form.get('url')
+    file_url = request.form.get("url")
     file = request.files.get("file")
 
     if not title or not file:
@@ -521,13 +523,13 @@ def su_upload():
 
     # Sanitize the filename
     filename = sanitize_filename(file.filename)
-    
+
     # Construct the upload folder path within `static`
     upload_folder = os.path.join(UPLOAD_FOLDER, title)
-    
+
     # Create the directory if it doesn't exist
     os.makedirs(upload_folder, exist_ok=True)
-    
+
     # Construct the full file path
     # file_path = os.path.join(upload_folder, filename)
     file_path = f"{upload_folder}/{filename}"
@@ -537,7 +539,9 @@ def su_upload():
     file.save(file_path)
 
     # Create and save the database record
-    new_entry = suMenu(title=title, url=file_url, file=file.read(), path=f"{title}/{filename}")
+    new_entry = suMenu(
+        title=title, url=file_url, file=file.read(), path=f"{title}/{filename}"
+    )
     db.session.add(new_entry)
     db.session.commit()
 
@@ -545,47 +549,57 @@ def su_upload():
     return redirect(url_for("main.su"))
 
 
-@main.route('/static/suMenus/<path:filename>')
+@main.route("/static/suMenus/<path:filename>")
 def uploaded_file(filename):
-    return send_from_directory('static', filename)
+    return send_from_directory("static", filename)
 
 
-@main.route('/su/approval', methods=['GET'])
+@main.route("/su/approval", methods=["GET"])
 def su_approval():
     # Query users where approval is None or Null
     applicants = User.query.filter((User.approved.is_(None))).all()
-    return render_template('su_approval.html', applicants=applicants)
+    return render_template("su_approval.html", applicants=applicants)
 
-@main.route('/su/update_approval', methods=['POST', 'GET'])
+
+@main.route("/su/update_approval", methods=["POST", "GET"])
 def su_update_approval():
     # Get the JSON data from the request
     data = request.get_json()
-    approved_applicants = data.get('approvedApplicants', [])
+    approved_applicants = data.get("approvedApplicants", [])
     print(approved_applicants)
-    
+
     # Iterate over the approved applicants and update the database
     for applicant in approved_applicants:
-        if 'name' in applicant and 'email' in applicant and 'role' in applicant:
+        if "name" in applicant and "email" in applicant and "role" in applicant:
             # Query the database for the applicant
             applicant_record = User.query.filter_by(
-                name=applicant['name'],
-                phone_number=applicant['email'],
-                role=applicant['role']
+                name=applicant["name"],
+                phone_number=applicant["email"],
+                role=applicant["role"],
             ).first()
 
             if applicant_record:
                 print(applicant_record)
                 # Update the record
-                applicant_record.approved = applicant['approved']
+                applicant_record.approved = applicant["approved"]
                 db.session.commit()
             else:
                 # Handle case where applicant is not found, if needed
                 print(f"Applicant not found: {applicant}")
-                
-    return jsonify({"status": "success", "message": "Approval data updated successfully"})
-    # Redirect to the approval page with a success message
-    # flash('Approval data updated successfully', 'success')
-    # return redirect(url_for('main.su_approval'))
+
+    return jsonify(
+        {"status": "success", "message": "Approval data updated successfully"}
+    )
+
+
+@main.route("/su/get_updated_table", methods=['GET'])
+@login_required
+def get_updated_table():
+    # Fetch the updated applicant data from the database
+    applicants = User.query.filter_by(approved=None).all()
+    # Render only the table rows and return as a response
+    return render_template("su_table_rows.html", applicants=applicants)
+
 
 # test ajax
 # @main.route('/dum', methods=['POST'])

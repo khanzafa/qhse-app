@@ -81,6 +81,19 @@
                 data: JSON.stringify({ approvedApplicants: approvedApplicants }),
                 success: function (response) {
                     console.log('Permissions updated successfully:', response);
+
+                    // Fetch the updated table content via AJAX
+                    $.ajax({
+                        url: '/su/get_updated_table', // New route to get updated table rows
+                        method: 'GET',
+                        success: function (updatedTableContent) {
+                            // Replace the existing table body with the new one
+                            document.querySelector('#table-container tbody').innerHTML = updatedTableContent;
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error fetching updated table:', status, error);
+                        }
+                    });
                 },
                 error: function (xhr, status, error) {
                     console.error('Error updating permissions:', status, error);
@@ -90,6 +103,8 @@
         else {
             console.log('No Applicants are checked')
         }
+
+        location.reload()
     });
 
 
