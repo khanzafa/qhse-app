@@ -326,3 +326,12 @@ class Document(db.Model):
     def __repr__(self):
         return f'<Document {self.title}>'
     
+class suMenu(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), unique=True, nullable=False)
+    url = db.Column(db.String(100), default=True, nullable=False)
+    file = db.Column(db.LargeBinary) # image
+    path = db.Column(db.String(120), index=True)
+    
+    def __repr__(self):
+        return f'<GroupContact {self.name}>'

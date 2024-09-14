@@ -14,7 +14,7 @@ class Config:
     WHATSAPP_API_URL = os.environ.get('WHATSAPP_API_URL') or 'https://api.whatsapp.com/send'
     WHATSAPP_API_KEY = os.environ.get('WHATSAPP_API_KEY') or 'your-whatsapp-api-key'
     
-    L_SERVER = 'smtp.gmail.com'  # Use Gmail's SMTP server
+    MAIL_SERVER = 'smtp.gmail.com'  # Use Gmail's SMTP server
     MAIL_PORT = 587  # Gmail uses port 587 for TLS
     MAIL_USE_TLS = True
     MAIL_USE_SSL = False

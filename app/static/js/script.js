@@ -70,3 +70,11 @@
 // document.addEventListener("DOMContentLoaded", function () {
 //   toggleDeleteButton(); // Ensure button state is correct on load
 // });
+// Initialization for ES Users
+console.log('js imported')
+import {
+    Tab,
+    initTWE,
+  } from "tw-elements";
+  
+  initTWE({ Tab });
