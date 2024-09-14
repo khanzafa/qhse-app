@@ -69,7 +69,8 @@ def create_app():
     #     with app.app_context():
     #         detector.run(app)
 
-    # from app.routes import main
+    from app.routes import web_bp
+    app.register_blueprint(web_bp)
     # from app.auth import auth as auth_blueprint
     # app.register_blueprint(main)
     # print("Main blueprint registered.")

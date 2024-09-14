@@ -1,6 +1,31 @@
+from datetime import datetime
+import cv2
+from ultralytics import YOLO
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+
+class Guest(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(64), index=True, unique=True)
+    otp = db.Column(db.String(256))
+    otp_expiry = db.Column(db.DateTime)  # Expiry time for the OTP
+    
+    def get_id(self):
+        return str(self.id)  # Implement this method to return a unique identifier for the guest
+
+    @property
+    def is_active(self):
+        # Assuming all guests are considered active
+        return True
+    
+    @property
+    def is_authenticated(self):
+        # Assuming all guests are considered active
+        return True
+    
+    def __repr__(self):
+        return f'<Guest {self.id}>'
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -35,7 +60,7 @@ class User(db.Model, UserMixin):
     
     def get_id(self):
         return str(self.id)
-    
+
 class Permission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
@@ -67,29 +92,7 @@ class UserPermission(db.Model):
     
     def __repr__(self):
         return f'<UserPermission {self.id}>'
-    
-class Guest(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), index=True, unique=True)
-    otp = db.Column(db.String(256))
-    otp_expiry = db.Column(db.DateTime)  # Expiry time for the OTP
-    
-    def get_id(self):
-        return str(self.id)  # Implement this method to return a unique identifier for the guest
-
-    @property
-    def is_active(self):
-        # Assuming all guests are considered active
-        return True
-    
-    @property
-    def is_authenticated(self):
-        # Assuming all guests are considered active
-        return True
-    
-    def __repr__(self):
-        return f'<Guest {self.id}>'
-    
+        
 class CCTV(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     location = db.Column(db.String(120), index=True, unique=True)
@@ -141,6 +144,29 @@ class Detector(db.Model):
     
     def __repr__(self):
         return f'<Detector {self.id}>'
+    
+    def process_frame(self, frame):
+        model = YOLO(self.weight.path)
+        results = model.track(frame, stream=False, persist=True)
+        detected_objects = []
+        for c in results[0].boxes:
+            track_id = c.id if hasattr(c, 'id') else None
+            track_id = int(track_id.item())  # Convert from tensor to int
+            class_id = c.cls
+            name = self.model.names[int(class_id)]
+            detected_object = DetectedObject(
+                detector_id=self.id,
+                name=name,
+                frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                timestamp=datetime.now(),
+                permission_id=self.permission_id                
+            )
+            detected_objects.append(detected_object)
+            db.session.add(detected_object)
+            db.session.commit()
+            
+        return detected_objects
+        
 
 class DetectorType(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -169,7 +169,7 @@ def view(id=None):
             'cctv_id': detector.cctv_id,
             'weight_id': detector.weight_id,
             'running': detector.running,
-            'role': detector.role
+            'permission_id': detector.permission_id
         }
         return jsonify(detector), 200
     else:
@@ -180,7 +180,7 @@ def view(id=None):
                 'cctv_id': detector.cctv_id,
                 'weight_id': detector.weight_id,
                 'running': detector.running,
-                'role': detector.role
+                'role': detector.permission_id
             })        
         return jsonify(detectors), 200
 
