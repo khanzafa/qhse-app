@@ -208,7 +208,7 @@ class PPEDetector(BaseDetector):
                 
                 image_filename = f"ppe_violation_{detector_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                 image_path = os.path.join(os.getcwd(), image_filename)
-                cv2.imwrite(image_path, frame)                
+                cv2.imwrite(image_path, frame)
                 
                 # Add the message to the shared queue
                 for rule in self.notification_rules[detector_id]:

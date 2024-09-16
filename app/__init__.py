@@ -92,30 +92,16 @@ def create_app():
     # app.register_blueprint(aios)
     # print("AIOS blueprint registered.")
 
-    # user_home_dir = os.path.expanduser("~")
-    # user_home_dir = user_home_dir.replace("\\", "/")
+    user_home_dir = os.path.expanduser("~")
+    user_home_dir = user_home_dir.replace("\\", "/")
     
-    # option = webdriver.ChromeOptions()
+    option = webdriver.ChromeOptions()
     # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data')
     # option.add_argument("--headless")
     # option.add_experimental_option("detach", True)
     # option.add_experimental_option("excludeSwitches", ["enable-automation"])
     # option.add_experimental_option('useAutomationExtension', False)
     # app.driver = webdriver.Chrome(options=option)
-    # app.driver.get("https://web.whatsapp.com/")
-    # app.wait = WebDriverWait(app.driver, 100)
-
-    # Tentukan direktori data pengguna untuk Firefox
-    # user_home_dir = os.path.expanduser("~")
-    # profile_dir = f"{user_home_dir}/.mozilla/firefox"
-
-    # # Konfigurasi opsi Firefox
-    # options = webdriver.FirefoxOptions()
-    # # Menentukan profil pengguna Firefox, jika Anda menggunakan profil khusus
-    # # Jika tidak menggunakan profil khusus, Anda bisa menghapus atau menyesuaikan baris ini
-    # options.set_preference("profile", profile_dir)
-    # # options.add_argument("--headless")
-    # app.driver = webdriver.Firefox(options=options)
     # app.driver.get("https://web.whatsapp.com/")
     # app.wait = WebDriverWait(app.driver, 100)
 
