@@ -30,7 +30,7 @@ message_api_docs = {
                     "template": {
                         "type": "string"
                     },
-                    "role": {
+                    "permission_id": {
                         "type": "string"
                     }
                 }
@@ -140,7 +140,7 @@ def view(id=None):
             'id': message.id,
             'name': message.name,
             'template': message.template,
-            'role': message.role
+            'permission_id': message.permission_id
         }
         return jsonify(message), 200
     else:
@@ -150,7 +150,7 @@ def view(id=None):
                 'id': message.id,
                 'name': message.name,
                 'template': message.template,
-                'role': message.role
+                'permission_id': message.permission_id
             })        
         return jsonify(messages), 200
     
@@ -162,7 +162,7 @@ def create():
         message = MessageTemplate(
             name=form.name.data,
             template=form.template.data,
-            role=session.get('role')
+            permission_id=session.get('permission_id')
         )
         db.session.add(message)
         db.session.commit()

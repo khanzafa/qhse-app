@@ -32,7 +32,7 @@ notification_api_docs = {
                     "description": {
                         "type": "string"
                     },
-                    "role": {
+                    "permission_id": {
                         "type": "string"
                     }
                 }
@@ -141,7 +141,7 @@ def view(id=None):
             'id': notification.id,
             'name': notification.name,
             'description': notification.description,
-            'role': notification.role
+            'permission_id': notification.permission_id
         }
         return jsonify(notification), 200
     else:
@@ -151,7 +151,7 @@ def view(id=None):
                 'id': notification.id,
                 'name': notification.name,
                 'description': notification.description,
-                'role': notification.role
+                'permission_id': notification.permission_id
             })        
         return jsonify(notifications), 200
     
@@ -163,7 +163,7 @@ def create():
         notification = NotificationRule(
             name=form.name.data,
             description=form.description.data,
-            role=session.get('role')
+            permission_id=session.get('permission_id')
         )
         db.session.add(notification)
         db.session.commit()

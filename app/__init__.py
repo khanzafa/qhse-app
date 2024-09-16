@@ -71,8 +71,8 @@ def create_app():
     #     with app.app_context():
     #         detector.run(app)
 
-    from app.routes import web_bp
-    app.register_blueprint(web_bp)
+    # from app.routes import web_bp
+    # app.register_blueprint(web_bp)
     # from app.auth import auth as auth_blueprint
     # app.register_blueprint(main)
     # print("Main blueprint registered.")
@@ -95,7 +95,7 @@ def create_app():
     user_home_dir = os.path.expanduser("~")
     user_home_dir = user_home_dir.replace("\\", "/")
     
-    option = webdriver.ChromeOptions()
+    # option = webdriver.ChromeOptions()
     # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data')
     # option.add_argument("--headless")
     # option.add_experimental_option("detach", True)

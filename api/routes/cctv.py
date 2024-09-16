@@ -181,7 +181,7 @@ def create():
             type=form.type.data, 
             ip_address=form.ip_address.data, 
             status=0, 
-            role=session.get('role')
+            permission_id=session.get('permission_id')
         )
         db.session.add(cctv)
         db.session.commit()
@@ -201,7 +201,7 @@ def edit(id):
         cctv.type = form.type.data
         cctv.ip_address = form.ip_address.data
         cctv.status = form.status.data
-        cctv.role = session.get('role')
+        cctv.permission_id = session.get('permission_id')
         db.session.commit()
         flash('CCTV edited successfully!')
         return Response(status=204)

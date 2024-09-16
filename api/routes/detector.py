@@ -36,7 +36,7 @@ detector_api_docs = {
                     "running": {
                         "type": "boolean"
                     },
-                    "role": {
+                    "permission_id": {
                         "type": "string"
                     }
                 }
@@ -180,7 +180,7 @@ def view(id=None):
                 'cctv_id': detector.cctv_id,
                 'weight_id': detector.weight_id,
                 'running': detector.running,
-                'role': detector.permission_id
+                'permission_id': detector.permission_id
             })        
         return jsonify(detectors), 200
 
@@ -193,7 +193,7 @@ def create():
             cctv_id=form.cctv_id.data,
             weight_id=form.weight_id.data,
             running=form.running.data,
-            role=session.get('role')
+            permission_id=session.get('permission_id')
         )
         db.session.add(detector)
         db.session.commit()
@@ -232,7 +232,7 @@ def delete(id):
 @swag_from(detector_api_docs['stream'])
 def detector_stream(detector_id):
     detector = Detector.query.get_or_404(detector_id)    
-    detector_type = detector_type
+    detector_type = detector.detector_type_id
     detector_types = {
         # 'PPE': ppe_detector,
         # 'Gesture': gesture_detector,
