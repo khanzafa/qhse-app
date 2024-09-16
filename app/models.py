@@ -1,9 +1,13 @@
 from datetime import datetime
+import logging
 import cv2
 from ultralytics import YOLO
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from sqlalchemy import event
+from sqlalchemy.orm import Session
+from flask_socketio import emit
 
 class Guest(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -116,6 +120,24 @@ class CCTV(db.Model):
     
     def __repr__(self):
         return f'<CCTV {self.location}>'
+    
+    def stop(self):
+        self.status = False
+        db.session.commit()
+        print(f"CCTV {self.id} stopped.")
+
+class Weight(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), index=True)
+    file = db.Column(db.LargeBinary)    
+    path = db.Column(db.String(120), index=True)
+    detector_type = db.relationship('DetectorType', backref=db.backref('weights', lazy=True))
+    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
+    created_at = db.Column(db.DateTime, index=True)
+    permission = db.relationship('Permission', backref=db.backref('weights', uselist=False))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
 class Detector(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -145,15 +167,21 @@ class Detector(db.Model):
     def __repr__(self):
         return f'<Detector {self.id}>'
     
+    def stop(self):
+        self.running = False
+        db.session.commit()
+        print(f"Detector {self.id} stopped.")
+    
     def process_frame(self, frame):
         model = YOLO(self.weight.path)
         results = model.track(frame, stream=False, persist=True)
+        annotated_frame = results[0].plot()
         detected_objects = []
         for c in results[0].boxes:
             track_id = c.id if hasattr(c, 'id') else None
             track_id = int(track_id.item())  # Convert from tensor to int
             class_id = c.cls
-            name = self.model.names[int(class_id)]
+            name = model.names[int(class_id)]
             detected_object = DetectedObject(
                 detector_id=self.id,
                 name=name,
@@ -165,8 +193,56 @@ class Detector(db.Model):
             db.session.add(detected_object)
             db.session.commit()
             
-        return detected_objects
-        
+        return detected_objects, annotated_frame
+ 
+# Event listener for CCTV status change
+
+# Event listener for Detector running change
+from threading import local
+
+# Thread-local storage for session data
+_thread_local = local()
+
+@event.listens_for(Session, 'before_commit')
+def before_commit_detector(session):
+    _thread_local.new = list(session.new)
+    _thread_local.dirty = list(session.dirty)
+    _thread_local.deleted = list(session.deleted)
+
+@event.listens_for(Session, 'after_commit')
+def after_commit_detector(session):
+    logging.info("After commit event for Detector")
+    logging.info(f"Session new: {_thread_local.new}")
+    logging.info(f"Session dirty: {_thread_local.dirty}")
+    logging.info(f"Session deleted: {_thread_local.deleted}")
+    from app import detector_manager, socketio
+    for obj in _thread_local.new:
+        if isinstance(obj, Detector) and 'running' in obj.__dict__:
+            socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
+            detector_manager.update_detectors()
+        if isinstance(obj, CCTV) and 'status' in obj.__dict__:
+            socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
+            detector_manager.update_detectors()
+    for obj in _thread_local.dirty:
+        if isinstance(obj, Detector) and 'running' in obj.__dict__:
+            socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
+            detector_manager.update_detectors()
+        if isinstance(obj, CCTV) and 'status' in obj.__dict__:
+            socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
+            detector_manager.update_detectors()
+    for obj in _thread_local.deleted:
+        if isinstance(obj, Detector):
+            socketio.emit('status_update', {'detector_id': obj.id, 'running': False})
+            detector_manager.update_detectors()
+        if isinstance(obj, CCTV):
+            socketio.emit('status_update', {'cctv_id': obj.id, 'status': False})
+            detector_manager.update_detectors()
+
+    # Clear thread-local storage after commit
+    _thread_local.new = []
+    _thread_local.dirty = []
+    _thread_local.deleted = []
+            
 
 class DetectorType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -262,19 +338,6 @@ class NotificationRule(db.Model):
 
     def __repr__(self):
         return f'<NotificationRule {self.id}>'
-
-class Weight(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), index=True)
-    file = db.Column(db.LargeBinary)    
-    path = db.Column(db.String(120), index=True)
-    detector_type = db.relationship('DetectorType', backref=db.backref('weights', lazy=True))
-    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
-    created_at = db.Column(db.DateTime, index=True)
-    permission = db.relationship('Permission', backref=db.backref('weights', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
-    created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
-    updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -45,7 +45,7 @@ weight_api_docs = {
                     "created_at": {
                         "type": "string"
                     },
-                    "role": {
+                    "permission_id": {
                         "type": "string"
                     }
                 }
@@ -170,7 +170,7 @@ def view(id=None):
             'file': weight.file,
             'path': weight.path,
             'created_at': weight.created_at,
-            'role': weight.role
+            'permission_id': weight.permission_id
         }
         return jsonify(weight), 200
     else:
@@ -183,7 +183,7 @@ def view(id=None):
                 'file': weight.file,
                 'path': weight.path,
                 'created_at': weight.created_at,
-                'role': weight.role
+                'permission_id': weight.permission_id
             })        
         return jsonify(weights), 200
     
@@ -192,17 +192,17 @@ def view(id=None):
 def create():
     form = ModelForm()
     if form.validate_on_submit():
-        role_dir = os.path.join('weights', session.get('role'))
-        if not os.path.exists(role_dir):
-            os.makedirs(role_dir)
-        form.file.data.save(os.path.join(role_dir, form.file.data.filename))
+        permission_id_dir = os.path.join('weights', session.get('permission_id'))
+        if not os.path.exists(permission_id_dir):
+            os.makedirs(permission_id_dir)
+        form.file.data.save(os.path.join(permission_id_dir, form.file.data.filename))
         new_model = Weight(
             name=form.name.data,
             detector_type_id=form.detector_type.data,
             file=form.file.data.read(),
-            path=os.path.join(role_dir, form.file.data.filename),
+            path=os.path.join(permission_id_dir, form.file.data.filename),
             created_at=datetime.now(),
-            role=session.get('role')
+            permission_id=session.get('permission_id')
         )
         db.session.add(new_model)
         db.session.commit()
@@ -221,9 +221,9 @@ def edit(id):
         model.name = form.name.data
         model.detector_type_id = form.detector_type.data
         model.file = form.file.data.read()
-        model.path = os.path.join('weights', session.get('role'), form.file.data.filename)
+        model.path = os.path.join('weights', session.get('permission_id'), form.file.data.filename)
         model.created_at = datetime.now()
-        model.role = session.get('role')
+        model.permission_id = session.get('permission_id')
         db.session.commit()
         flash('Model updated successfully!')
         return Response(status=200)

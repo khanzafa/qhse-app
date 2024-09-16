@@ -1,6 +1,9 @@
 # app/__init__.py
 # import threading
-from flask import Flask, current_app
+import signal
+from flask_socketio import SocketIO
+import threading
+from flask import Flask, current_app, session
 from base64 import b64encode
 from app.extensions import db, migrate, swagger
 # from ppe_detection import PPEDetector
@@ -20,6 +23,8 @@ from app.models import User
 # from selenium.webdriver.support.ui import WebDriverWait
 import os
 
+from utils.detector import DetectorManager
+
 # ppe_detector = PPEDetector()
 # gesture_detector = GestureForHelpDetector()
 # unfocused_detector = UnfocusedDetector()
@@ -28,6 +33,20 @@ login_manager.login_view = 'auth.login'
 # # Initialize Flask-Mail
 # mail = Mail()
 
+# Initialize Flask-SocketIO
+socketio = SocketIO()
+
+# Misal: Manajer detektor yang telah kita buat sebelumnya
+detector_manager = DetectorManager(session)
+
+def run_detectors(app):
+    detector_manager.initialize_detectors(app)
+
+# Tangkap sinyal untuk menghentikan detektor saat server dimatikan
+def handle_shutdown_signal(signal, frame):
+    print("Shutting down detector manager...")
+    detector_manager.stop_all()
+    print("Detector manager stopped.")
 
 def create_app():
     app = Flask(__name__)
@@ -54,15 +73,23 @@ def create_app():
 
     db.init_app(app)
     print("Database initialized.")
+
     migrate.init_app(app, db)
     print("Migration initialized.")
+
     swagger.init_app(app)
     print("Swagger initialized.")
+
     login_manager.init_app(app)
     print("Login manager initialized.")
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+    
+    # Initialize Flask-SocketIO with the app instance
+    socketio.init_app(app)
+    print("SocketIO initialized.")
     
     # # Initialize Flask-Mail with the app instance
     # mail.init_app(app)
@@ -71,8 +98,8 @@ def create_app():
     #     with app.app_context():
     #         detector.run(app)
 
-    from app.routes import web_bp
-    app.register_blueprint(web_bp)
+    # from app.routes import web_bp
+    # app.register_blueprint(web_bp)
     # from app.auth import auth as auth_blueprint
     # app.register_blueprint(main)
     # print("Main blueprint registered.")
@@ -89,41 +116,12 @@ def create_app():
     for route in api_routes:
         app.register_blueprint(route)
 
-    # app.register_blueprint(aios)
-    # print("AIOS blueprint registered.")
+    # Jalankan thread detektor sebelum memulai Flask
+    detector_thread = threading.Thread(target=run_detectors, args=(app,))
+    detector_thread.start()
 
-    # user_home_dir = os.path.expanduser("~")
-    # user_home_dir = user_home_dir.replace("\\", "/")
-    
-    # option = webdriver.ChromeOptions()
-    # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data')
-    # option.add_argument("--headless")
-    # option.add_experimental_option("detach", True)
-    # option.add_experimental_option("excludeSwitches", ["enable-automation"])
-    # option.add_experimental_option('useAutomationExtension', False)
-    # app.driver = webdriver.Chrome(options=option)
-    # app.driver.get("https://web.whatsapp.com/")
-    # app.wait = WebDriverWait(app.driver, 100)
-
-    # Tentukan direktori data pengguna untuk Firefox
-    # user_home_dir = os.path.expanduser("~")
-    # profile_dir = f"{user_home_dir}/.mozilla/firefox"
-
-    # # Konfigurasi opsi Firefox
-    # options = webdriver.FirefoxOptions()
-    # # Menentukan profil pengguna Firefox, jika Anda menggunakan profil khusus
-    # # Jika tidak menggunakan profil khusus, Anda bisa menghapus atau menyesuaikan baris ini
-    # options.set_preference("profile", profile_dir)
-    # # options.add_argument("--headless")
-    # app.driver = webdriver.Firefox(options=options)
-    # app.driver.get("https://web.whatsapp.com/")
-    # app.wait = WebDriverWait(app.driver, 100)
-
-    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
-    # print("PPE detector started.")
-    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    # print("Gesture detector started.")
-    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
-    # print("Unfocused detector started.")
+    # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
+    signal.signal(signal.SIGINT, handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
     return app

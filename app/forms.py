@@ -40,6 +40,12 @@ class DetectorForm(FlaskForm):
     running = BooleanField('Running')
     submit = SubmitField('Save')
 
+    def __init__(self, session_role=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cctv_id.choices = [(cctv.id, cctv.location) for cctv in CCTV.query.all()]
+        self.weight_id.choices = [(weight.id, weight.name) for weight in Weight.query.all()]
+        
+
 class ModelForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     detector_type = SelectField('Detector Type', coerce=int, validators=[DataRequired()])

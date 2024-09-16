@@ -1,3 +1,4 @@
+import time
 import cv2
 import logging
 from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, Response, jsonify
@@ -36,7 +37,7 @@ detector_api_docs = {
                     "running": {
                         "type": "boolean"
                     },
-                    "role": {
+                    "permission_id": {
                         "type": "string"
                     }
                 }
@@ -180,7 +181,7 @@ def view(id=None):
                 'cctv_id': detector.cctv_id,
                 'weight_id': detector.weight_id,
                 'running': detector.running,
-                'role': detector.permission_id
+                'permission_id': detector.permission_id
             })        
         return jsonify(detectors), 200
 
@@ -193,7 +194,7 @@ def create():
             cctv_id=form.cctv_id.data,
             weight_id=form.weight_id.data,
             running=form.running.data,
-            role=session.get('role')
+            permission_id=session['permission_id']
         )
         db.session.add(detector)
         db.session.commit()
@@ -209,9 +210,9 @@ def edit(id):
     detector = Detector.query.get_or_404(id)
     form = DetectorForm(obj=detector)
     if form.validate_on_submit():
-        detector.cctv_id = form.cctv_id.data
-        detector.weight_id = form.weight_id.data
-        detector.running = form.running.data
+        detector.cctv_id = form.cctv_id.data or detector.cctv_id
+        detector.weight_id = form.weight_id.data or detector.weight_id
+        detector.running = form.running.data or detector.running
         db.session.commit()
         flash('Detector updated successfully!')
         return Response(status=200)
@@ -231,27 +232,16 @@ def delete(id):
 @detector_bp.route('/<int:detector_id>/stream')
 @swag_from(detector_api_docs['stream'])
 def detector_stream(detector_id):
-    detector = Detector.query.get_or_404(detector_id)    
-    detector_type = detector_type
-    detector_types = {
-        # 'PPE': ppe_detector,
-        # 'Gesture': gesture_detector,
-        # 'Unfocused': unfocused_detector
-    }
-    detector = detector_types[detector_type]
+    from app import detector_manager
     def generate_frames():
         while True:
-            if detector_id in detector.frames:
-                print(f"Detector {detector_id} dengan tipe {detector_type} terdapat frame")
-                frame = detector.frames[detector_id]            
-                print("Frame:", frame)
-                # cv2.imshow("Frame", frame)
+            if detector_id in detector_manager.annotated_frames:
+                frame = detector_manager.annotated_frames[detector_id]
                 ret, buffer = cv2.imencode('.jpg', frame)
                 frame = buffer.tobytes()
-                yield (b'--frame\r\n'   
+                yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
             else:
-                print(f"Detector {detector_id} dengan tipe {detector_type} TIDAK terdapat frame")
-                continue
-    
+                time.sleep(0.1)  # Wait for a short time before checking again
+
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')

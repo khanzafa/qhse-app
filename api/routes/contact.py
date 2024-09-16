@@ -177,7 +177,7 @@ def create():
             phone_number=form.phone_number.data,
             name=form.name.data,
             description=form.description.data,
-            role=session.get('role')
+            permission_id=session.get('permission_id')
         )
         db.session.add(contact)
         db.session.commit()
