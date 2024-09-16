@@ -194,7 +194,7 @@ def create():
             cctv_id=form.cctv_id.data,
             weight_id=form.weight_id.data,
             running=form.running.data,
-            permission_id=session['permission_id']
+            permission_id=session.get('permission_id')
         )
         db.session.add(detector)
         db.session.commit()

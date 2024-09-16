@@ -25,7 +25,7 @@ from flask import (
 )
 from app.extensions import db
 from app.models import (
-    Camera,
+    CCTV,
     Contact,
     DetectedObject,
     Detector,
@@ -44,7 +44,7 @@ from app.forms import (
     LoginForm,
     RegistrationForm,
 )
-from app import gesture_detector, ppe_detector, unfocused_detector
+# from app import gesture_detector, ppe_detector, unfocused_detector
 from flask_login import current_user, login_user, logout_user, login_required
 
 main = Blueprint("main", __name__)
@@ -56,12 +56,12 @@ GRAPHICS_DIR = "app/static/graphics"
 def index():
     return render_template("index.html", title="Home", current_user=current_user)
 
-
+# DONE
 @main.route("/report/dashboard")
 @login_required
 def dashboard():
     # Fetching data
-    num_cctv = Camera.query.count()
+    num_cctv = CCTV.query.count()
     num_detectors = Detector.query.count()
 
     num_no_helmet = DetectedObject.query.filter(
@@ -97,7 +97,7 @@ def dashboard():
         safety_incidents=safety_incidents,
     )
 
-
+# DONE
 @main.route("/cctv/view_feed/<int:camera_id>")
 def view_cctv_feed(camera_id):
     return render_template(
@@ -107,10 +107,10 @@ def view_cctv_feed(camera_id):
         current_user=current_user,
     )
 
-
+# DONE
 @main.route("/cctv/stream/<int:camera_id>")
 def cctv_stream(camera_id):
-    camera = Camera.query.get_or_404(camera_id)
+    camera = CCTV.query.get_or_404(camera_id)
 
     def generate_frames():
         address = 0 if camera.ip_address == "http://0.0.0.0" else camera.ip_address
@@ -176,22 +176,22 @@ def detector_stream(detector_id):
 
 @main.route("/cctv/all", methods=["GET"])
 def view_all_cctv():
-    cameras = Camera.query.all()
+    cameras = CCTV.query.all()
     return jsonify([camera.to_dict() for camera in cameras])
 
-
+# DONE
 @main.route("/cctv/manage", methods=["GET", "POST"])
 def manage_cctv():
     form = AddCCTVForm()
     if form.validate_on_submit():
-        camera = Camera(
+        camera = CCTV(
             location=form.location.data, ip_address=form.ip_address.data, status=0
         )
         db.session.add(camera)
         db.session.commit()
         flash("CCTV added successfully!")
         return redirect(url_for("main.manage_cctv"))
-    cameras = Camera.query.all()
+    cameras = CCTV.query.all()
     return render_template(
         "manage_cctv.html",
         title="Manage CCTV",
@@ -200,10 +200,10 @@ def manage_cctv():
         cameras=cameras,
     )
 
-
+# DONE
 @main.route("/cctv/edit/<int:id>", methods=["GET", "POST"])
 def edit_cctv(id):
-    camera = Camera.query.get_or_404(id)
+    camera = CCTV.query.get_or_404(id)
     form = EditCCTVForm(obj=camera)
     if form.validate_on_submit():
         camera.location = form.location.data
@@ -217,16 +217,16 @@ def edit_cctv(id):
         "edit_cctv.html", title="Edit CCTV", form=form, current_user=current_user
     )
 
-
+# DONE
 @main.route("/cctv/delete/<int:id>", methods=["POST"])
 def delete_cctv(id):
-    camera = Camera.query.get_or_404(id)
+    camera = CCTV.query.get_or_404(id)
     db.session.delete(camera)
     db.session.commit()
     flash("CCTV deleted successfully!", "success")
     return redirect(url_for("main.manage_cctv"))
 
-
+# DONE
 @main.route("/get_weights/<int:detector_type_id>")
 def get_weights(detector_type_id):
     weights = Weight.query.filter_by(detector_type_id=detector_type_id).all()
@@ -244,7 +244,7 @@ def manage_detector(id=None):
         form = DetectorForm()
         title = "Add New Detector"
 
-    cameras = Camera.query.all()
+    cameras = CCTV.query.all()
     detector_types = DetectorType.query.all()
     if len(detector_types) == 0:
         detector_types = [
@@ -346,7 +346,7 @@ def delete_contact(id):
     flash("Contact entry deleted successfully!")
     return redirect(url_for("main.manage_contact"))
 
-
+# DONE
 # Manage model
 @main.route("/object-detection/model/manage", methods=["GET", "POST"])
 @main.route("/object-detection/model/manage/<int:id>", methods=["GET", "POST"])
@@ -394,7 +394,7 @@ def manage_model(id=None):
         "manage_model.html", form=form, models=models, model=model, title=title
     )
 
-
+# DONE
 @main.route("/object-detection/model/delete/<int:id>", methods=["POST"])
 def delete_model(id):
     model = Weight.query.get_or_404(id)
@@ -403,7 +403,7 @@ def delete_model(id):
     flash("Model deleted successfully!")
     return redirect(url_for("main.manage_model"))
 
-
+# DONE
 # Manage message
 @main.route("/object-detection/message/manage", methods=["GET", "POST"])
 @main.route("/object-detection/message/manage/<int:id>", methods=["GET", "POST"])
@@ -412,7 +412,7 @@ def manage_message(id=None):
         "manage_message.html", title="Manage Message", current_user=current_user
     )
 
-
+# DONE
 @main.route("/report/detected-object", methods=["GET"])
 def detected_object():
     page = request.args.get("page", 1, type=int)
@@ -422,7 +422,7 @@ def detected_object():
     if search_query:
         detected_objects = (
             DetectedObject.query.join(Detector)
-            .join(Camera)
+            .join(CCTV)
             .filter(DetectedObject.name.like(f"%{search_query}%"))
             .order_by(DetectedObject.timestamp.desc())
             .paginate(page=page, per_page=per_page)
@@ -430,7 +430,7 @@ def detected_object():
     else:
         detected_objects = (
             DetectedObject.query.join(Detector)
-            .join(Camera)
+            .join(CCTV)
             .order_by(DetectedObject.timestamp.desc())
             .paginate(page=page, per_page=per_page)
         )
@@ -441,7 +441,7 @@ def detected_object():
         search_query=search_query,
     )
 
-
+# DONE
 @main.route("/report/detected-object/view-object/<int:object_id>", methods=["GET"])
 def view_object(object_id):
     detected_object = DetectedObject.query.get_or_404(object_id)

@@ -4,6 +4,7 @@ from api.routes.detector import detector_bp
 from api.routes.document import document_bp
 from api.routes.message import message_bp
 from api.routes.notification import notification_bp
+from api.routes.report import report_bp
 from api.routes.weight import weight_bp
 
 api_routes = [
@@ -13,5 +14,6 @@ api_routes = [
     document_bp,
     message_bp,
     notification_bp,
+    report_bp,
     weight_bp
 ]
