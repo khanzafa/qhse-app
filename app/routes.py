@@ -17,6 +17,7 @@ from flask import (
     redirect,
     request,
     send_from_directory,
+    session,
     url_for,
     Response,
     stream_with_context,
@@ -30,6 +31,8 @@ from app.models import (
     DetectedObject,
     Detector,
     DetectorType,
+    MessageTemplate,
+    NotificationRule,
     User,
     Weight,
     suMenu,
@@ -37,7 +40,9 @@ from app.models import (
 from app.forms import (
     AddCCTVForm,
     EditCCTVForm,
+    MessageTemplateForm,
     ModelForm,
+    NotificationRuleForm,
     SelectCCTVForm,
     ContactForm,
     DetectorForm,
@@ -46,6 +51,8 @@ from app.forms import (
 )
 # from app import gesture_detector, ppe_detector, unfocused_detector
 from flask_login import current_user, login_user, logout_user, login_required
+
+from utils.auth import get_allowed_permission_ids
 
 main = Blueprint("main", __name__)
 # current_user = {'name': 'John'}
@@ -60,9 +67,13 @@ def index():
 @main.route("/report/dashboard")
 @login_required
 def dashboard():
+    session_permission = session.get('permission_id')
+    print('session perm')
+    print(session_permission)
+    
     # Fetching data
-    num_cctv = CCTV.query.count()
-    num_detectors = Detector.query.count()
+    num_cctv = CCTV.query.filter_by(permission_id=session_permission).count()
+    num_detectors = Detector.query.filter_by(permission_id=session_permission).count()
 
     num_no_helmet = DetectedObject.query.filter(
         DetectedObject.name.like("%No helmet%")
@@ -87,7 +98,7 @@ def dashboard():
     )  # Replace with actual data
 
     return render_template(
-        "dashboard.html",
+        "dashboard.html",   
         num_cctv=num_cctv,
         num_detectors=num_detectors,
         num_no_ppe=num_no_ppe,
@@ -95,6 +106,7 @@ def dashboard():
         num_gesture_help=num_gesture_help,
         chatbot_requests=chatbot_requests,
         safety_incidents=safety_incidents,
+        # session_permission = session_permission
     )
 
 # DONE
@@ -105,26 +117,6 @@ def view_cctv_feed(camera_id):
         title="Live CCTV Feed",
         camera_id=camera_id,
         current_user=current_user,
-    )
-
-# DONE
-@main.route("/cctv/stream/<int:camera_id>")
-def cctv_stream(camera_id):
-    camera = CCTV.query.get_or_404(camera_id)
-
-    def generate_frames():
-        address = 0 if camera.ip_address == "http://0.0.0.0" else camera.ip_address
-        cap = cv2.VideoCapture(address)
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            ret, buffer = cv2.imencode(".jpg", frame)
-            frame = buffer.tobytes()
-            yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
-
-    return Response(
-        generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
 
@@ -191,7 +183,8 @@ def manage_cctv():
         db.session.commit()
         flash("CCTV added successfully!")
         return redirect(url_for("main.manage_cctv"))
-    cameras = CCTV.query.all()
+    # cameras = CCTV.query.all()
+    cameras = requests.get(url=f'http://localhost:5000/cctv').json()
     return render_template(
         "manage_cctv.html",
         title="Manage CCTV",
@@ -449,25 +442,24 @@ def view_object(object_id):
 
 
 # Super user
-@main.route("/su", methods=["GET", "POST"])
+@main.route("/su", methods=["GET"])
 @login_required
 def su():
-    # Check if the current user has the 'manager' role
-    if current_user.role != "manager":
-        abort(403)  # Forbidden access
     return render_template("su.html")
 
 
 @main.route("/su/all-cards", methods=["GET"])
 @login_required
 def all_cards():
-    all_cards = suMenu.query.all()
+    allowed = get_allowed_permission_ids()
+    all_cards = suMenu.query.filter(suMenu.permission_id.in_(allowed)).all()
 
     results = [
         {
             "title": card.title,
             "url": card.url,
             "imageUrl": url_for("main.uploaded_file", filename=card.path),
+            "permission_id": card.permission_id
         }
         for card in all_cards
     ]
@@ -482,10 +474,13 @@ def search():
 
     if query:
         # Perform a search based on the title
-        search_results = suMenu.query.filter(suMenu.title.ilike(f"%{query}%")).all()
+        search_results = suMenu.query.filter(
+            suMenu.permission_id.in_(get_allowed_permission_ids()),
+            suMenu.title.ilike(f"%{query}%")
+            ).all()
     else:
         # If no query, return all results
-        search_results = suMenu.query.all()
+        search_results = suMenu.query.filter(suMenu.permission_id.in_(get_allowed_permission_ids())).all()
 
     # Return the results in JSON format
     results = [
@@ -495,6 +490,7 @@ def search():
             "imageUrl": url_for(
                 "main.uploaded_file", filename=result.path
             ),  # Assuming path is stored for image location
+            "permission_id": result.permission_id
         }
         for result in search_results
     ]
@@ -554,6 +550,9 @@ def uploaded_file(filename):
 
 @main.route("/su/approval", methods=["GET"])
 def su_approval():
+    # Check if the current user has the 'manager' role
+    if current_user.role.lower() != "manager":
+        abort(403)  # Forbidden access
     # Query users where approval is None or Null
     applicants = User.query.filter((User.approved.is_(None))).all()
     return render_template("su_approval.html", applicants=applicants)
@@ -599,7 +598,97 @@ def get_updated_table():
     return render_template("su_table_rows.html", applicants=applicants)
 
 
-# test ajax
-# @main.route('/dum', methods=['POST'])
-# def dum():
-#     return 'hah?'
+@main.route("/su/grant_access", methods=["GET"])
+def grant_access():
+    # Check if the current user has the 'manager' role
+    if current_user.role.lower() != "manager":
+        abort(403)  # Forbidden access
+    # Query users where approval is None or Null
+    users = User.query.filter((User.role.ilike('%manager%') == False) & (User.approved == True)).all()
+    return render_template("grant_access.html", users=users)
+
+
+@main.route('/set_session', methods=['POST'])
+def set_session():
+    permission_id = request.form.get('id')
+    if permission_id:
+        session['permission_id'] = permission_id
+        return jsonify({'status': 'success'}), 200
+    return jsonify({'status': 'error', 'message': 'No ID provided'}), 400
+
+@main.app_context_processor
+def inject_session_permission():
+    return dict(session_permission=session.get('permission_id', ''))
+
+# buat test
+# NOTIFICATION RULE
+@main.route('/object-detection/notification-rule/manage', methods=['GET', 'POST'])
+@main.route('/object-detection/notification-rule/manage/<int:rule_id>', methods=['GET', 'POST'])
+def manage_notification_rules(rule_id=None):
+    if rule_id:
+        message = MessageTemplate.query.get(rule_id)
+        message_form = MessageTemplateForm(obj=message)
+        message_title = "Edit Message"
+    else:
+        message = None
+        message_form = MessageTemplateForm()
+        message_title = "Add New Message"
+
+    if message_form.validate_on_submit() and 'submit_message' in request.form:
+        if message:
+            message.name = message_form.name.data
+            message.template = message_form.template.data
+        else:
+            new_message = MessageTemplate(
+                name=message_form.name.data,
+                template=message_form.template.data,
+                role=session.get('role')
+            )
+            db.session.add(new_message)
+        db.session.commit()
+        flash('Message updated!' if message else 'Message added!', 'success')
+        return redirect(url_for('main.manage_notification_rules'))
+
+    # Handling Notification Rule form
+    rule_id = request.form.get('rule_id')
+    if rule_id:
+        rule = NotificationRule.query.get(rule_id) or None
+        rule_form = NotificationRuleForm(obj=rule) 
+        rule_title = "Edit Notification Rule"
+    else:
+        rule = None
+        rule_form = NotificationRuleForm()
+        rule_form.detector_id.choices.insert(0, (0, 'Select Detector'))
+        rule_form.contact_id.choices.insert(0, (0, 'Select Contact'))
+        rule_form.message_template_id.choices.insert(0, (0, 'Select Message Template'))
+        rule_title = "Add New Notification Rule"
+
+    if rule_form.validate_on_submit() and 'submit_rule' in request.form:
+        if rule:
+            rule.detector_id = rule_form.detector_id.data
+            rule.contact_id = rule_form.contact_id.data
+            rule.message_template_id = rule_form.message_template_id.data
+        else:
+            new_rule = NotificationRule(
+                detector_id=rule_form.detector_id.data,
+                contact_id=rule_form.contact_id.data,
+                message_template_id=rule_form.message_template_id.data,
+                role=session.get('role')
+            )
+            db.session.add(new_rule)
+        db.session.commit()
+        flash('Rule updated!' if rule else 'Rule added!', 'success')
+        return redirect(url_for('main.manage_notification_rules'))
+
+    messages = MessageTemplate.query.filter(MessageTemplate.permission_id.in_(get_allowed_permission_ids())).all()
+    rules = NotificationRule.query.filter(NotificationRule.permission_id.in_(get_allowed_permission_ids())).all()
+    
+    return render_template(
+        'manage_notification_rules.html', 
+        message_form=message_form, 
+        rule_form=rule_form, 
+        messages=messages, 
+        rules=rules,
+        message_title=message_title,
+        rule_title=rule_title
+    )

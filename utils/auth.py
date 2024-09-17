@@ -7,4 +7,4 @@ def get_allowed_permission_ids():
         return []
 
     user_permissions = UserPermission.query.filter_by(user_id=current_user.id).all()
-    return [permission.id for permission in user_permissions]
+    return [permission.permission_id for permission in user_permissions]

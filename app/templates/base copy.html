@@ -19,7 +19,7 @@
     <div id="logo" class="text-xl font-semibold">
       <img src="/static/img/spil_logo.svg" alt="Logo" class="h-8" />
     </div>
-    <span class="text-2xl font-bold ml-3 tracking-wide text-gray-800">{{session_permission}}</span>
+    <span class="text-2xl font-bold ml-3 tracking-wide text-gray-800">{{session_role}}</span>
   </div>
 
   <!-- Running Text -->
@@ -154,8 +154,19 @@
           </a> -->
 
           <!-- Dropdown: Master Chatbot -->
-
-        <!-- </div> -->
+          <!-- <div x-show="open" class="pl-10">
+            <a href="{{ url_for('guide_bot.manage_documents') }}"
+              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/guide-bot/documents/' in request.path else '' }}">
+              <i class="fas fa-file-alt mr-3"></i>
+              Documents
+            </a>
+            <a href="{{ url_for('guide_bot.chat') }}"
+              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/guide-bot/chat/' in request.path else '' }}">
+              <i class="fas fa-comments mr-3"></i>
+              Chatbot
+            </a>
+          </div>
+        </div> -->
 
         <!-- AIOS -->
         <a href="{{ url_for('aios.index') }}"

@@ -37,6 +37,7 @@ class User(db.Model, UserMixin):
     phone_number = db.Column(db.String(20), index=True, unique=True)
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(10), default='user')
+    approved = db.Column(db.Boolean(), default=None)
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -392,9 +393,11 @@ class Document(db.Model):
 class suMenu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), unique=True, nullable=False)
-    url = db.Column(db.String(100), default=True, nullable=False)
+    url = db.Column(db.String(100), default="", nullable=False)
     file = db.Column(db.LargeBinary) # image
     path = db.Column(db.String(120), index=True)
+    permission = db.relationship('Permission', backref=db.backref('sumenus', uselist=False))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
     
     def __repr__(self):
-        return f'<GroupContact {self.name}>'
+        return f'<GroupContact {self.title}>'

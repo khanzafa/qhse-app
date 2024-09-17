@@ -16,11 +16,10 @@ from app.extensions import db, migrate, swagger
 from api.routes import api_routes
 from flask_login import LoginManager
 from app.models import User
-# from aios.routes import aios
 # from flask_mail import Mail
 
-# from selenium import webdriver
-# from selenium.webdriver.support.ui import WebDriverWait
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 import os
 
 from utils.detector import DetectorManager
@@ -100,9 +99,9 @@ def create_app():
 
     # from app.routes import web_bp
     # app.register_blueprint(web_bp)
-    # from app.auth import auth as auth_blueprint
-    # app.register_blueprint(main)
-    # print("Main blueprint registered.")
+    from app.routes import main
+    app.register_blueprint(main)
+    print("Main blueprint registered.")
     # app.register_blueprint(ppe)
     # print("PPE blueprint registered.")
     # app.register_blueprint(gesture)
@@ -111,17 +110,40 @@ def create_app():
     # print("Unfocused blueprint registered.")
     # app.register_blueprint(guide_bot)
     # print("Guide bot blueprint registered.")
-    # app.register_blueprint(auth_blueprint)
-    # print("Auth blueprint registered.")
+    from app.auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint)
+    print("Auth blueprint registered.")
+    from aios.routes import aios
+    app.register_blueprint(aios)
     for route in api_routes:
+        print(route)
         app.register_blueprint(route)
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,))
-    detector_thread.start()
+    # detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)
     signal.signal(signal.SIGTERM, handle_shutdown_signal)
+    user_home_dir = os.path.expanduser("~")
+    user_home_dir = user_home_dir.replace("\\", "/")
+    
+    # option = webdriver.ChromeOptions()
+    # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data')
+    # option.add_argument("--headless")
+    # option.add_experimental_option("detach", True)
+    # option.add_experimental_option("excludeSwitches", ["enable-automation"])
+    # option.add_experimental_option('useAutomationExtension', False)
+    # app.driver = webdriver.Chrome(options=option)
+    # app.driver.get("https://web.whatsapp.com/")
+    # app.wait = WebDriverWait(app.driver, 100)
+
+    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    # print("PPE detector started.")
+    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
+    # print("Gesture detector started.")
+    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    # print("Unfocused detector started.")
 
     return app
