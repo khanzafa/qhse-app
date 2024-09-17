@@ -14,8 +14,8 @@ from app.routes import main
 # from aios.routes import aios
 # from flask_mail import Mail
 
-# from selenium import webdriver
-# from selenium.webdriver.support.ui import WebDriverWait
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 import os
 
 from utils.detector import DetectorManager
@@ -107,6 +107,7 @@ def create_app():
     app.register_blueprint(auth_blueprint)
     print("Auth blueprint registered.")
     for route in api_routes:
+        print(route)
         app.register_blueprint(route)
 
     # Jalankan thread detektor sebelum memulai Flask
