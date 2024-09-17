@@ -186,7 +186,7 @@ class BaseDetector:
     def load_notification_rules(self, detector_id):
         with self.app.app_context():
             # rules = NotificationRule.query.filter_by(detector_id=detector_id).all()
-            rules = NotificationRule.query.join(Detector).join(MessageTemplate).join(Contact).filter(Detector.id == detector_id, Detector.permission_id.in_(get_allowed_permission_ids())).all()
+            rules = NotificationRule.query.join(Detector).join(MessageTemplate).join(Contact).filter(Detector.id == detector_id, Detector.permission_id == session.get('permission_id')).all()
             self.notification_rules[detector_id] = rules
 
     def release_caps(self):

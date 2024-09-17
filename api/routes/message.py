@@ -145,7 +145,7 @@ def view(id=None):
         return jsonify(message), 200
     else:
         messages = []
-        for message in MessageTemplate.query.filter(MessageTemplate.permission_id.in_(get_allowed_permission_ids())).all():
+        for message in MessageTemplate.query.filter(MessageTemplate.permission_id == session.get('permission_id')).all():
             messages.append({
                 'id': message.id,
                 'name': message.name,
@@ -153,6 +153,7 @@ def view(id=None):
                 'permission_id': message.permission_id
             })        
         return jsonify(messages), 200
+        # return render_template('manage_message.html', messages=messages, form=MessageTemplateForm())
     
 @message_bp.route('/', methods=['POST'])    
 @swag_from(message_api_docs['create'])
@@ -167,7 +168,8 @@ def create():
         db.session.add(message)
         db.session.commit()
         flash('Message template added successfully!')
-        return Response(status=201)
+        # return Response(status=201)
+        return redirect(url_for('message.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -180,7 +182,8 @@ def edit(id):
     if form.validate_on_submit():
         form.populate_obj(message)
         db.session.commit()
-        return Response(status=200)
+        # return Response(status=200)
+        return redirect(url_for('message.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -191,4 +194,4 @@ def delete(id):
     message = MessageTemplate.query.get_or_404(id)
     db.session.delete(message)
     db.session.commit()
-    return Response(status=200)
+    # return Response(status=200)

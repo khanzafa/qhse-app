@@ -37,6 +37,7 @@ class User(db.Model, UserMixin):
     phone_number = db.Column(db.String(20), index=True, unique=True)
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(10), default='user')
+    approved = db.Column(db.Boolean(), default=None)
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -46,7 +47,7 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    # def is_manager(self):
+    # def is_manager(self): 
     #     return self.role == 'manager'
 
     def to_dict(self):

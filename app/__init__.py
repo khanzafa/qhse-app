@@ -6,16 +6,11 @@ import threading
 from flask import Flask, current_app, session
 from base64 import b64encode
 from app.extensions import db, migrate, swagger
-# from ppe_detection import PPEDetector
-# from gesture_detection import GestureForHelpDetector
-# from unfocused_detection import UnfocusedDetector
-# from ppe_detection.routes import ppe
-# from gesture_detection.routes import gesture
-# from unfocused_detection.routes import unfocused
 # from guide_bot.routes import guide_bot
 from api.routes import api_routes
 from flask_login import LoginManager
 from app.models import User
+from app.routes import main
 # from aios.routes import aios
 # from flask_mail import Mail
 
@@ -98,11 +93,9 @@ def create_app():
     #     with app.app_context():
     #         detector.run(app)
 
-    # from app.routes import web_bp
-    # app.register_blueprint(web_bp)
-    # from app.auth import auth as auth_blueprint
-    # app.register_blueprint(main)
-    # print("Main blueprint registered.")
+    from app.auth import auth as auth_blueprint
+    app.register_blueprint(main)
+    print("Main blueprint registered.")
     # app.register_blueprint(ppe)
     # print("PPE blueprint registered.")
     # app.register_blueprint(gesture)
@@ -111,17 +104,17 @@ def create_app():
     # print("Unfocused blueprint registered.")
     # app.register_blueprint(guide_bot)
     # print("Guide bot blueprint registered.")
-    # app.register_blueprint(auth_blueprint)
-    # print("Auth blueprint registered.")
+    app.register_blueprint(auth_blueprint)
+    print("Auth blueprint registered.")
     for route in api_routes:
         app.register_blueprint(route)
 
     # Jalankan thread detektor sebelum memulai Flask
-    detector_thread = threading.Thread(target=run_detectors, args=(app,))
-    detector_thread.start()
+    # detector_thread = threading.Thread(target=run_detectors, args=(app,))
+    # detector_thread.start()
 
-    # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
-    signal.signal(signal.SIGINT, handle_shutdown_signal)
-    signal.signal(signal.SIGTERM, handle_shutdown_signal)
+    # # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
+    # signal.signal(signal.SIGINT, handle_shutdown_signal)
+    # signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
     return app

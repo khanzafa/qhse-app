@@ -175,7 +175,7 @@ def view(id=None):
         return jsonify(weight), 200
     else:
         weights = []
-        for weight in Weight.query.filter(Weight.permission_id.in_(get_allowed_permission_ids())).all():
+        for weight in Weight.query.filter(Weight.permission_id == session.get('permission_id')).all():
             weights.append({
                 'id': weight.id,
                 'name': weight.name,
@@ -185,7 +185,8 @@ def view(id=None):
                 'created_at': weight.created_at,
                 'permission_id': weight.permission_id
             })        
-        return jsonify(weights), 200
+        # return jsonify(weights), 200
+        return render_template('manage_model.html', models=weights, form=ModelForm())
     
 @weight_bp.route('/', methods=['POST'])
 @swag_from(weight_api_docs['create'])

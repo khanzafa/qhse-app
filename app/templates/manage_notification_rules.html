@@ -51,12 +51,12 @@
                     {% for rule in rules %}
                     <tr class="flex justify-between items-center p-4 bg-gray-50 rounded-md shadow">
                         <td>{{ rule.id }}</td>
-                        <td>{{ rule.detector.id }}</td>
-                        <td>{{ rule.contact.name }}</td>
-                        <td>{{ rule.message_template.name }}</td>
+                        <td>{{ rule.detector_id }}</td>
+                        <td>{{ rule.contact_id }}</td>
+                        <td>{{ rule.message_template_id }}</td>
                         <td>
                             <button
-                                onclick="openRuleModal('{{ rule.id }}', '{{ rule.detector.id }}', '{{ rule.contact.id }}', '{{ rule.message_template.id }}')"
+                                onclick="openRuleModal('{{ rule.id }}', '{{ rule.detector_id }}', '{{ rule.contact_id }}', '{{ rule.message_template_id }}')"
                                 class="bg-red-600 text-white px-4 py-1 rounded-md hover:bg-red-700 transition">
                                 Edit
                             </button>
@@ -77,7 +77,7 @@
             ✖
         </button>
         <h2 class="text-xl font-semibold mb-4" id="messageModalTitle">Add New Message</h2>
-        <form id="messageForm" method="POST" action="{{ url_for('main.manage_notification_rules') }}" class="space-y-4">
+        <form id="messageForm" method="POST" action="{{ url_for('message.create') }}" class="space-y-4">
             {{ message_form.hidden_tag() }}
             <input type="hidden" name="rule_id" id="message_id" value="">
             <div>
@@ -111,7 +111,7 @@
             ✖
         </button>
         <h2 class="text-xl font-semibold mb-4" id="ruleModalTitle">Add New Notification Rule</h2>
-        <form id="ruleForm" method="POST" action="{{ url_for('main.manage_notification_rules') }}" class="space-y-4">
+        <form id="ruleForm" method="POST" action="{{ url_for('notification.create') }}" class="space-y-4">
             {{ rule_form.hidden_tag() }}
             <input type="hidden" name="rule_id" id="rule_id" value="">
             <div>

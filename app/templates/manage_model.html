@@ -20,11 +20,13 @@
                 PyTorch.
                 After training, save your model using the following code:
             </p>
-            
+
             <div class="mt-6 mb-4">
                 <p class="font-semibold">Get dataset from Roboflow</p>
                 <p class="text-gray-700">
-                    You can get this code from Roboflow. Go to the project versions, select a version, click 'Download Dataset,' choose the desired YOLO version format, then select the 'Show download code' option and click 'Continue.' After that, you will be prompted with a copyable code to download the dataset.
+                    You can get this code from Roboflow. Go to the project versions, select a version, click 'Download
+                    Dataset,' choose the desired YOLO version format, then select the 'Show download code' option and
+                    click 'Continue.' After that, you will be prompted with a copyable code to download the dataset.
                 </p>
                 <pre class="bg-gray-200 p-4 rounded-md text-sm whitespace-pre-wrap break-words mt-2">
 !pip install roboflow
@@ -40,7 +42,8 @@ dataset = version.download("yolov8")
             <div class="my-4">
                 <p class="font-semibold">Steps to train a YOLO model</p>
                 <p class="text-gray-700">
-                    Fill the data parameter with the path to the data.yaml file extracted from the Roboflow code earlier, and adjust the epochs parameter as needed.
+                    Fill the data parameter with the path to the data.yaml file extracted from the Roboflow code
+                    earlier, and adjust the epochs parameter as needed.
                 </p>
                 <pre class="bg-gray-200 p-4 rounded-md text-sm whitespace-pre-wrap break-words mt-2">
 from ultralytics import YOLO
@@ -75,7 +78,7 @@ model.train(data="/content/seek-help-detection-3/data.yaml", epochs=100, imgsz=6
                     {% for model in models %}
                     <tr>
                         <td class="border border-gray-300 px-2 py-1">{{ model.name }}</td>
-                        <td class="border border-gray-300 px-2 py-1">{{ model.detector_type.name }}</td>
+                        <td class="border border-gray-300 px-2 py-1">{{ model.detector_type_id }}</td>
                         <td class="border border-gray-300 px-2 py-1">{{ model.created_at.strftime('%Y-%m-%d %H:%M:%S')
                             }}</td>
                         <td class="border border-gray-300 px-2 py-1 flex space-x-2">
@@ -87,7 +90,7 @@ model.train(data="/content/seek-help-detection-3/data.yaml", epochs=100, imgsz=6
                             </button>
 
                             <!-- Delete -->
-                            <form action="{{ url_for('main.delete_model', id=model.id) }}" method="POST"
+                            <form action="{{ url_for('weight.delete', id=model.id) }}" method="POST"
                                 class="inline-block">
                                 <button type="submit" class="text-red-500 hover:text-red-700"
                                     onclick="return confirm('Are you sure you want to delete this model?');">
@@ -118,7 +121,7 @@ model.train(data="/content/seek-help-detection-3/data.yaml", epochs=100, imgsz=6
             </div>
 
             <form method="POST" enctype="multipart/form-data"
-                action="{{ url_for('main.manage_model', id=model.id if model else None) }}">
+                action="{{ url_for('weight.create', id=model.id if model else None) }}">
                 {{ form.hidden_tag() }}
 
                 <div class="mb-4">
@@ -164,7 +167,7 @@ model.train(data="/content/seek-help-detection-3/data.yaml", epochs=100, imgsz=6
                 </button>
             </div>
 
-            <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.manage_model', id=model.id) }}">
+            <form method="POST" enctype="multipart/form-data" action="{{ url_for('weight.edit', id=model.id) }}">
                 {{ form.hidden_tag() }}
 
                 <div class="mb-4">

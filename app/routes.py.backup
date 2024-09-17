@@ -33,14 +33,14 @@ def dashboard():
     print("CURRENT USER:", current_user)
     print(Style.RESET_ALL)        
     # Fetching data 
-    num_cctv = Camera.query.filter(Camera.permission_id.in_(get_allowed_permission_ids())).count()
-    num_detectors = Detector.query.filter(Detector.permission_id.in_(get_allowed_permission_ids())).count()
+    num_cctv = Camera.query.filter(Camera.permission_id == session.get('permission_id')).count()
+    num_detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).count()
 
-    num_no_helmet = DetectedObject.query.filter(DetectedObject.name.like('%No helmet%'), DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
-    num_no_vest = DetectedObject.query.filter(DetectedObject.name.like('%No vest%'), DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
+    num_no_helmet = DetectedObject.query.filter(DetectedObject.name.like('%No helmet%'), DetectedObject.permission_id == session.get('permission_id')).count()
+    num_no_vest = DetectedObject.query.filter(DetectedObject.name.like('%No vest%'), DetectedObject.permission_id == session.get('permission_id')).count()
     num_no_ppe = num_no_helmet + num_no_vest
-    num_reckless = DetectedObject.query.filter(DetectedObject.name == 'sleepy', DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
-    num_gesture_help = DetectedObject.query.filter(DetectedObject.name == 'cross-hands', DetectedObject.permission_id.in_(get_allowed_permission_ids())).count()
+    num_reckless = DetectedObject.query.filter(DetectedObject.name == 'sleepy', DetectedObject.permission_id == session.get('permission_id')).count()
+    num_gesture_help = DetectedObject.query.filter(DetectedObject.name == 'cross-hands', DetectedObject.permission_id == session.get('permission_id')).count()
 
     # Example data for charts (this would normally be queried from the database)
     today = datetime.today()
@@ -63,7 +63,7 @@ def manage_cctv():
         db.session.commit()
         flash('CCTV added successfully!')
         return redirect(url_for('main.manage_cctv'))
-    cameras = Camera.query.filter(Camera.permission_id.in_(get_allowed_permission_ids())).all()
+    cameras = Camera.query.filter(Camera.permission_id == session.get('permission_id')).all()
     return render_template('manage_cctv.html', title='Manage CCTV', form=form, cameras=cameras)
 
 @main.route('/cctv/edit/<int:id>', methods=['GET', 'POST'])
@@ -123,7 +123,7 @@ def manage_detector(id=None):
         form = DetectorForm()
         title = "Add New Detector"
 
-    cameras = Camera.query.filter(Camera.permission_id.in_(get_allowed_permission_ids())).all()
+    cameras = Camera.query.filter(Camera.permission_id == session.get('permission_id')).all()
     detector_types = DetectorType.query.all()
     if len(detector_types) == 0:
         detector_types = [
@@ -143,7 +143,7 @@ def manage_detector(id=None):
         db.session.add_all(detector_types)
         db.session.commit()
 
-    weights = Weight.query.filter(Weight.permission_id.in_(get_allowed_permission_ids())).all()
+    weights = Weight.query.filter(Weight.permission_id == session.get('permission_id')).all()
     form.weight_id.choices = [(weight.id, weight.name) for weight in weights]
     form.camera_id.choices = [(camera.id, camera.location) for camera in cameras]
     # form.types.choices = [(detector_type.id, detector_type.name) for detector_type in detector_types]
@@ -169,7 +169,7 @@ def manage_detector(id=None):
         flash('Detector entry updated successfully!' if detector else 'Detector entry added successfully!')
         return redirect(url_for('main.manage_detector'))
     
-    detectors = Detector.query.filter(Detector.permission_id.in_(get_allowed_permission_ids())).all()
+    detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).all()
     return render_template('manage_detector.html', form=form, detectors=detectors, detector=detector, title=title)
 
 @main.route('/object-detection/detector/delete/<int:id>')
@@ -251,7 +251,7 @@ def manage_model(id=None):
         flash('Model entry updated successfully!' if model else 'Model entry added successfully!')
         return redirect(url_for('main.manage_model'))
     
-    models = Weight.query.filter(Weight.permission_id.in_(get_allowed_permission_ids())).all()
+    models = Weight.query.filter(Weight.permission_id == session.get('permission_id')).all()
     return render_template('manage_model.html', form=form, models=models, model=model, title=title)
 
 @main.route('/object-detection/model/delete/<int:id>', methods=['POST'])
@@ -304,7 +304,7 @@ def manage_contact(id=None):
         flash('Contact entry updated successfully!' if contact else 'Contact entry added successfully!')
         return redirect(url_for('main.manage_contact'))
     
-    whas = Contact.query.filter(Contact.permission_id.in_(get_allowed_permission_ids())).all()
+    whas = Contact.query.filter(Contact.permission_id == session.get('permission_id')).all()
     return render_template('manage_contact.html', form=form, whas=whas, contact=contact, title=title)
 
 @main.route('/object-detection/contact/delete/<int:id>')
@@ -324,12 +324,12 @@ def detected_object():
 
     if search_query:
         detected_objects = DetectedObject.query.join(Detector).join(Camera) \
-            .filter(DetectedObject.name.like(f'%{search_query}%'), DetectedObject.permission_id.in_(get_allowed_permission_ids())) \
+            .filter(DetectedObject.name.like(f'%{search_query}%'), DetectedObject.permission_id == session.get('permission_id')) \
             .order_by(DetectedObject.timestamp.desc()) \
             .paginate(page=page, per_page=per_page)
     else:
         detected_objects = DetectedObject.query.join(Detector).join(Camera) \
-            .filter(DetectedObject.permission_id.in_(get_allowed_permission_ids())) \
+            .filter(DetectedObject.permission_id == session.get('permission_id')) \
             .order_by(DetectedObject.timestamp.desc()) \
             .paginate(page=page, per_page=per_page)
 
@@ -399,8 +399,8 @@ def manage_notification_rules(rule_id=None):
         flash('Rule updated!' if rule else 'Rule added!', 'success')
         return redirect(url_for('main.manage_notification_rules'))
 
-    messages = MessageTemplate.query.filter(MessageTemplate.permission_id.in_(get_allowed_permission_ids())).all()
-    rules = NotificationRule.query.filter(NotificationRule.permission_id.in_(get_allowed_permission_ids())).all()
+    messages = MessageTemplate.query.filter(MessageTemplate.permission_id == session.get('permission_id')).all()
+    rules = NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all()
     
     return render_template(
         'manage_notification_rules.html', 

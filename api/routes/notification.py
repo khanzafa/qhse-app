@@ -1,8 +1,9 @@
 import logging
 from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, Response, jsonify
+import requests
 from app.models import NotificationRule
 from app import db
-from app.forms import NotificationRuleForm
+from app.forms import MessageTemplateForm, NotificationRuleForm
 from utils.auth import get_allowed_permission_ids
 from flasgger import swag_from
 
@@ -146,14 +147,18 @@ def view(id=None):
         return jsonify(notification), 200
     else:
         notifications = []
-        for notification in NotificationRule.query.filter(NotificationRule.permission_id.in_(get_allowed_permission_ids())).all():
+        for notification in NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all():
             notifications.append({
                 'id': notification.id,
-                'name': notification.name,
-                'description': notification.description,
+                'detector_id': notification.detector_id,
+                'message_template_id': notification.message_template_id,
+                'contact_id': notification.contact_id,
                 'permission_id': notification.permission_id
             })        
-        return jsonify(notifications), 200
+        # return jsonify(notifications), 200
+        messages = requests.get('http://localhost:5000/message/').json()
+        logging.debug(f"Messages: {messages}")
+        return render_template('manage_notification_rules.html', messages=messages, rules=notifications, rule_form=NotificationRuleForm(), message_form=MessageTemplateForm())
     
 @notification_bp.route('/', methods=['POST'])
 @swag_from(notification_api_docs['create'])
@@ -168,7 +173,8 @@ def create():
         db.session.add(notification)
         db.session.commit()
         flash('Notification rule added successfully!')
-        return Response(status=201)
+        # return Response(status=201)
+        return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -181,7 +187,8 @@ def edit(id):
     if form.validate_on_submit():
         form.populate_obj(notification)
         db.session.commit()
-        return Response(status=200)
+        # return Response(status=200)
+        return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -192,4 +199,5 @@ def delete(id):
     notification = NotificationRule.query.get_or_404(id)
     db.session.delete(notification)
     db.session.commit()
-    return Response(status=200)
+    # return Response(status=200)
+    return redirect(url_for('notification.view'))

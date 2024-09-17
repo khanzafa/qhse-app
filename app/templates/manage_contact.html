@@ -25,7 +25,7 @@
   <div id="contact-modal" class="fixed inset-0 flex items-center justify-center hidden">
     <div class="bg-white rounded-lg shadow-lg p-6">
       <h3 class="text-xl font-semibold mb-4">Add Contact</h3>
-      <form method="POST" action="{{ url_for('main.manage_contact') }}" class="space-y-4">
+      <form method="POST" action="{{ url_for('contact.create') }}" class="space-y-4">
         {{ form.hidden_tag() }}
 
         <!-- Phone Number Field -->
@@ -64,7 +64,7 @@
   <div id="group-modal" class="fixed inset-0 flex items-center justify-center hidden">
     <div class="bg-white rounded-lg shadow-lg p-6">
       <h3 class="text-xl font-semibold mb-4">Add Group Contact</h3>
-      <form method="POST" action="{{ url_for('main.manage_contact') }}" class="space-y-4">
+      <form method="POST" action="{{ url_for('contact.create') }}" class="space-y-4">
         {{ form.hidden_tag() }}
 
         <!-- Name Field -->
@@ -154,7 +154,7 @@
               class="edit-btn inline-block px-3 py-1 bg-yellow-500 text-white text-sm font-medium rounded hover:bg-yellow-600 transition duration-300"
               data-id="{{ contact.id }}" data-name="{{ contact.name }}" data-phone="{{ contact.phone_number }}"
               data-description="{{ contact.description }}" data-is-group="{{ contact.is_group }}">Edit</button>
-            <a href="{{ url_for('main.delete_contact', id=contact.id) }}"
+            <a href="{{ url_for('contact.delete', id=contact.id) }}"
               class="inline-block px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 transition duration-300"
               onclick="return confirm('Are you sure you want to delete this entry?')">Delete</a>
           </td>
@@ -199,7 +199,22 @@
       }
       document.getElementById('edit-name').value = this.dataset.name;
       document.getElementById('edit-description').value = this.dataset.description;
-      document.getElementById('edit-form').action = `{{ url_for('main.manage_contact') }}/${contactId}`;
+      document.getElementById('edit-form').action = fetch(`/contact/${contactId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'        
+        },
+        body: JSON.stringify({
+          _method: 'PUT',
+          name: this.dataset.name,
+          phone_number: this.dataset.phone,
+          description: this.dataset.description,
+          is_group: isGroup
+        })
+      }).then(response => response.json()).then(data => {
+        console.log(data);
+      });    
       document.getElementById('edit-modal').classList.remove('hidden');
     });
   });

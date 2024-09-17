@@ -120,7 +120,7 @@ class DetectorThread(threading.Thread):
                                     print("====================================================================================================")
                                     print("MESSAGE MESSAGE MESSAGE: ", message)
                                     print("====================================================================================================")   
-                                    message_queue.put((rule.contact.name, message, None))  # Add message to the queue
+                                    message_queue.put((rule.contact.name, message, image_path))  # Add message to the queue
                     except Exception as e:
                         logging.error(f"Error processing frame for detector ID: {self.detector_id}: {e}")
                     finally:
@@ -224,6 +224,7 @@ class MessageSenderThread(threading.Thread):
                 with self.app.app_context():
                     Message.send_whatsapp_message(target_name, message, image_path)
                 self.message_queue.task_done()
+                time.sleep(3)
             except queue.Empty:
                 continue
             except Exception as e:
@@ -235,7 +236,7 @@ class MessageSenderThread(threading.Thread):
 
 # Query untuk mendapatkan semua detektor yang aktif
 def get_active_detectors():
-    # Fungsi ini perlu dikonfigurasi sesuai dengan implementasi database Anda
+    # Fungsi ini perlu dikonfigurasi sesuai denga   n implementasi database Anda
     logging.info("Fetching active detectors from the database.")
     return Detector.query.filter(Detector.running == True).all()
 

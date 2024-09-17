@@ -7,6 +7,7 @@ from wtforms.validators import DataRequired, IPAddress, Length, URL, EqualTo, Va
 from app.models import CCTV, Contact, Detector, MessageTemplate, User
 from app.extensions import db
 from app.models import DetectorType, Weight
+from utils.auth import get_allowed_permission_ids
 
 class AddCCTVForm(FlaskForm):
     location = StringField('Location', validators=[DataRequired()])    
@@ -68,11 +69,11 @@ class NotificationRuleForm(FlaskForm):
     
     submit = SubmitField('Save')
 
-    def __init__(self, session_role=None    , *args, **kwargs):
+    def __init__(self, session_role=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.detector_id.choices = [(detector.id, detector.id) for detector in Detector.query.filter(Detector.role == "QHSE").all()]
-        self.contact_id.choices = [(contact.id, contact.name) for contact in Contact.query.filter(Contact.role == "QHSE").all()]
-        self.message_template_id.choices = [(template.id, template.name) for template in MessageTemplate.query.filter(MessageTemplate.role == "QHSE").all()]
+        self.detector_id.choices = [(detector.id, detector.id) for detector in Detector.query.filter(Detector.permission_id == session.get('permission_id')).all()]
+        self.contact_id.choices = [(contact.id, contact.name) for contact in Contact.query.filter(Contact.permission_id == session.get('permission_id')).all()]
+        self.message_template_id.choices = [(template.id, template.name) for template in MessageTemplate.query.filter(MessageTemplate.permission_id == session.get('permission_id')).all()]
 
 class OTPForm(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired()])

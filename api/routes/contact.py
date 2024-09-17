@@ -148,7 +148,8 @@ contact_bp = Blueprint('contact', __name__, url_prefix='/contact')
 @contact_bp.route('/<int:id>', methods=['GET'])
 @swag_from(contact_api_docs['view'])
 def view(id=None):
-    if id:
+    form = ContactForm()
+    if id:        
         contact = Contact.query.get_or_404(id)
         contact = {
             'id': contact.id,
@@ -156,17 +157,18 @@ def view(id=None):
             'name': contact.name,
             'description': contact.description
         }
-        return jsonify(contact), 200
+        return jsonify(contact), 200        
     else:
         contacts = []
-        for contact in Contact.query.filter(Contact.permission_id.in_(get_allowed_permission_ids())).all():
+        for contact in Contact.query.filter(Contact.permission_id == session.get('permission_id')).all():
             contacts.append({
                 'id': contact.id,
                 'phone_number': contact.phone_number,
                 'name': contact.name,
                 'description': contact.description
             })        
-        return jsonify(contacts), 200
+        # return jsonify(contacts), 200
+        return render_template('manage_contact.html', whas=contacts, form=form)
     
 @contact_bp.route('/', methods=['POST'])
 @swag_from(contact_api_docs['create'])
@@ -182,7 +184,8 @@ def create():
         db.session.add(contact)
         db.session.commit()
         flash('Contact added successfully!')
-        return Response(status=201)
+        # return Response(status=201)
+        return redirect(url_for('contact.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -197,7 +200,8 @@ def edit(id):
         form.populate_obj(contact)
         db.session.commit()
         flash('Contact updated successfully!')
-        return Response(status=200)
+        # return Response(status=200)
+        return redirect(url_for('contact.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -209,4 +213,5 @@ def delete(id):
     db.session.delete(contact)
     db.session.commit()
     flash('Contact deleted successfully!')
-    return Response(status=200)
+    # return Response(status=200)
+    return redirect(url_for('contact.view'))
