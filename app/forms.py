@@ -2,9 +2,9 @@
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from flask import session
-from wtforms import BooleanField, IntegerField, StringField, SubmitField, SelectField, TextAreaField, PasswordField, FileField
+from wtforms import BooleanField, IntegerField, SelectMultipleField, StringField, SubmitField, SelectField, TextAreaField, PasswordField, FileField, widgets
 from wtforms.validators import DataRequired, IPAddress, Length, URL, EqualTo, ValidationError
-from app.models import CCTV, Contact, Detector, MessageTemplate, User
+from app.models import CCTV, Contact, Detector, MessageTemplate, Permission, User
 from app.extensions import db
 from app.models import DetectorType, Weight
 
@@ -100,3 +100,19 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(phone_number=phone_number.data).first()
         if user:
             raise ValidationError('Phone number already registered.')
+        
+        
+class AccessForm(FlaskForm):
+    # This will create checkboxes for all permissions dynamically
+    permissions = SelectMultipleField(
+        'Permissions',
+        coerce=int,  # We use `int` because the permission ID is an integer
+        option_widget=widgets.CheckboxInput(),  # Use checkboxes
+        widget=widgets.ListWidget(prefix_label=False),  # Arrange them in a list
+        # validators=[DataRequired()]  # Ensure the form gets at least one permission selected
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(AccessForm, self).__init__(*args, **kwargs)
+        # Dynamically fetch permissions from the database
+        self.permissions.choices = [(perm.id, perm.name) for perm in Permission.query.all()]

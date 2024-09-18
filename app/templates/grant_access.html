@@ -33,6 +33,7 @@
                     <td class="px-4 py-2">
                         <button type="button"
                             class="btn btn-primary bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            data-user-id="{{ user.id }}" data-user-name="{{ user.name }}"
                             data-modal-toggle="accessModal" data-modal-target="#accessModal">
                             Show
                         </button>
@@ -41,22 +42,40 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
 
+        <!-- Modal Edit Access -->
+        <div id="accessModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="bg-white rounded-lg shadow-xl w-1/3 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <!-- user id ini akan salah karena ini query utk munculin semua -->
+                        <h3 class="text-lg font-semibold" id="modal-title">Edit Access for <span
+                                id="modal-user-id-test"></span> <span id="modal-user-name"></span></h3>
+                        <button class="text-gray-400 hover:text-gray-600 focus:outline-none" id="closeAccessModal"
+                            data-modal-toggle="accessModal">
+                            ✖
+                        </button>
+                    </div>
+                    <form action="{{ url_for('main.grant_access') }}" method="POST" id="modal-form">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="user_id" id="modal-user-id" value="">
+                        <ul id="permissions">
+                            {% for perm_id, perm_name in form.permissions.choices %}
+                            <li>
+                                <span>{{ perm_id }}</span>
+                                <span>{{ user_permission_ids }}</span>
+                                <input checked id="{{ perm_id }}" name="permissions" type="checkbox"
+                                    value="{{ perm_id }}" {% if value in user_permission_ids %}selected{% endif %}>
+                                <label for="{{ perm_id }}">{{ perm_name }}</label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+            
+                        <button type="submit" class="btn btn-primary bg-blue-500 px-2 py-2 rounded">Update
+                            Permissions</button>
+                    </form>
 
-    <!-- Modal Edit Access -->
-    <div class="modal fade hidden" id="accessModal" tabindex="-1" aria-labelledby="accessModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="phoneModalLabel">Phone Number</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="modalPhoneNumber">Phone number will be displayed here.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">✖</button>
+                    
                 </div>
             </div>
         </div>
@@ -140,8 +159,30 @@
     // Open modal when Add button is clicked
     document.querySelectorAll('[data-modal-toggle]').forEach(button => {
         button.addEventListener('click', function () {
+            const userId = button.getAttribute('data-user-id');
+            const userName = button.getAttribute('data-user-name');
+            const modal = document.querySelector(button.getAttribute('data-modal-target'));
+
+            // Set the modal's user name and user ID
+            document.getElementById('modal-user-name').innerText = userName;
+            document.getElementById('modal-user-id-test').innerText = userId;
+            document.getElementById('modal-user-id').value = userId;
+
             const target = document.querySelector(button.getAttribute('data-modal-target'));
             target.classList.remove('hidden');
+
+            // Fetch user permissions via AJAX if needed
+            fetch(`/su/grant_access/${userId}`, { method: 'GET' })
+                .then(response => response.json())
+                .then(data => {
+                    // Populate the form with the permissions (if necessary)
+                    // const checkboxes = document.querySelectorAll('#modal-form #permissions li input[type="checkbox"]');
+                    // checkboxes.forEach(checkbox => {
+                    //     checkbox.checked = data.permissions.includes(parseInt(checkbox.value));
+                    // });
+
+
+                });
         });
     });
 
@@ -153,12 +194,12 @@
         });
     });
 
-    document.getElementById('closeAddModal').addEventListener('click', function () {
-        document.getElementById('modelModal').classList.add('hidden');
+    document.getElementById('closeAccessModal').addEventListener('click', function () {
+        document.getElementById('accessModal').classList.add('hidden');
     });
 
-    document.getElementById('cancelAddModal').addEventListener('click', function () {
-        document.getElementById('modelModal').classList.add('hidden');
+    document.getElementById('cancelAccessModal').addEventListener('click', function () {
+        document.getElementById('accessModal').classList.add('hidden');
     });
 </script>
 {% endblock %}
