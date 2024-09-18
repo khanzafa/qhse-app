@@ -1,6 +1,7 @@
 # app/__init__.py
 # import threading
 import signal
+from flask_cors import CORS
 from flask_socketio import SocketIO
 import threading
 from flask import Flask, current_app, session
@@ -53,7 +54,7 @@ def create_app():
     UPLOAD_FOLDER = 'uploads'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     
-    app.secret_key='haho'
+    app.secret_key='haho'    
 
     # Membuat direktori upload jika belum ada
     if not os.path.exists(UPLOAD_FOLDER):
@@ -109,6 +110,7 @@ def create_app():
     for route in api_routes:
         print(route)
         app.register_blueprint(route)
+    CORS(app)
 
     # Jalankan thread detektor sebelum memulai Flask
     # detector_thread = threading.Thread(target=run_detectors, args=(app,))

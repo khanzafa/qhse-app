@@ -33,6 +33,7 @@ from app.models import (
     DetectorType,
     MessageTemplate,
     NotificationRule,
+    Permission,
     User,
     Weight,
     suMenu,
@@ -685,15 +686,17 @@ def grant_access():
 
 @main.route('/set_session', methods=['POST'])
 def set_session():
-    permission_id = request.form.get('id')
+    permission_id = request.form.get('id')    
     if permission_id:
+        permission = Permission.qeury.get(permission_id)
+        session['permission_name'] = permission.name
         session['permission_id'] = permission_id
         return jsonify({'status': 'success'}), 200
     return jsonify({'status': 'error', 'message': 'No ID provided'}), 400
 
 @main.app_context_processor
 def inject_session_permission():
-    return dict(session_permission=session.get('permission_id', ''))
+    return dict(session_permission=session.get('permission_id', ''), permission_name=session.get('permission_name', ''))
 
 # buat test
 # NOTIFICATION RULE
