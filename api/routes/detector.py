@@ -174,15 +174,16 @@ def view(id=None):
         }
         return jsonify(detector), 200
     else:
-        detectors = []
-        for detector in Detector.query.filter(Detector.permission_id == session.get('permission_id')).all():
-            detectors.append({
-                'id': detector.id,
-                'cctv_id': detector.cctv_id,
-                'weight_id': detector.weight_id,
-                'running': detector.running,
-                'permission_id': detector.permission_id
-            })        
+        # detectors = []
+        # for detector in Detector.query.filter(Detector.permission_id == session.get('permission_id')).all():
+        #     detectors.append({
+        #         'id': detector.id,
+        #         'cctv_id': detector.cctv_id,
+        #         'weight_id': detector.weight_id,
+        #         'running': detector.running,
+        #         'permission_id': detector.permission_id
+        #     })        
+        detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).all()
         # return jsonify(detectors), 200
         return render_template('manage_detector.html', detectors=detectors, form=DetectorForm())
 
@@ -206,7 +207,7 @@ def create():
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@detector_bp.route('/<int:id>', methods=['PUT'])
+@detector_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(detector_api_docs['edit'])
 def edit(id):
     detector = Detector.query.get_or_404(id)
@@ -214,7 +215,7 @@ def edit(id):
     if form.validate_on_submit():
         detector.cctv_id = form.cctv_id.data or detector.cctv_id
         detector.weight_id = form.weight_id.data or detector.weight_id
-        detector.running = form.running.data or detector.running
+        detector.running = form.running.data
         db.session.commit()
         flash('Detector updated successfully!')
         # return Response(status=200)
@@ -223,7 +224,7 @@ def edit(id):
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@detector_bp.route('/<int:id>', methods=['DELETE'])
+@detector_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(detector_api_docs['delete'])
 def delete(id):
     detector = Detector.query.get_or_404(id)

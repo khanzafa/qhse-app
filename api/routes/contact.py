@@ -191,7 +191,7 @@ def create():
     abort(400)
 
 
-@contact_bp.route('/<int:id>', methods=['PUT'])
+@contact_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(contact_api_docs['edit'])
 def edit(id):
     contact = Contact.query.get_or_404(id)
@@ -206,7 +206,7 @@ def edit(id):
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@contact_bp.route('/<int:id>', methods=['DELETE'])
+@contact_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(contact_api_docs['delete'])
 def delete(id):
     contact = Contact.query.get_or_404(id)

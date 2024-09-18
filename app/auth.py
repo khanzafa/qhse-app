@@ -31,7 +31,7 @@ def login():
             return redirect(url_for('auth.login'))
         
         login_user(user)
-        session['permission_id'] = 2
+        # session['permission_id'] = 2
         return redirect(url_for('main.su'))
     return render_template('login.html', form=form)
 

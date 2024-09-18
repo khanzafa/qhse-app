@@ -101,48 +101,32 @@
             class="fixed top-16 left-0 h-full bg-red-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0">
             <nav class="mt-4">
                 <!-- HOME -->
-                <a href="{{ url_for('main.su') }}"
+                <a href="{{ url_for('admin.su') }}"
                     class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
                     <i class="fa-solid fa-house mr-3"></i>
-                    Home
+                    Menu
                 </a>
 
                 <!-- Register Approval -->
-                <a href="{{ url_for('main.su_approval') }}"
+                <a href="{{ url_for('admin.user_approval') }}"
                     class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
                     <i class="fa-solid fa-users-gear mr-3"></i>
                     User Approval
                 </a>
 
                 <!-- Grant Access to user -->
-                <a href="{{ url_for('main.grant_access') }}"
+                <a href="{{ url_for('admin.user_permission') }}"
                     class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
                     <i class="fa-solid fa-list-check mr-3"></i>
                     Grant access to users
                 </a>
 
                 <br>
-                <!-- Upload Form -->
-                <div class="upload-form">
-                    <h2>Upload Form</h2>
-                    <form action="{{ url_for('main.su_upload') }}" method="post" enctype="multipart/form-data">
-                        <label for="title">Title:</label>
-                        <input type="text" id="title" name="title" style="color: black;" required><br><br>
-
-                        <label for="url">URL:</label>
-                        <input type="text" id="url" name="url" style="color: black;" required><br><br>
-
-                        <label for="file">Upload File:</label>
-                        <input type="file" id="file" name="file" required><br><br>
-
-                        <button type="submit" style="background-color: #38a169;">Submit</button>
-                    </form>
-                </div>
             </nav>
         </aside>
     </div>
 
-    <main class="flex-1 p-10 ml-64">{% block content %} Main Content {% endblock %}</main>
+    <main class="flex-1 p-10 ml-64">{% block content %} {% endblock %}</main>
 
 
     <!-- Toggle Button for Sidebar -->
@@ -199,7 +183,7 @@
                 } else {
                     // Perform the search
                     $.ajax({
-                        url: '/su/search', // Replace with your search endpoint
+                        url: '/admin/su/search', // Replace with your search endpoint
                         type: 'GET',
                         contentType: 'application/json',
                         data: { query: query },
@@ -217,7 +201,7 @@
             function showAllCards() {
                 // Fetch all cards from the server or show the existing ones
                 $.ajax({
-                    url: '/su/all-cards', // Replace with the endpoint to fetch all cards
+                    url: '/admin/su/all-cards', // Replace with the endpoint to fetch all cards
                     type: 'GET',
                     success: function (data) {
                         displayResults(data);

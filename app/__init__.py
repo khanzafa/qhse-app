@@ -113,11 +113,11 @@ def create_app():
     CORS(app)
 
     # Jalankan thread detektor sebelum memulai Flask
-    # detector_thread = threading.Thread(target=run_detectors, args=(app,))
-    # detector_thread.start()
+    detector_thread = threading.Thread(target=run_detectors, args=(app,))
+    detector_thread.start()
 
-    # # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
-    # signal.signal(signal.SIGINT, handle_shutdown_signal)
-    # signal.signal(signal.SIGTERM, handle_shutdown_signal)
+    # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
+    signal.signal(signal.SIGINT, handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
     return app

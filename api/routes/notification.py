@@ -1,7 +1,7 @@
 import logging
 from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, Response, jsonify
 import requests
-from app.models import NotificationRule
+from app.models import MessageTemplate, NotificationRule
 from app import db
 from app.forms import MessageTemplateForm, NotificationRuleForm
 from utils.auth import get_allowed_permission_ids
@@ -128,7 +128,6 @@ notification_api_docs = {
     }
 }
 
-
 notification_bp = Blueprint('notification', __name__, url_prefix='/notification')
 
 # NOTIFICATION
@@ -146,17 +145,26 @@ def view(id=None):
         }
         return jsonify(notification), 200
     else:
-        notifications = []
-        for notification in NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all():
-            notifications.append({
-                'id': notification.id,
-                'detector_id': notification.detector_id,
-                'message_template_id': notification.message_template_id,
-                'contact_id': notification.contact_id,
-                'permission_id': notification.permission_id
-            })        
+        # notifications = []
+        # for notification in NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all():
+        #     notifications.append({
+        #         'id': notification.id,
+        #         'detector_id': notification.detector_id,
+        #         'message_template_id': notification.message_template_id,
+        #         'contact_id': notification.contact_id,
+        #         'permission_id': notification.permission_id
+        #     })        
         # return jsonify(notifications), 200
-        messages = requests.get('http://localhost:5000/message/').json()
+        # messages = requests.get('http://localhost:5000/message/').json() # ini gabisa karena session nya gaada kalau pake requests    
+        notifications = NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all()
+        messages = []
+        for message in MessageTemplate.query.filter(MessageTemplate.permission_id == session.get('permission_id')).all():
+            messages.append({
+                'id': message.id,
+                'name': message.name,
+                'template': message.template,
+                'permission_id': message.permission_id
+            })
         logging.debug(f"Messages: {messages}")
         return render_template('manage_notification_rules.html', messages=messages, rules=notifications, rule_form=NotificationRuleForm(), message_form=MessageTemplateForm())
     
@@ -166,9 +174,10 @@ def create():
     form = NotificationRuleForm()
     if form.validate_on_submit():
         notification = NotificationRule(
-            name=form.name.data,
-            description=form.description.data,
-            permission_id=session.get('permission_id')
+            detector_id=form.detector_id.data,
+            message_template_id=form.message_template_id.data,
+            contact_id=form.contact_id.data,
+            permission_id=session.get('permission_id')            
         )
         db.session.add(notification)
         db.session.commit()
@@ -179,7 +188,7 @@ def create():
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@notification_bp.route('/<int:id>', methods=['PUT'])
+@notification_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(notification_api_docs['edit'])
 def edit(id):
     notification = NotificationRule.query.get_or_404(id)
@@ -193,7 +202,7 @@ def edit(id):
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@notification_bp.route('/<int:id>', methods=['DELETE'])
+@notification_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(notification_api_docs['delete'])
 def delete(id):
     notification = NotificationRule.query.get_or_404(id)

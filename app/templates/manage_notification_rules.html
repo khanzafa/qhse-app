@@ -2,25 +2,24 @@
 {% block title %}Manage Notification Rules{% endblock %}
 {% block content %}
 <!-- Main Content -->
-<div class="container mx-auto py-4 flex flex-col lg:flex-row lg:space-x-8">
+<div class="container mx-auto py-8 lg:flex lg:space-x-8 space-y-8 lg:space-y-0">
 
-    <!-- Existing Messages -->
-    <div class="w-full lg:w-1/2 mb-8 lg:mb-0">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-semibold mb-4">
-                Template Messages
-                <span>
-                    <i class="fas fa-plus-circle text-red-600 cursor-pointer" onclick="openMessageModal()"></i>
-                </span>
-            </h2>
-            <ul class="space-y-2">
+    <!-- Template Messages Section -->
+    <div class="w-full lg:w-1/2">
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Template Messages</h2>
+                <i class="fas fa-plus-circle text-red-600 text-xl cursor-pointer hover:text-red-700 transition"
+                    onclick="openMessageModal()"></i>
+            </div>
+            <ul class="space-y-4">
                 {% for message in messages %}
-                <li class="flex justify-between items-center p-4 bg-gray-50 rounded-md shadow">
-                    <span>{{ message.name }}</span>
+                <li class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                    <span class="font-medium text-gray-700">{{ message.name }}</span>
                     <button
                         onclick="openMessageModal('{{ message.id }}', '{{ message.name | escape }}', '{{ message.template | escape }}')"
-                        class="bg-red-600 text-white px-4 py-1 rounded-md hover:bg-red-700 transition">
-                        <i class="fas fa-eye"></i>
+                        class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">
+                        <i class="fas fa-eye"></i> View
                     </button>
                 </li>
                 {% endfor %}
@@ -28,47 +27,52 @@
         </div>
     </div>
 
-    <!-- Existing Notification Rules -->
+    <!-- Notification Rules Section -->
     <div class="w-full lg:w-1/2">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-semibold mb-4">
-                Notification Rules
-                <span>
-                    <i class="fas fa-plus-circle text-red-600 cursor-pointer" onclick="openRuleModal()"></i>
-                </span>
-            </h2>
-            <table class="space-y-2">
-                <thead>
-                    <tr class="flex justify-between items-center p-4 bg-gray-100 rounded-md shadow">
-                        <th>ID</th>
-                        <th>Detector</th>
-                        <th>Contact</th>
-                        <th>Template</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rule in rules %}
-                    <tr class="flex justify-between items-center p-4 bg-gray-50 rounded-md shadow">
-                        <td>{{ rule.id }}</td>
-                        <td>{{ rule.detector_id }}</td>
-                        <td>{{ rule.contact_id }}</td>
-                        <td>{{ rule.message_template_id }}</td>
-                        <td>
-                            <button
-                                onclick="openRuleModal('{{ rule.id }}', '{{ rule.detector_id }}', '{{ rule.contact_id }}', '{{ rule.message_template_id }}')"
-                                class="bg-red-600 text-white px-4 py-1 rounded-md hover:bg-red-700 transition">
-                                Edit
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Notification Rules</h2>
+                <i class="fas fa-plus-circle text-red-600 text-xl cursor-pointer hover:text-red-700 transition"
+                    onclick="openRuleModal()"></i>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto text-sm text-left">
+                    <thead class="bg-gray-200 text-gray-700">
+                        <tr>
+                            <th class="px-4 py-2">Detector</th>
+                            <th class="px-4 py-2">Contact</th>
+                            <th class="px-4 py-2">Template</th>
+                            <th class="px-4 py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for rule in rules %}
+                        <tr class="bg-gray-50 hover:bg-gray-100 transition">
+                            <td class="px-4 py-3">{{ rule.detector_id }}</td>
+                            <td class="px-4 py-3">{{ rule.contact.name }}</td>
+                            <td class="px-4 py-3">{{ rule.message_template.name }}</td>
+                            <td class="px-4 py-3 flex space-x-2">
+                                <button
+                                    onclick="openRuleModal('{{ rule.id }}', '{{ rule.detector_id }}', '{{ rule.contact_id }}', '{{ rule.message_template_id }}')"
+                                    class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition">
+                                    Edit
+                                </button>
+                                <a href="{{ url_for('notification.delete', id=rule.id) }}"
+                                    class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
 </div>
+
+
 
 <!-- Message Template Modal -->
 <div id="messageModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">

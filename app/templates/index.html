@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Container -->
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-6">Available Menus</h1>
+
+        <!-- Grid to display menus -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for menu in menus %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-4">
+                    <!-- Check if the menu has an image (binary data in file) -->
+                    {% if menu.file %}
+                    <img src="data:image/jpeg;base64,{{ menu.file | b64encode | safe }}" alt="{{ menu.title }}" class="w-full h-32 object-cover mb-4">
+                    {% else %}
+                    <img src="https://via.placeholder.com/640x360" alt="{{ menu.title }}" class="w-full h-32 object-cover mb-4">
+                    {% endif %}
+                    <h2 class="text-xl font-semibold">{{ menu.title }}</h2>
+                    <a href="javascript:void(0);" onclick="setSession('{{ menu.permission_id }}')" class="text-blue-500 hover:text-blue-600 mt-2 block">Go to {{ menu.title }}</a>
+                </div>
+            </div>
+            {% else %}
+            <p>No menus available based on your permissions.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        // Function to call api set session
+        function setSession(permissionId) {
+            // Prepare the form data
+            let formData = new FormData();
+            formData.append('id', permissionId);
+        
+            // Send a POST request to the Flask backend
+            fetch('/admin/set_session', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Handle success response
+                    window.location.href = "{{ url_for('main.dashboard') }}";
+                } else {
+                    // Handle error response
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while setting the session.');
+            });
+        }
+    </script>
+</body>
+</html>

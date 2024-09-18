@@ -134,6 +134,7 @@ message_bp = Blueprint('message', __name__, url_prefix='/message')
 @message_bp.route('/<int:id>', methods=['GET'])
 @swag_from(message_api_docs['view'])
 def view(id=None):
+    logging.debug(f"Permission ID: {session.get('permission_id')}")
     if id:
         message = MessageTemplate.query.get_or_404(id)
         message = {
@@ -168,8 +169,8 @@ def create():
         db.session.add(message)
         db.session.commit()
         flash('Message template added successfully!')
-        # return Response(status=201)
-        return redirect(url_for('message.view'))
+        return Response(status=201)
+        # return redirect(url_for('message.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -182,8 +183,8 @@ def edit(id):
     if form.validate_on_submit():
         form.populate_obj(message)
         db.session.commit()
-        # return Response(status=200)
-        return redirect(url_for('message.view'))
+        return Response(status=200)
+        # return redirect(url_for('message.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -194,4 +195,4 @@ def delete(id):
     message = MessageTemplate.query.get_or_404(id)
     db.session.delete(message)
     db.session.commit()
-    # return Response(status=200)
+    return Response(status=200)

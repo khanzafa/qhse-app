@@ -174,18 +174,19 @@ def view(id=None):
         }
         return jsonify(weight), 200
     else:
-        weights = []
-        for weight in Weight.query.filter(Weight.permission_id == session.get('permission_id')).all():
-            weights.append({
-                'id': weight.id,
-                'name': weight.name,
-                'detector_type_id': weight.detector_type_id,
-                'file': weight.file,
-                'path': weight.path,
-                'created_at': weight.created_at,
-                'permission_id': weight.permission_id
-            })        
+        # weights = []
+        # for weight in Weight.query.filter(Weight.permission_id == session.get('permission_id')).all():
+        #     weights.append({
+        #         'id': weight.id,
+        #         'name': weight.name,
+        #         'detector_type_id': weight.detector_type_id,
+        #         'file': weight.file,
+        #         'path': weight.path,
+        #         'created_at': weight.created_at,
+        #         'permission_id': weight.permission_id
+        #     })        
         # return jsonify(weights), 200
+        weights = Weight.query.filter(Weight.permission_id == session.get('permission_id')).all()
         return render_template('manage_model.html', models=weights, form=ModelForm())
     
 @weight_bp.route('/', methods=['POST'])
@@ -208,12 +209,13 @@ def create():
         db.session.add(new_model)
         db.session.commit()
         flash('Model added successfully!')
-        return Response(status=201)
+        # return Response(status=201)
+        return redirect(url_for('weight.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@weight_bp.route('/<int:id>', methods=['PUT'])
+@weight_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(weight_api_docs['edit'])
 def edit(id):
     model = Weight.query.get_or_404(id)
@@ -227,16 +229,18 @@ def edit(id):
         model.permission_id = session.get('permission_id')
         db.session.commit()
         flash('Model updated successfully!')
-        return Response(status=200)
+        # return Response(status=200)
+        return redirect(url_for('weight.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@weight_bp.route('/<int:id>', methods=['DELETE'])
+@weight_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(weight_api_docs['delete'])
 def delete(id):
     model = Weight.query.get_or_404(id)
     db.session.delete(model)
     db.session.commit()
-    return Response(status=204)
+    # return Response(status=204)
+    return redirect(url_for('weight.view'))
 

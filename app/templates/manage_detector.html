@@ -27,8 +27,8 @@ block content %}
       {% for detector in detectors %}
       <tr>
         <td class="border px-4 py-2">{{ detector.id }}</td>
-        <td class="border px-4 py-2">{{ detector.cctv_id }}</td>
-        <td class="border px-4 py-2">{{ detector.weight_id }}</td>
+        <td class="border px-4 py-2">{{ detector.cctv.location }}</td>
+        <td class="border px-4 py-2">{{ detector.weight.name }}</td>
         <td class="border px-4 py-2">{{ "Running" if detector.running else "Stopped" }}</td>
         <td class="border px-4 py-2 space-x-2 text-center">
           <!-- View Icon -->
@@ -45,7 +45,7 @@ block content %}
           </button>
 
           <!-- Delete Button -->
-          <form method="GET" action="{{ url_for('detector.delete', id=detector.id) }}" class="inline-block">
+          <form method="POST" action="{{ url_for('detector.delete', id=detector.id) }}" class="inline-block">
             {{ form.hidden_tag() }}
             <button type="submit"
               class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-300"

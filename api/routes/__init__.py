@@ -6,6 +6,7 @@ from api.routes.message import message_bp
 from api.routes.notification import notification_bp
 from api.routes.report import report_bp
 from api.routes.weight import weight_bp
+from api.routes.admin import admin_bp
 
 api_routes = [
     cctv_bp,
@@ -15,5 +16,7 @@ api_routes = [
     message_bp,
     notification_bp,
     report_bp,
-    weight_bp
+    weight_bp,
+    admin_bp,
+
 ]

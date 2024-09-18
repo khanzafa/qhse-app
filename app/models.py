@@ -34,7 +34,7 @@ class Guest(db.Model, UserMixin):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
-    phone_number = db.Column(db.String(20), index=True, unique=True)
+    phone_number = db.Column(db.String(30), index=True, unique=True)
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(10), default='user')
     approved = db.Column(db.Boolean(), default=None)
@@ -196,9 +196,8 @@ class Detector(db.Model):
             
         return detected_objects, annotated_frame
  
-# Event listener for CCTV status change
 
-# Event listener for Detector running change
+# Event listener
 from threading import local
 
 # Thread-local storage for session data

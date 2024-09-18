@@ -35,22 +35,26 @@ class SelectCCTVForm(FlaskForm):
 
 class DetectorForm(FlaskForm):
     id = IntegerField('ID')
-    cctv_id = SelectField('cctv', coerce=int, validators=[DataRequired()])    
-    # types = SelectField('Type', coerce=int, validators=[DataRequired()])
+    cctv_id = SelectField('CCTV', coerce=int, validators=[DataRequired()])    
     weight_id = SelectField('Weight', coerce=int, validators=[DataRequired()])
-    running = BooleanField('Running')
+    running = BooleanField('Running', default=False)
     submit = SubmitField('Save')
 
-    def __init__(self, session_role=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cctv_id.choices = [(cctv.id, cctv.location) for cctv in CCTV.query.all()]
-        self.weight_id.choices = [(weight.id, weight.name) for weight in Weight.query.all()]
+        self.cctv_id.choices = [(cctv.id, cctv.location) for cctv in CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).all()]
+        self.weight_id.choices = [(weight.id, weight.name) for weight in Weight.query.filter(Weight.permission_id == session.get('permission_id')).all()]
         
 
 class ModelForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     detector_type = SelectField('Detector Type', coerce=int, validators=[DataRequired()])
     file = FileField('File', validators=[DataRequired()])
+    submit = SubmitField('Save')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.detector_type.choices = [(detector_type.id, detector_type.name) for detector_type in DetectorType.query.all()]
 
 class ContactForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[Length(max=20)])
@@ -74,6 +78,7 @@ class NotificationRuleForm(FlaskForm):
         self.detector_id.choices = [(detector.id, detector.id) for detector in Detector.query.filter(Detector.permission_id == session.get('permission_id')).all()]
         self.contact_id.choices = [(contact.id, contact.name) for contact in Contact.query.filter(Contact.permission_id == session.get('permission_id')).all()]
         self.message_template_id.choices = [(template.id, template.name) for template in MessageTemplate.query.filter(MessageTemplate.permission_id == session.get('permission_id')).all()]
+        
 
 class OTPForm(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired()])
@@ -117,3 +122,23 @@ class AccessForm(FlaskForm):
         super(AccessForm, self).__init__(*args, **kwargs)
         # Dynamically fetch permissions from the database
         self.permissions.choices = [(perm.id, perm.name) for perm in Permission.query.all()]
+
+class UserApprovalForm(FlaskForm):
+    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    approved = BooleanField('Approved', default=None)
+    approve = SubmitField('Approve') 
+    reject = SubmitField('Reject')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_id.choices = [(user.id, user.name) for user in User.query.filter_by(approved=None).all()]
+
+class UserPermissionForm(FlaskForm):
+    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    permission_id = SelectMultipleField('Permissions', coerce=int, option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
+    submit = SubmitField('Save')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_id.choices = [(user.id, user.name) for user in User.query.all()]
+        self.permission_id.choices = [(perm.id, perm.name) for perm in Permission.query.all()]

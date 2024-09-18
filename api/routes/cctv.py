@@ -195,12 +195,14 @@ def create():
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@cctv_bp.route('/<int:id>', methods=['PUT'])
+@cctv_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(cctv_api_docs['edit'])
 def edit(id):
     cctv = CCTV.query.get_or_404(id)
     form = CCTVForm(obj=cctv)
+    logging.debug(f"Form data: {form.data}")
     if form.validate_on_submit():
+        logging.debug(f"Form validated: {form.data}")
         cctv.location = form.location.data
         cctv.type = form.type.data
         cctv.ip_address = form.ip_address.data
@@ -214,9 +216,10 @@ def edit(id):
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@cctv_bp.route('/<int:id>', methods=['DELETE'])
+@cctv_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(cctv_api_docs['delete'])
 def delete(id):
+    logging.debug(f"Deleting CCTV with ID: {id}")
     cctv = CCTV.query.get_or_404(id)
     db.session.delete(cctv)
     db.session.commit()
