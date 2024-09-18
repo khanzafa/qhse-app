@@ -35,10 +35,12 @@ from app.models import (
     NotificationRule,
     Permission,
     User,
+    UserPermission,
     Weight,
     suMenu,
 )
 from app.forms import (
+    AccessForm,
     AddCCTVForm,
     EditCCTVForm,
     MessageTemplateForm,
@@ -628,7 +630,7 @@ def uploaded_file(filename):
 def su_approval():
     # Check if the current user has the 'manager' role
     if current_user.role.lower() != "manager":
-        abort(403)  # Forbidden access
+        return redirect(url_for('main.su'))
     # Query users where approval is None or Null
     applicants = User.query.filter((User.approved.is_(None))).all()
     return render_template("su_approval.html", applicants=applicants)
@@ -674,14 +676,62 @@ def get_updated_table():
     return render_template("su_table_rows.html", applicants=applicants)
 
 
-@main.route("/su/grant_access", methods=["GET"])
-def grant_access():
-    # Check if the current user has the 'manager' role
+# grant access
+@main.route("/su/grant_access", methods=["GET", "POST"])
+@main.route("/su/grant_access/<int:user_id>", methods=["GET", "POST"])
+def grant_access(user_id=None):
     if current_user.role.lower() != "manager":
-        abort(403)  # Forbidden access
-    # Query users where approval is None or Null
+        return redirect(url_for('main.su'))
+
     users = User.query.filter((User.role.ilike('%manager%') == False) & (User.approved == True)).all()
-    return render_template("grant_access.html", users=users)
+    permissions = {permission.id: permission.name for permission in Permission.query.all()}
+
+    allowed_permission_ids = get_allowed_permission_ids()  # Get current user's permissions
+    allowed_permission_names = [permissions[perm_id] for perm_id in allowed_permission_ids]
+
+    form = AccessForm()
+    
+    user = User.query.get(user_id) if user_id else None
+    print("WOI INI USER KEMANA?")
+    print(user)
+        
+    # Pre-populate the form permissions with the clicked user's current permissions
+    if user and request.method == 'GET':
+        
+        # form.permissions.data = [(up.permission_id, up.permission.name) for up in UserPermission.query.join(Permission).filter(Permission.id==UserPermission.permission_id, UserPermission.user_id==user_id).all()]
+
+        user_permission_ids = [up.permission_id for up in UserPermission.query.filter_by(user_id=user_id).all()]
+        form.permissions.data = user_permission_ids  # Pre-check the clicked user's current permissions
+        print("LU NAPA KOSONG KOCAK")
+        print(form.permissions.data)
+        return render_template("grant_access.html", users=users, user=user, permissions=permissions, allowed_permission_names=allowed_permission_names, form=form, user_permission_ids=user_permission_ids)
+
+    if request.method == "POST" and form.validate_on_submit():
+        user_id = request.form.get('user_id')
+        user = User.query.get(user_id)
+
+        if user:
+            selected_permissions = request.form.getlist("permissions")  # Get selected permissions IDs
+            
+            # Remove existing permissions that are not selected
+            UserPermission.query.filter(UserPermission.user_id == user_id,
+                                        UserPermission.permission_id.notin_(selected_permissions)).delete(synchronize_session=False)
+            
+            # Add new permissions
+            for permission_id in selected_permissions:
+                if not UserPermission.query.filter_by(user_id=user_id, permission_id=permission_id).first():
+                    new_permission = UserPermission(user_id=user_id, permission_id=permission_id)
+                    db.session.add(new_permission)
+            
+            db.session.commit()
+            flash('Permissions updated successfully!', 'success')
+        else:
+            flash('User not found!', 'danger')
+
+        return redirect(url_for('main.grant_access'))
+
+    return render_template("grant_access.html", users=users, user=user, permissions=permissions, allowed_permission_names=allowed_permission_names, form=form)
+
 
 
 @main.route('/set_session', methods=['POST'])
