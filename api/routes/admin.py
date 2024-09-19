@@ -76,7 +76,8 @@ def user_permission(user_id=None):
 @admin_bp.route("/su", methods=["GET"])
 @login_required
 def su():
-    return render_template("su.html")
+    permissions = Permission.query.all()
+    return render_template("su.html", permissions=permissions)
 
 @admin_bp.route("/su/all-cards", methods=["GET"])
 @login_required
@@ -138,33 +139,52 @@ def su_upload():
     title = request.form.get("title")
     file_url = request.form.get("url")
     file = request.files.get("file")
-
-    if not title or not file:
-        flash("Title and file are required!", "error")
+    
+    existing_permission_id = request.form.get('existing_permission')
+    print(existing_permission_id)
+    new_permission = request.form.get('new_permission')
+    new_permission_description = request.form.get('new_permission_description')
+    
+    new_perm_entry = Permission(
+            name=new_permission,
+            description=new_permission_description
+        )
+    
+    if existing_permission_id and new_permission:
+        flash("You cannot select an existing permission and create a new one at the same time.", "error")
         return redirect(url_for("admin.su"))
 
-    # Sanitize the filename
-    filename = sanitize_filename(file.filename)
-
-    # Construct the upload folder path within `static`
-    upload_folder = os.path.join(UPLOAD_FOLDER, title)
-
-    # Create the directory if it doesn't exist
-    os.makedirs(upload_folder, exist_ok=True)
-
-    # Construct the full file path
-    # file_path = os.path.join(upload_folder, filename)
-    file_path = f"{upload_folder}/{filename}"
-
-    # app\static\suMenus
-    # Save the file
-    file.save(file_path)
-
-    # Create and save the database record
-    new_entry = suMenu(
-        title=title, url=file_url, file=file.read(), path=f"{title}/{filename}"
-    )
-    db.session.add(new_entry)
+    if not title:
+        flash("Title is required!", "error")
+        return redirect(url_for("admin.su"))
+    
+    if existing_permission_id:
+        perm_id = existing_permission_id
+    elif new_permission and new_permission_description:
+        new_perm_entry = Permission(name=new_permission, description=new_permission_description)
+        db.session.add(new_perm_entry)
+        db.session.commit()
+        perm_id = Permission.query.filter_by(name=new_permission).first().id
+    else:
+        perm_id = None
+    
+    if file and file.filename:
+        filename = sanitize_filename(file.filename)
+        upload_folder = os.path.join(UPLOAD_FOLDER, title)
+        os.makedirs(upload_folder, exist_ok=True)
+        file_path = os.path.join(upload_folder, filename)
+        file.save(file_path)
+        new_menu_entry = suMenu(
+            title=title, url=file_url, file=file.read(), path=f"{title}/{filename}",
+            permission_id=perm_id
+        )
+    else:
+        new_menu_entry = suMenu(
+            title=title,
+            permission_id=perm_id
+        )
+    
+    db.session.add(new_menu_entry)
     db.session.commit()
 
     flash("File uploaded successfully!", "success")

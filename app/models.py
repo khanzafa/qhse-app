@@ -392,9 +392,9 @@ class Document(db.Model):
 class suMenu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), unique=True, nullable=False)
-    url = db.Column(db.String(100), default="", nullable=False)
-    file = db.Column(db.LargeBinary) # image
-    path = db.Column(db.String(120), index=True)
+    url = db.Column(db.String(100), default="", nullable=True)
+    file = db.Column(db.LargeBinary, default=None, nullable=True) # image
+    path = db.Column(db.String(120), index=True, default="", nullable=True)
     permission = db.relationship('Permission', backref=db.backref('sumenus', uselist=False))
     permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
     

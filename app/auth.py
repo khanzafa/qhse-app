@@ -16,7 +16,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.su'))
+        return redirect(url_for('admin.su'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(phone_number=form.phone_number.data).first()
@@ -32,7 +32,7 @@ def login():
         
         login_user(user)
         # session['permission_id'] = 2
-        return redirect(url_for('main.su'))
+        return redirect(url_for('admin.su'))
     return render_template('login.html', form=form)
 
 @auth.route('/register', methods=['GET', 'POST'])

@@ -108,13 +108,12 @@ def create_app():
     app.register_blueprint(auth_blueprint)
     print("Auth blueprint registered.")
     for route in api_routes:
-        print(route)
         app.register_blueprint(route)
     CORS(app)
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,))
-    detector_thread.start()
+    # detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)

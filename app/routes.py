@@ -742,7 +742,7 @@ def uploaded_file(filename):
 def set_session():
     permission_id = request.form.get('id')    
     if permission_id:
-        permission = Permission.qeury.get(permission_id)
+        permission = Permission.query.get(permission_id)
         session['permission_name'] = permission.name
         session['permission_id'] = permission_id
         return jsonify({'status': 'success'}), 200

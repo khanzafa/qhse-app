@@ -1,5 +1,5 @@
 from flask_login import current_user
-from app.models import UserPermission
+from app.models import UserPermission, Permission
 
 def get_allowed_permission_ids():
     if not current_user.is_authenticated:
