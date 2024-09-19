@@ -342,7 +342,7 @@ class NotificationRule(db.Model):
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     phone_number = db.Column(db.String(20), unique=True)
-    name = db.Column(db.String(100), unique=True)
+    name = db.Column(db.String(100))
     description = db.Column(db.String(100))
     is_group = db.Column(db.Boolean, default=False)
     permission = db.relationship('Permission', backref=db.backref('contacts', uselist=False))

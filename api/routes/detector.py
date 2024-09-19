@@ -183,7 +183,7 @@ def view(id=None):
         #         'running': detector.running,
         #         'permission_id': detector.permission_id
         #     })        
-        detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).all()
+        detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).order_by(Detector.id).all()
         # return jsonify(detectors), 200
         return render_template('manage_detector.html', detectors=detectors, form=DetectorForm())
 
