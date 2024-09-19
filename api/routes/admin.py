@@ -16,6 +16,8 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 @admin_bp.route("/user-approval", methods=["GET", "POST"])
 @login_required
 def user_approval():
+    if current_user.role.lower() != "admin":
+        abort(403)
     form = UserApprovalForm()
     
     if request.method == "GET":
@@ -42,6 +44,8 @@ def user_approval():
 @admin_bp.route("/user-permission", methods=["GET", "POST"])
 @admin_bp.route("/user-permission/<int:user_id>", methods=["GET"])
 def user_permission(user_id=None):
+    if current_user.role.lower() != "admin":
+        abort(403)
     form = UserPermissionForm()
     if user_id:
         user_permissions = UserPermission.query.filter_by(user_id=user_id).all()
@@ -76,6 +80,9 @@ def user_permission(user_id=None):
 @admin_bp.route("/su", methods=["GET"])
 @login_required
 def su():
+    print(current_user.role.lower())
+    if current_user.role.lower() != 'admin':
+        return redirect(url_for("main.index"))
     permissions = Permission.query.all()
     return render_template("su.html", permissions=permissions)
 
