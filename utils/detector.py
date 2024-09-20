@@ -236,7 +236,7 @@ class MessageSenderThread(threading.Thread):
 
 # Query untuk mendapatkan semua detektor yang aktif
 def get_active_detectors():
-    # Fungsi ini perlu dikonfigurasi sesuai denga   n implementasi database Anda
+    # Fungsi ini perlu dikonfigurasi sesuai dengan implementasi database Anda
     logging.info("Fetching active detectors from the database.")
     return Detector.query.filter(Detector.running == True).all()
 

@@ -1,5 +1,7 @@
+from collections import defaultdict
 from datetime import datetime
 import logging
+import time
 import cv2
 from ultralytics import YOLO
 from app import db
@@ -153,6 +155,11 @@ class Detector(db.Model):
     permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Instance attribute
+        self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_frame": -1})
 
     def to_dict(self):
         return {
@@ -183,6 +190,7 @@ class Detector(db.Model):
             track_id = int(track_id.item())  # Convert from tensor to int
             class_id = c.cls
             name = model.names[int(class_id)]
+            
             detected_object = DetectedObject(
                 detector_id=self.id,
                 name=name,
@@ -190,7 +198,32 @@ class Detector(db.Model):
                 timestamp=datetime.now(),
                 permission_id=self.permission_id                
             )
-            detected_objects.append(detected_object)
+            
+            # Frame
+            if track_id is not None:
+                with self.lock:
+                    print(f"Initial count: {self.detected_objects_tracker[track_id]['count']}, Last frame: {self.detected_objects_tracker[track_id]['last_frame']}")
+                    # If first time detection or reset count due to detection gap
+                    if self.detected_objects_tracker[track_id]["count"] == 0:
+                        # First detection, add to detection objects list
+                        detected_objects.append(detected_object)
+                        self.detected_objects_tracker[track_id]["count"] += 1
+                        # Detected again in consecutive frames
+                    elif self.detected_objects_tracker[track_id]["last_frame"] == self.frame_number - 1:
+                        self.detected_objects_tracker[track_id]["count"] += 1
+                    else:
+                        # Reset count if there's a gap in detection
+                        self.detected_objects_tracker[track_id]["count"] = 1
+                        
+                    # Check if the object has been detected for 15 consecutive frames
+                    if self.detected_objects_tracker[track_id]["count"] >= 15:
+                        # Add to detected objects list
+                        detected_objects.append(detected_object)
+                        self.detected_objects_tracker[track_id]["count"] = 0  # Reset the count after sending the message
+
+                    # Update last_frame at the end, regardless of the branch
+                    self.detected_objects_tracker[track_id]["last_frame"] = self.frame_number
+            
             db.session.add(detected_object)
             db.session.commit()
             
