@@ -79,239 +79,128 @@ def index():
 def dashboard():
     session_permission = session.get('permission_id')
 
-    # Agregasi data terkait jumlah CCTV, detektor, dan PPE
-    num_cctv = CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).count()
-    num_detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).count()
+    num_cctv = CCTV.query.count()
+    num_detectors = Detector.query.count()
 
-    num_no_helmet = DetectedObject.query.filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == "no-helmet").count()
-    num_no_vest = DetectedObject.query.filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == "no-vest").count()
-    num_no_ppe = num_no_helmet + num_no_vest
-    num_drowsy = DetectedObject.query.filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == "drowsy").count()
-    num_phone = DetectedObject.query.filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == "phone").count()
-    num_no_seatbelt = DetectedObject.query.filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == "no-seatbelt").count()
-    num_reckless = num_drowsy + num_phone + num_no_seatbelt
-    num_danger = DetectedObject.query.filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == "cross-hand").count()
-    
-    # Ambil semua kamera
+    # Deklarasi filter untuk permission_id 1 dan 2
+    filter_permission_1 = [DetectedObject.permission_id == 1]
+    filter_permission_2 = [DetectedObject.permission_id == 2]
+
+    # Gunakan session_permission untuk menentukan filter mana yang dipakai
+    if session_permission == 1:
+        detection_filters = filter_permission_1
+    elif session_permission == 2:
+        detection_filters = filter_permission_2
+    else:
+        detection_filters = []  # Jika tidak ada permission yang sesuai
+
+    # Menghitung jumlah deteksi berdasarkan jenis objek
+    detection_counts = {
+        "no_helmet": DetectedObject.query.filter(DetectedObject.name == "no-helmet", *detection_filters).count(),
+        "no_vest": DetectedObject.query.filter(DetectedObject.name == "no-vest", *detection_filters).count(),
+        "drowsy": DetectedObject.query.filter(DetectedObject.name == "drowsy", *detection_filters).count(),
+        "phone": DetectedObject.query.filter(DetectedObject.name == "phone", *detection_filters).count(),
+        "no_seatbelt": DetectedObject.query.filter(DetectedObject.name == "no-seatbelt", *detection_filters).count(),
+        "danger": DetectedObject.query.filter(DetectedObject.name == "cross-hand", *detection_filters).count(),
+        "fire": DetectedObject.query.filter(DetectedObject.name == "fire", *detection_filters).count(),
+        "smoke": DetectedObject.query.filter(DetectedObject.name == "smoke", *detection_filters).count(),
+        "sleep": DetectedObject.query.filter(DetectedObject.name == "sleep", *detection_filters).count()
+    }
+
+    num_no_ppe_detected = detection_counts["no_helmet"] + detection_counts["no_vest"]
+    num_reckless_driver_detected = detection_counts["drowsy"] + detection_counts["phone"] + detection_counts["no_seatbelt"]
+
     results = db.session.query(DetectedObject, CCTV).select_from(DetectedObject) \
-        .join(Detector) \
-        .join(CCTV) \
-        .all()
+        .join(Detector).join(CCTV) \
+        .filter(*detection_filters).all()
 
-    # Buat dictionary kamera
     cameras = {camera.id: camera.location for obj, camera in results}
-    cameras = {'all': f"All Cameras", **cameras}
+    cameras = {'all': "All Cameras", **cameras}
 
-    # Dapatkan kamera yang dipilih dari form atau set 'all' sebagai default
     selected_camera_ppe = request.form.get('camera', 'all')
     selected_camera_driver = request.form.get('camera', 'all')
     selected_camera_danger = request.form.get('camera', 'all')
-    
-    
-    # Filter data berdasarkan kamera yang dipilih
-    if selected_camera_ppe == 'all':
-        # Mengambil semua data untuk semua kamera
-        total_no_helmet_all = db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == 'no-helmet').count()
-        total_no_vest_all = db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == 'no-vest').count()
-    else:
-        # Mengambil data berdasarkan kamera yang dipilih
-        data = db.session.query(DetectedObject).join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id'),CCTV.id == selected_camera_ppe).all()
+    selected_camera_paier = request.form.get('camera', 'all')
 
-        total_no_helmet_all = sum(1 for obj in data if obj.name == 'no-helmet')
-        total_no_vest_all = sum(1 for obj in data if obj.name == 'no-vest')
-            
-    
-    # Filter data berdasarkan kamera yang dipilih
-    if selected_camera_driver == 'all':
-        # Mengambil semua data untuk semua kamera
-        total_drowsy_all = db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == 'drowsy').count()
-        total_no_seatbelt_all = db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == 'no-seatbelt').count()
-        total_phone_all = db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == 'phone').count()
-        total_reckless_all = total_drowsy_all + total_no_seatbelt_all + total_phone_all
-    else:
-        # Mengambil data berdasarkan kamera yang dipilih
-        data = db.session.query(DetectedObject).join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id'), CCTV.id == selected_camera_driver).all()
+    def filter_by_camera(camera_id, object_name):
+        query = db.session.query(DetectedObject).filter(DetectedObject.name == object_name, *detection_filters)
+        if camera_id != 'all':
+            query = query.join(Detector).join(CCTV).filter(CCTV.id == camera_id)
+        return query.count()
 
-        total_drowsy_all = db.session.query(DetectedObject).join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id'), CCTV.id == selected_camera_driver, DetectedObject.name == 'drowsy').count()
-        total_no_seatbelt_all = db.session.query(DetectedObject).join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id'), CCTV.id == selected_camera_driver, DetectedObject.name == 'no-seatbelt').count()
-        total_phone_all = db.session.query(DetectedObject).join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id'), CCTV.id == selected_camera_driver, DetectedObject.name == 'phone').count()
-        total_reckless_all = total_drowsy_all + total_no_seatbelt_all + total_phone_all
-            
-            
-    # Filter data berdasarkan kamera yang dipilih
-    if selected_camera_danger == 'all':
-        # Mengambil semua data untuk semua kamera
-        total_gesture_help_all = db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), DetectedObject.name == 'cross-hand').count()
-    else:
-        # Mengambil data berdasarkan kamera yang dipilih
-        data = db.session.query(DetectedObject).join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id'), CCTV.id == selected_camera_danger).all()
-        total_gesture_help_all = db.session.query(DetectedObject).join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id'), CCTV.id == selected_camera_danger, DetectedObject.name == 'cross-hand').count()
+    total_no_helmet_all = filter_by_camera(selected_camera_ppe, 'no-helmet')
+    total_no_vest_all = filter_by_camera(selected_camera_ppe, 'no-vest')
+    total_drowsy_all = filter_by_camera(selected_camera_driver, 'drowsy')
+    total_no_seatbelt_all = filter_by_camera(selected_camera_driver, 'no-seatbelt')
+    total_phone_all = filter_by_camera(selected_camera_driver, 'phone')
+    total_reckless_all = total_drowsy_all + total_no_seatbelt_all + total_phone_all
+    total_gesture_help_all = filter_by_camera(selected_camera_danger, 'cross-hand')
+    total_fire_help_all = filter_by_camera(selected_camera_paier, 'fire')
+    total_smoke_help_all = filter_by_camera(selected_camera_paier, 'smoke')
+    total_sleep_help_all = filter_by_camera(selected_camera_paier, 'sleep')
 
-    # Ambil tanggal terbaru dan terawal dari data
-    latest_entry = DetectedObject.query.order_by(DetectedObject.timestamp.desc()).first()
-    if latest_entry:
-        latest_date = latest_entry.timestamp
-    else:
-        latest_date = datetime.utcnow()
-
+    latest_entry = DetectedObject.query.filter(*detection_filters).order_by(DetectedObject.timestamp.desc()).first()
+    latest_date = latest_entry.timestamp if latest_entry else datetime.utcnow()
     earliest_date = latest_date - timedelta(days=7)
 
-        # Example data for PPE detection per day
     today = datetime.today()
     last_7_days = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
 
+    def fetch_daily_counts(object_name, camera_id):
+        counts = []
+        for i in range(7):
+            query = db.session.query(DetectedObject).filter(
+                DetectedObject.name == object_name,
+                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i)),
+                *detection_filters
+            )
+            if camera_id != 'all':
+                query = query.join(Detector).join(CCTV).filter(CCTV.id == camera_id)
+            counts.append(query.count())
+        return counts
+
+    num_no_vest_detected_per_day = fetch_daily_counts('no-vest', selected_camera_ppe)
+    num_no_helmet_detected_per_day = fetch_daily_counts('no-helmet', selected_camera_ppe)
     
-    # Buat array untuk data harian
-    num_no_vest_per_day = []
-    num_no_helmet_per_day = []
-    num_drowsy_per_day = []
-    num_phone_per_day = []
-    num_no_seatbelt_per_day = []
-    num_danger_per_day = []
+    num_drowsy_detected_per_day = fetch_daily_counts('drowsy', selected_camera_driver)
+    num_phone_detected_per_day = fetch_daily_counts('phone', selected_camera_driver)
+    num_no_seatbelt_detected_per_day = fetch_daily_counts('no-seatbelt', selected_camera_driver)
 
-
-    # Fetch daily counts for no-vest and no-helmet
-    if selected_camera_ppe == 'all':
-        num_no_vest_per_day = [
-            db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'no-vest',
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-
-        num_no_helmet_per_day = [
-            db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'no-helmet',
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-    else:
-        num_no_vest_per_day = [
-            db.session.query(DetectedObject).join(Detector).join(CCTV).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'no-vest',
-                CCTV.id == selected_camera_ppe,
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-
-        num_no_helmet_per_day = [
-            db.session.query(DetectedObject).join(Detector).join(CCTV).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'no-helmet',
-                CCTV.id == selected_camera_ppe,
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-
-
-    # Fetch daily counts for driver
-    if selected_camera_driver == 'all':
-        num_drowsy_per_day = [
-            db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'drowsy',
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-
-        num_phone_per_day = [
-            db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'phone',
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-        
-        num_no_seatbelt_per_day = [
-            db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'no-seatbelt',
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-                
-    else:
-        num_drowsy_per_day = [
-            db.session.query(DetectedObject).join(Detector).join(CCTV).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'drowsy',
-                CCTV.id == selected_camera_driver,
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-
-        num_phone_per_day = [
-            db.session.query(DetectedObject).join(Detector).join(CCTV).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'phone',
-                CCTV.id == selected_camera_driver,
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-        
-        num_no_seatbelt_per_day = [
-            db.session.query(DetectedObject).join(Detector).join(CCTV).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'no-seatbelt',
-                CCTV.id == selected_camera_driver,
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-
-    # Fetch daily counts for danger
-    if selected_camera_driver == 'all':
-        num_danger_per_day = [
-            db.session.query(DetectedObject).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'cross-hand',
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-    else:
-        num_danger_per_day = [
-            db.session.query(DetectedObject).join(Detector).join(CCTV).filter(DetectedObject.permission_id == session.get('permission_id'), 
-                DetectedObject.name == 'cross-hand',
-                CCTV.id == selected_camera_danger,
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i))
-            ).count() for i in range(7)
-        ]
-
-    # Hitung total harian untuk menampilkan di template
-    total_no_vest = sum(num_no_vest_per_day) or 0
-    total_no_helmet = sum(num_no_helmet_per_day) or 0
-    total_no_ppe = sum(num_no_helmet_per_day + num_no_vest_per_day)
-    total_drowsy = sum(num_drowsy_per_day) or 0
-    total_phone = sum(num_phone_per_day) or 0
-    total_no_seatbelt = sum(num_no_seatbelt_per_day) or 0
-    total_reckless_driver = sum(num_drowsy_per_day + num_phone_per_day + num_no_seatbelt_per_day) or 0
-    total_danger = sum(num_danger_per_day) or 0
-
-    # Render data ke template dashboard
+    num_danger_gesture_detected_per_day = fetch_daily_counts('cross-hand', selected_camera_danger)
+    
+    num_fire_detected_per_day = fetch_daily_counts('fire', selected_camera_paier)
+    num_smoke_detected_per_day = fetch_daily_counts('smoke', selected_camera_paier)
+    num_sleep_detected_per_day = fetch_daily_counts('sleep', selected_camera_paier)
     return render_template(
         'dashboard.html',
-        cameras=cameras,
-        selected_camera_ppe=selected_camera_ppe,
-        selected_camera_driver=selected_camera_driver,
-        selected_camera_danger=selected_camera_danger,
         num_cctv=num_cctv,
         num_detectors=num_detectors,
-        num_no_ppe=num_no_ppe,
-        num_no_helmet=total_no_helmet_all,
-        num_no_vest=num_no_vest,
-        num_drowsy=total_drowsy_all,
-        num_no_seatbelt=total_no_seatbelt_all,
-        num_phone=total_phone_all,
-        num_reckless=num_reckless,
-        num_danger=num_danger,
+        num_no_helmet_detected=detection_counts["no_helmet"],
+        num_no_vest_detected=detection_counts["no_vest"],
+        num_fire_detected=detection_counts["fire"],
+        num_smoke_detected=detection_counts["smoke"],
+        num_sleep_detected=detection_counts["sleep"],
+        num_no_ppe_detected=num_no_ppe_detected,
+        num_reckless_driver_detected=num_reckless_driver_detected,
+        num_danger_detected=detection_counts["danger"],
+        cameras=cameras,
         last_7_days=last_7_days,
-        num_no_vest_per_day=num_no_vest_per_day,
-        num_no_helmet_per_day=num_no_helmet_per_day,
-        num_drowsy_per_day=num_drowsy_per_day,
-        num_phone_per_day=num_phone_per_day,
-        num_no_seatbelt_per_day=num_no_seatbelt_per_day,
-        num_danger_per_day=num_danger_per_day,
+        num_no_vest_detected_per_day=num_no_vest_detected_per_day,
+        num_no_helmet_detected_per_day=num_no_helmet_detected_per_day,
+        num_drowsy_detected_per_day=num_drowsy_detected_per_day,
+        num_phone_detected_per_day=num_phone_detected_per_day,
+        num_no_seatbelt_detected_per_day=num_no_seatbelt_detected_per_day,
+        num_danger_gesture_detected_per_day=num_danger_gesture_detected_per_day,
+        num_fire_detected_per_day=num_fire_detected_per_day,
+        num_smoke_detected_per_day=num_smoke_detected_per_day,
+        num_sleep_detected_per_day=num_sleep_detected_per_day,
+        session_permission=session_permission
     )
 
-# DASHBOARD DUMMY
+
+
+
+# # DASHBOARD DUMMY
 # @main.route('/report/dashboard')
 # @login_required
 # def dashboard():

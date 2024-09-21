@@ -6,6 +6,9 @@ content %}
     <h3 class="text-xl font-semibold mb-2">Dashboard Overview</h3>
   </div>
 
+  <!-- QHSE -->
+  {% if session_permission == "1"%}
+  
   <!-- Dashboard Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
     <!-- CCTV Count -->
@@ -23,19 +26,19 @@ content %}
     <!-- No PPE Detected -->
     <div class="bg-red-500 text-white p-4 rounded-lg shadow text-center">
       <h3 class="text-lg font-semibold">No PPE Detected</h3>
-      <p class="text-2xl">{{num_no_ppe }}</p>
+      <p class="text-2xl">{{ num_no_ppe_detected }}</p>
     </div>
 
     <!-- Reckless Driver Detected -->
     <div class="bg-yellow-500 text-white p-4 rounded-lg shadow text-center">
       <h3 class="text-lg font-semibold">Reckless Drivers</h3>
-      <p class="text-2xl">{{ num_reckless }}</p>
+      <p class="text-2xl">{{ num_reckless_driver_detected }}</p>
     </div>
 
     <!-- Gesture for Help Detected -->
     <div class="bg-purple-500 text-white p-4 rounded-lg shadow text-center">
       <h3 class="text-lg font-semibold">Help Gesture</h3>
-      <p class="text-2xl">{{ num_danger }}</p>
+      <p class="text-2xl">{{ num_danger_detected }}</p>
     </div>
   </div>
 
@@ -73,7 +76,6 @@ content %}
       </div>
     </div>
   </div>
-
   <!-- Driver Monitor Condition Section -->
   <div class="bg-white p-4 rounded-lg shadow mb-8">
     <h3 class="text-xl font-semibold mb-4">Driver Monitor (Last 7 Days)</h3>
@@ -133,21 +135,93 @@ content %}
       </div>
     </div>
   </div>
+  <!-- PAIER -->
+  {% elif session_permission == "2" %}
+
+  <!-- Dashboard Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+    <!-- CCTV Count -->
+    <div class="bg-blue-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">CCTV Count</h3>
+      <p class="text-2xl">{{ num_cctv }}</p>
+    </div>
+
+    <!-- Detector Count -->
+    <div class="bg-green-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">Detector Count</h3>
+      <p class="text-2xl">{{ num_detectors }}</p>
+    </div>
+
+    <!-- Fire Detected -->
+    <div class="bg-red-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">Fire Detected</h3>
+      <p class="text-2xl">{{ num_fire_detected }}</p>
+    </div>
+
+    <!-- Smoke Detected -->
+    <div class="bg-yellow-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">Smoke Detected</h3>
+      <p class="text-2xl">{{ num_smoke_detected }}</p>
+    </div>
+
+    <!-- Sleep Detected -->
+    <div class="bg-purple-500 text-white p-4 rounded-lg shadow text-center">
+      <h3 class="text-lg font-semibold">Sleep Detected</h3>
+      <p class="text-2xl">{{ num_sleep_detected }}</p>
+    </div>
+  </div>
+
+  <!-- PAIER Detection Section -->
+  <div class="bg-white p-4 rounded-lg shadow mb-8">
+    <h3 class="text-xl font-semibold mb-4">PAIER Detection (Last 7 Days)</h3>
+    <div style="display: flex; justify-content: space-between">
+      <!-- Dropdown for Camera Selection -->
+      <div class="mb-8" style="margin-right: 20px">
+        <form method="POST" id="cameraForm">
+          <label for="cameraSelect" class="block text-lg font-medium mb-2">Select Camera</label>
+          <select
+            id="cameraSelect"
+            name="camera"
+            class="block w-full mt-1 p-2 border border-gray-300 rounded-md"
+            onchange="document.getElementById('cameraForm').submit()"
+          >
+            {% for camera_id, camera_location in cameras.items() %}
+              <option value="{{ camera_id }}" {% if camera_id == selected_camera_paier %}selected{% endif %}>
+                {{ camera_location }}
+              </option>
+            {% endfor %}
+          </select>
+
+        </form>
+      </div>
+      <!-- Bar Chart -->
+      <div style="flex: 1; margin-right: 10px">
+        <canvas id="fireSmokeSleepBarChart" style="width: 100%; height: 500px"></canvas>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %} {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
+
+
 <script>
+  // Ambil data session_permission dari Jinja
+  const sessionPermission = "{{ session_permission }}";
   // Labels Data
   const labels = {{ last_7_days|tojson }};
   const reversedLabels = labels.slice().reverse()
 
-  // Data for Bar Chart (PPE)
+  // Filter untuk hak akses 1 (PPE, Driver, Danger)
+  if (sessionPermission === "1") {
+  // QHSE DASHBOARD - PPE Detection Bar Chart
   const ppeBarChartCtx = document.getElementById('ppeBarChart').getContext('2d');
-  const numNoVestPerDay = {{ num_no_vest_per_day|tojson }};
+  const numNoVestPerDay = {{ num_no_vest_detected_per_day|tojson }};
   const reversedNoVestData = numNoVestPerDay.slice().reverse();
-  const numNoHelmetPerDay = {{ num_no_helmet_per_day|tojson }};
+  const numNoHelmetPerDay = {{ num_no_helmet_detected_per_day|tojson }};
   const reversedNoHelmetData = numNoHelmetPerDay.slice().reverse();
 
   const ppeBarChart = new Chart(ppeBarChartCtx, {
@@ -259,7 +333,7 @@ content %}
     data: {
       labels: ['No Vest', 'No Helmet'],
       datasets: [{
-        data: [{{ num_no_vest }}, {{ num_no_helmet }}],
+        data: [{{ num_no_vest_detected }}, {{ num_no_helmet_detected }}],
         backgroundColor: ['rgba(0, 215, 101, 0.2)', 'rgba(238, 213, 58, 0.2)'],
         borderColor: ['rgba(0, 215, 101, 1)', 'rgba(238, 213, 58, 1)'],
         borderWidth: 1
@@ -305,14 +379,14 @@ content %}
     },
     plugins: [ChartDataLabels] // Tambahkan plugin ChartDataLabels
   });
-
+  
   // Barchart Driver Monitor
   const driverBarChartCtx = document.getElementById('driverBarChart').getContext('2d');
-  const numDrowsyPerDay = {{ num_drowsy_per_day|tojson }};
+  const numDrowsyPerDay = {{ num_drowsy_detected_per_day|tojson }};
   const reversedDrowsyData = numDrowsyPerDay.slice().reverse();
-  const numPhonePerDay = {{ num_phone_per_day|tojson }};
+  const numPhonePerDay = {{ num_phone_detected_per_day|tojson }};
   const reversedPhoneData = numPhonePerDay.slice().reverse();
-  const numNoSeatbeltPerDay = {{ num_no_seatbelt_per_day|tojson }};
+  const numNoSeatbeltPerDay = {{ num_no_seatbelt_detected_per_day|tojson }};
   const reversedNoSeatbeltData = numNoSeatbeltPerDay.slice().reverse();
 
   const driverBarChart = new Chart(driverBarChartCtx, {
@@ -425,106 +499,218 @@ content %}
   });
 
 
-    const dangerBarChartCtx = document.getElementById('dangerBarChart').getContext('2d');
-    const numDangerPerDay = {{ num_danger_per_day|tojson }};
-    const reversedDangerData = numDangerPerDay.slice().reverse();
+// Danger Gesture Detection Bar Chart
+const dangerBarChartCtx = document.getElementById('dangerBarChart').getContext('2d');
+const numDangerPerDay = {{ num_danger_gesture_detected_per_day|tojson }};
+const reversedDangerData = numDangerPerDay.slice().reverse();
 
-    const dangerBarChart = new Chart(dangerBarChartCtx, {
-      type: 'bar',
-      data: {
-        labels: reversedLabels,
-        datasets: [{
-          label: 'Cross Hand',
-          data: reversedDangerData,
-          backgroundColor: 'rgba(18, 178, 190, 0.2)',
-          borderColor: 'rgba(18, 178, 190, 1)',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        indexAxis: 'y', // Use 'y' for horizontal bar chart
-        plugins: {
-          legend: {
-            labels: {
-              color: 'black',
-              font: {
-                size: 15
-              }
-            }
-          },
-          title: {
-            display: true,
-            text: 'Help Gesture Bar Chart',
-            color: 'rgba(0, 123, 255, 0.8)', // Title color
-            font: {
-              size: 16,
-              weight: 'bold'
-            }
-          },
-          datalabels: {
-            color: 'black', // Warna teks label angka
-            font: {
-              weight: 'bold',
-              size: 15,
-              family: 'Brush Script MT'
-            },
-            anchor: 'end', // Posisi label angka
-            align: 'right', // Menempatkan label sedikit ke dalam bar
-            formatter: (value) => value, // Format label angka
-            backgroundColor: 'rgba(226, 228, 229, 0.8)', // Warna latar belakang label
-            borderRadius: 3, // Radius border latar belakang
-            padding: 4 // Padding di dalam label
-          }
-        },
-        scales: {
-          x: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Number of Events', // Label sumbu x
-              color: 'black', // Warna label sumbu x
-              font: {
-                size: 15,
-                weight: 'bold' // Ketebalan teks label sumbu x
-              }
-            },
-            ticks: {
-              color: 'rgba(32, 33, 33, 0.8)', // Mengubah warna label sumbu x
-              font: {
-                size: 15,
-                weight: 'bold' // Mengubah ketebalan font sumbu x
-              },
-              callback: function(value, index, values) {
-                // Menampilkan label hanya setiap 2 label
-                return index % 2 === 0 ? value : '';
-              }
-            },
-            grace: '10%' // Menambahkan margin 10% pada sumbu x untuk memberikan ruang pada label
-          },
-          y: {
-            type: 'category',
-            position: 'left',
-            title: {
-              display: true,
-              text: 'Date', // Label sumbu y
-              color: 'black', // Warna label sumbu y
-              font: {
-                size: 15,
-                weight: 'bold' // Ketebalan teks label sumbu y
-              }
-            },
-            ticks: {
-              color: 'rgba(32, 33, 33, 0.8)', // Mengubah warna label sumbu y
-              font: {
-                size: 15,
-                weight: 'bold' // Mengubah ketebalan font sumbu y
-              }
-            }
+const dangerBarChart = new Chart(dangerBarChartCtx, {
+  type: 'bar',
+  data: {
+    labels: reversedLabels,
+    datasets: [{
+      label: 'Cross Hand',
+      data: reversedDangerData,
+      backgroundColor: 'rgba(18, 178, 190, 0.2)',
+      borderColor: 'rgba(18, 178, 190, 1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    indexAxis: 'y', // Use 'y' for horizontal bar chart
+    plugins: {
+      legend: {
+        labels: {
+          color: 'black',
+          font: {
+            size: 15
           }
         }
       },
-      plugins: [ChartDataLabels] // Tambahkan plugin datalabels
-    });
-</script>
+      title: {
+        display: true,
+        text: 'Help Gesture Bar Chart',
+        color: 'rgba(0, 123, 255, 0.8)', // Title color
+        font: {
+          size: 16,
+          weight: 'bold'
+        }
+      },
+      datalabels: {
+        color: 'black', // Warna teks label angka
+        font: {
+          weight: 'bold',
+          size: 15,
+          family: 'Brush Script MT'
+        },
+        anchor: 'end', // Posisi label angka
+        align: 'right', // Menempatkan label sedikit ke dalam bar
+        formatter: (value) => value, // Format label angka
+        backgroundColor: 'rgba(226, 228, 229, 0.8)', // Warna latar belakang label
+        borderRadius: 3, // Radius border latar belakang
+        padding: 4 // Padding di dalam label
+      }
+    },
+    scales: {
+      x: {
+        grace: '10%', // Menambahkan margin 10% pada sumbu x untuk memberikan ruang pada label
+        ticks: {
+          callback: function(value, index, values) {
+            // Menampilkan label hanya setiap 2 label
+            return index % 2 === 0 ? value : '';
+          }
+        }
+      },
+      y: {
+        type: 'category',
+        position: 'left',
+        title: {
+          display: true,
+          text: 'Date', // Label sumbu y
+          color: 'black', // Warna label sumbu y
+          font: {
+            size: 15,
+            weight: 'bold' // Ketebalan teks label sumbu y
+          }
+        },
+        ticks: {
+          color: 'rgba(32, 33, 33, 0.8)', // Mengubah warna label sumbu y
+          font: {
+            size: 15,
+            weight: 'bold' // Mengubah ketebalan font sumbu y
+          }
+        }
+      }
+    }
+  },
+  plugins: [ChartDataLabels] // Tambahkan plugin datalabels
+});
+
+    }
+
+    // Filter untuk hak akses 2 (Fire, Smoke, Sleep)
+    if (sessionPermission === "2") {
+      const fireSmokeSleepBarChartCtx = document.getElementById('fireSmokeSleepBarChart').getContext('2d');
+      const fireData = {{ num_fire_detected_per_day|tojson }};
+      const reversedFireData = fireData.slice().reverse();
+      const smokeData = {{ num_smoke_detected_per_day|tojson }};
+      const reversedSmokeData = smokeData.slice().reverse();
+      const sleepData = {{ num_sleep_detected_per_day|tojson }};
+      const reversedSleepData = sleepData.slice().reverse();
+
+      const fireSmokeSleepBarChart = new Chart(fireSmokeSleepBarChartCtx, {
+        type: 'bar',
+        data: {
+          labels: reversedLabels, // Label untuk tiap hari
+          datasets: [
+            {
+              label: 'Fire Detected',
+              data: reversedFireData,
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Smoke Detected',
+              data: reversedSmokeData,
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Sleep Detected',
+              data: reversedSleepData,
+              backgroundColor: 'rgba(255, 206, 86, 0.2)',
+              borderColor: 'rgba(255, 206, 86, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+    options: {
+      plugins: {
+        legend: {
+          labels: {
+            color: 'black',
+            font: {
+              size: 15
+            }
+          }
+        },
+        title: {
+          display: true,
+          text: 'PAIER Bar Chart',
+          color: 'rgba(0, 123, 255, 0.8)', // Warna judul chart
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        datalabels: {
+          color: 'black', // Warna teks label angka
+          font: {
+            weight: 'bold',
+            size: 15,
+            family: 'Brush Script MT'
+          },
+          anchor: 'end', // Posisi label angka
+          align: 'end', // Posisi label angka di atas bar
+          formatter: (value) => value, // Format label angka
+          backgroundColor: 'rgba(226, 228, 229, 0.8)', // Warna latar belakang label
+          borderRadius: 3, // Radius border latar belakang
+          padding: 4 // Padding di dalam label
+        }
+      },
+      scales: {
+        x: {
+          type: 'category',
+          position: 'bottom',
+          title: {
+            display: true,
+            text: 'Date', // Nama sumbu X
+            color: 'black', // Warna teks sumbu X
+            font: {
+              size: 15,
+              weight: 'bold' // Ketebalan teks nama sumbu X
+            }
+          },
+          ticks: {
+            color: 'rgba(32, 33, 33, 0.8)', // Mengubah warna label sumbu x
+            font: {
+              size: 15,
+              weight: 'bold' // Mengubah ketebalan font sumbu x
+            }
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grace: '10%', // Menambahkan margin di bagian atas sumbu y agar label terlihat
+          title: {
+            display: true,
+            text: 'Number of Events', // Nama sumbu Y
+            color: 'black', // Warna teks sumbu Y
+            font: {
+              size: 15,
+              weight: 'bold' // Ketebalan teks nama sumbu Y
+            }
+          },
+          ticks: {
+            color: 'rgba(32, 33, 33, 0.8)', // Mengubah warna label sumbu y
+            font: {
+              weight: 'bold',
+              size: 15,
+              weight: 'bold' // Mengubah ketebalan font sumbu y
+            },
+            callback: function(value, index, values) {
+              // Menampilkan label hanya setiap 2 label
+              return index % 2 === 0 ? value : '';
+            }
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels] // Tambahkan plugin datalabels
+  });
+    }
+  </script>
 
 {% endblock %}

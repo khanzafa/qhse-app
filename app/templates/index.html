@@ -45,7 +45,7 @@
             formData.append('id', permissionId);
         
             // Send a POST request to the Flask backend
-            fetch('/admin/set_session', {
+            fetch('/set_session', {
                 method: 'POST',
                 body: formData
             })
