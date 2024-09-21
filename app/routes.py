@@ -285,7 +285,6 @@ def dashboard():
     total_reckless_driver = sum(num_drowsy_per_day + num_phone_per_day + num_no_seatbelt_per_day) or 0
     total_danger = sum(num_danger_per_day) or 0
 
-
     # Render data ke template dashboard
     return render_template(
         'dashboard.html',
@@ -742,7 +741,7 @@ def uploaded_file(filename):
 def set_session():
     permission_id = request.form.get('id')    
     if permission_id:
-        permission = Permission.qeury.get(permission_id)
+        permission = Permission.query.get(permission_id)
         session['permission_name'] = permission.name
         session['permission_id'] = permission_id
         return jsonify({'status': 'success'}), 200

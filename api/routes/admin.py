@@ -7,14 +7,26 @@ import os
 import re
 from utils.auth import get_allowed_permission_ids
 import logging
+from functools import wraps
 
 logging.basicConfig(level=logging.DEBUG)
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+# Custom decorator to require admin privileges
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if the user is authenticated and is an admin
+        if not current_user.is_admin():
+            abort(403)  # Return 403 Forbidden error if not an admin
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Super user
 @admin_bp.route("/user-approval", methods=["GET", "POST"])
 @login_required
+@admin_required
 def user_approval():
     form = UserApprovalForm()
     
@@ -41,6 +53,8 @@ def user_approval():
 
 @admin_bp.route("/user-permission", methods=["GET", "POST"])
 @admin_bp.route("/user-permission/<int:user_id>", methods=["GET"])
+@login_required
+@admin_required
 def user_permission(user_id=None):
     form = UserPermissionForm()
     if user_id:
@@ -70,16 +84,19 @@ def user_permission(user_id=None):
 
     # For GET requests
     users = User.query.all()
+    users.sort(key=lambda x: x.name)
     return render_template("user_permission.html", users=users, form=form)
 
 @admin_bp.route("/", methods=["GET"])
 @admin_bp.route("/su", methods=["GET"])
 @login_required
+@admin_required
 def su():
     return render_template("su.html")
 
 @admin_bp.route("/su/all-cards", methods=["GET"])
 @login_required
+@admin_required
 def all_cards():
     allowed = get_allowed_permission_ids()
     all_cards = suMenu.query.filter(suMenu.permission_id.in_(allowed)).all()
@@ -96,9 +113,9 @@ def all_cards():
 
     return jsonify(results)
 
-
 @admin_bp.route("/su/search", methods=["GET"])
 @login_required
+@admin_required
 def search():
     query = request.args.get("query", "")  # Get the query parameter
 
@@ -127,13 +144,13 @@ def search():
 
     return jsonify(results)
 
-
 def sanitize_filename(filename):
     return re.sub(r'[<>:"/\\|?*\t\n]', "_", filename)
 
 UPLOAD_FOLDER = "static/suMenus"
 
 @admin_bp.route("/su/upload", methods=["POST"])
+@admin_required
 def su_upload():
     title = request.form.get("title")
     file_url = request.form.get("url")
@@ -170,7 +187,6 @@ def su_upload():
     flash("File uploaded successfully!", "success")
     return redirect(url_for("admin.su"))
 
-
 # @admin_bp.route("/static/suMenus/<path:filename>")
 # def uploaded_file(filename):
 #     return send_from_directory("static", filename)
@@ -184,7 +200,6 @@ def su_upload():
 #     # Query users where approval is None or Null
 #     applicants = User.query.filter((User.approved.is_(None))).all()
 #     return render_template("su_approval.html", applicants=applicants)
-
 
 # @admin_bp.route("/su/update_approval", methods=["POST", "GET"])
 # def su_update_approval():
@@ -216,7 +231,6 @@ def su_upload():
 #         {"status": "success", "message": "Approval data updated successfully"}
 #     )
 
-
 # @admin_bp.route("/su/get_updated_table", methods=['GET'])
 # @login_required
 # def get_updated_table():
@@ -224,7 +238,6 @@ def su_upload():
 #     applicants = User.query.filter_by(approved=None).all()
 #     # Render only the table rows and return as a response
 #     return render_template("su_table_rows.html", applicants=applicants)
-
 
 # # grant access
 # @admin_bp.route("/su/grant_access", methods=["GET", "POST"])

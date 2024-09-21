@@ -28,7 +28,12 @@
                 </div>
             </div>
             {% else %}
-            <p>No menus available based on your permissions.</p>
+            <p>
+                No menus available based on your permissions.
+                Contact the administrator for more information.
+            </p>
+            <!-- Logout -->
+            <a href="{{ url_for('auth.logout') }}" class="text-red-500 hover:text-red-600 mt-2 block">Logout</a>
             {% endfor %}
         </div>
     </div>

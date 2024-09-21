@@ -2,6 +2,7 @@ import time
 import cv2
 import logging
 from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, Response, jsonify
+from flask_login import login_required
 from app.models import CCTV, Detector, DetectorType, Weight
 from app import db
 from app.forms import DetectorForm
@@ -162,6 +163,7 @@ detector_bp = Blueprint('detector', __name__, url_prefix='/detector')
 @detector_bp.route('/', methods=['GET'])
 @detector_bp.route('/<int:id>', methods=['GET'])
 @swag_from(detector_api_docs['view'])
+@login_required
 def view(id=None):
     if id:
         detector = Detector.query.get_or_404(id)
@@ -183,12 +185,13 @@ def view(id=None):
         #         'running': detector.running,
         #         'permission_id': detector.permission_id
         #     })        
-        detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).all()
+        detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).order_by(Detector.id).all()
         # return jsonify(detectors), 200
         return render_template('manage_detector.html', detectors=detectors, form=DetectorForm())
 
 @detector_bp.route('/', methods=['POST'])
 @swag_from(detector_api_docs['create'])
+@login_required
 def create():
     form = DetectorForm()
     if form.validate_on_submit():
@@ -209,6 +212,7 @@ def create():
 
 @detector_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(detector_api_docs['edit'])
+@login_required
 def edit(id):
     detector = Detector.query.get_or_404(id)
     form = DetectorForm(obj=detector)
@@ -226,6 +230,7 @@ def edit(id):
 
 @detector_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(detector_api_docs['delete'])
+@login_required
 def delete(id):
     detector = Detector.query.get_or_404(id)
     db.session.delete(detector)
@@ -236,6 +241,7 @@ def delete(id):
 
 @detector_bp.route('/<int:detector_id>/stream')
 @swag_from(detector_api_docs['stream'])
+@login_required
 def detector_stream(detector_id):
     from app import detector_manager
     def generate_frames():

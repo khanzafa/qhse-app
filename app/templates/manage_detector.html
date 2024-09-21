@@ -32,7 +32,7 @@ block content %}
         <td class="border px-4 py-2">{{ "Running" if detector.running else "Stopped" }}</td>
         <td class="border px-4 py-2 space-x-2 text-center">
           <!-- View Icon -->
-          <a href="{{ url_for('detector.view', detector_id=detector.id) }}"
+          <a href="{{ url_for('detector.detector_stream', detector_id=detector.id) }}"
             class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
             <i class="fas fa-eye"></i>
           </a>

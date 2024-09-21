@@ -1,5 +1,6 @@
 import logging
 from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, Response, jsonify
+from flask_login import login_required
 import requests
 from app.models import MessageTemplate, NotificationRule
 from app import db
@@ -134,6 +135,7 @@ notification_bp = Blueprint('notification', __name__, url_prefix='/notification'
 @notification_bp.route('/', methods=['GET'])
 @notification_bp.route('/<int:id>', methods=['GET'])
 @swag_from(notification_api_docs['view'])
+@login_required
 def view(id=None):
     if id:
         notification = NotificationRule.query.get_or_404(id)
@@ -170,6 +172,7 @@ def view(id=None):
     
 @notification_bp.route('/', methods=['POST'])
 @swag_from(notification_api_docs['create'])
+@login_required
 def create():
     form = NotificationRuleForm()
     if form.validate_on_submit():
@@ -190,6 +193,7 @@ def create():
 
 @notification_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(notification_api_docs['edit'])
+@login_required
 def edit(id):
     notification = NotificationRule.query.get_or_404(id)
     form = NotificationRuleForm(obj=notification)
@@ -202,8 +206,9 @@ def edit(id):
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@notification_bp.route('/<int:id>/edit', methods=['POST'])
+@notification_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(notification_api_docs['delete'])
+@login_required
 def delete(id):
     notification = NotificationRule.query.get_or_404(id)
     db.session.delete(notification)

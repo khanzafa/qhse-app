@@ -15,7 +15,7 @@ report_bp = Blueprint('report', __name__, url_prefix='/report')
 
 # REPORT
 @report_bp.route("/dashboard")
-# @login_required
+@login_required
 def dashboard():
     session_permission = session.get('permission_id')
 
@@ -251,7 +251,32 @@ def dashboard():
         num_no_seatbelt_per_day=num_no_seatbelt_per_day,
         num_danger_per_day=num_danger_per_day,
     )
-   
+
+@report_bp.route('/detected-object', methods=['GET'])
+@login_required
+def detected_object():
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Jumlah objek per halaman
+    search_query = request.args.get('search_query')
+
+    if search_query:
+        detected_objects = DetectedObject.query.join(Detector).join(CCTV) \
+            .filter(DetectedObject.name.like(f'%{search_query}%'), DetectedObject.permission_id == session.get('permission_id')) \
+            .order_by(DetectedObject.timestamp.desc()) \
+            .paginate(page=page, per_page=per_page)
+    else:
+        detected_objects = DetectedObject.query.join(Detector).join(CCTV) \
+            .filter(DetectedObject.permission_id == session.get('permission_id')) \
+            .order_by(DetectedObject.timestamp.desc()) \
+            .paginate(page=page, per_page=per_page)
+
+    return render_template('detected_object.html', detected_objects=detected_objects, search_query=search_query)
+
+@report_bp.route('/detected-object/view-object/<int:object_id>', methods=['GET'])
+@login_required
+def view_object(object_id):
+    detected_object = DetectedObject.query.get_or_404(object_id)    
+    return render_template('view_object.html', detected_object=detected_object)   
 
 # @report_bp.route("/detected-object", methods=["GET"])
 # @report_bp.route("/detected-object/<int:object_id>", methods=["GET"])
@@ -328,28 +353,4 @@ def dashboard():
 #                 "search_query": search_query,
 #             }
 #         ), 200
-    
-# REPORT
-@report_bp.route('/detected-object', methods=['GET'])
-def detected_object():
-    page = request.args.get('page', 1, type=int)
-    per_page = 10  # Jumlah objek per halaman
-    search_query = request.args.get('search_query')
 
-    if search_query:
-        detected_objects = DetectedObject.query.join(Detector).join(CCTV) \
-            .filter(DetectedObject.name.like(f'%{search_query}%'), DetectedObject.permission_id == session.get('permission_id')) \
-            .order_by(DetectedObject.timestamp.desc()) \
-            .paginate(page=page, per_page=per_page)
-    else:
-        detected_objects = DetectedObject.query.join(Detector).join(CCTV) \
-            .filter(DetectedObject.permission_id == session.get('permission_id')) \
-            .order_by(DetectedObject.timestamp.desc()) \
-            .paginate(page=page, per_page=per_page)
-
-    return render_template('detected_object.html', detected_objects=detected_objects, search_query=search_query)
-
-@report_bp.route('/detected-object/view-object/<int:object_id>', methods=['GET'])
-def view_object(object_id):
-    detected_object = DetectedObject.query.get_or_404(object_id)    
-    return render_template('view_object.html', detected_object=detected_object)
