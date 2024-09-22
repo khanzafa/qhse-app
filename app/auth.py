@@ -31,8 +31,9 @@ def login():
             return redirect(url_for('auth.login'))
         
         login_user(user)
-        # session['permission_id'] = 2
-        return redirect(url_for('admin.su'))
+        if user.is_admin():
+            return redirect(url_for('admin.su'))    
+        return redirect(url_for('main.index'))        
     return render_template('login.html', form=form)
 
 @auth.route('/register', methods=['GET', 'POST'])

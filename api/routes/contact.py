@@ -1,5 +1,6 @@
 import logging
 from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, Response, jsonify
+from flask_login import login_required
 from app.models import Contact
 from app import db, swagger
 from app.forms import ContactForm
@@ -147,6 +148,7 @@ contact_bp = Blueprint('contact', __name__, url_prefix='/contact')
 @contact_bp.route('/', methods=['GET'])
 @contact_bp.route('/<int:id>', methods=['GET'])
 @swag_from(contact_api_docs['view'])
+@login_required
 def view(id=None):
     form = ContactForm()
     if id:        
@@ -172,6 +174,7 @@ def view(id=None):
     
 @contact_bp.route('/', methods=['POST'])
 @swag_from(contact_api_docs['create'])
+@login_required
 def create():
     form = ContactForm()
     if form.validate_on_submit():
@@ -193,6 +196,7 @@ def create():
 
 @contact_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(contact_api_docs['edit'])
+@login_required
 def edit(id):
     contact = Contact.query.get_or_404(id)
     form = ContactForm(obj=contact)
@@ -208,6 +212,7 @@ def edit(id):
 
 @contact_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(contact_api_docs['delete'])
+@login_required
 def delete(id):
     contact = Contact.query.get_or_404(id)
     db.session.delete(contact)

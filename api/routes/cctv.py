@@ -1,4 +1,5 @@
 from flask import render_template, redirect, url_for, flash, session, Response, Blueprint, jsonify, abort
+from flask_login import login_required
 from app.models import CCTV
 from app import db
 from app.forms import AddCCTVForm, CCTVForm, EditCCTVForm
@@ -148,6 +149,7 @@ cctv_bp = Blueprint('cctv', __name__, url_prefix='/cctv')
 @cctv_bp.route('/', methods=['GET'])
 @cctv_bp.route('/<int:id>', methods=['GET'])
 @swag_from(cctv_api_docs['view'])
+@login_required
 def view(id=None):
     logging.debug(f"Permission ID: {session.get('permission_id')}")
     form = CCTVForm()    
@@ -176,6 +178,7 @@ def view(id=None):
 
 @cctv_bp.route('/', methods=['POST'])
 @swag_from(cctv_api_docs['create'])
+@login_required
 def create():
     form = CCTVForm()    
     if form.validate_on_submit():
@@ -197,6 +200,7 @@ def create():
 
 @cctv_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(cctv_api_docs['edit'])
+@login_required
 def edit(id):
     cctv = CCTV.query.get_or_404(id)
     form = CCTVForm(obj=cctv)
@@ -218,6 +222,7 @@ def edit(id):
 
 @cctv_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(cctv_api_docs['delete'])
+@login_required
 def delete(id):
     logging.debug(f"Deleting CCTV with ID: {id}")
     cctv = CCTV.query.get_or_404(id)
@@ -229,6 +234,7 @@ def delete(id):
 
 @cctv_bp.route('/<int:cctv_id>/stream')
 @swag_from(cctv_api_docs['stream'])
+@login_required
 def stream(cctv_id):
     cctv = CCTV.query.get_or_404(cctv_id)
     def generate_frames():

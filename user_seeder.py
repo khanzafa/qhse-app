@@ -12,8 +12,8 @@ def seed_users(n):
         phone_number = fake.unique.phone_number()
         password = fake.password()
         
-        # Random role between 'user', 'admin', 'manager'
-        role = random.choice(['user', 'admin', 'manager'])
+        # Random role between 'user', 'admin', 'guest'
+        role = random.choice(['user', 'admin', 'guest'])
 
         # Randomly approve users (None or True)
         approved = random.choice([None, True])

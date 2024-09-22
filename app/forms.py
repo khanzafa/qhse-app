@@ -95,10 +95,9 @@ class RegistrationForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=20)])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128)])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    role = SelectField('Role', choices=[        
-        ('Manager', 'Manager'),
-        ('QHSE', 'QHSE'),
-        ('PAIER', 'PAIER')      
+    role = SelectField('Role', choices=[            
+        ('user', 'user'),
+        ('guest', 'guest'),      
     ], validators=[DataRequired()])
     submit = SubmitField('Register')
 

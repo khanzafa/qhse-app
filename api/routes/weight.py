@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from base64 import b64encode
 from flask import Blueprint, Response, abort, render_template, redirect, url_for, flash, session, jsonify
+from flask_login import login_required
 from app.models import DetectorType, Weight
 from app import db
 from app.forms import ModelForm
@@ -160,6 +161,7 @@ weight_bp = Blueprint('weight', __name__, url_prefix='/weight')
 @weight_bp.route('/', methods=['GET'])
 @weight_bp.route('/<int:id>', methods=['GET'])
 @swag_from(weight_api_docs['view'])
+@login_required
 def view(id=None):
     if id:
         weight = Weight.query.get_or_404(id)
@@ -191,6 +193,7 @@ def view(id=None):
     
 @weight_bp.route('/', methods=['POST'])
 @swag_from(weight_api_docs['create'])
+@login_required
 def create():
     form = ModelForm()
     if form.validate_on_submit():
@@ -217,6 +220,7 @@ def create():
 
 @weight_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(weight_api_docs['edit'])
+@login_required
 def edit(id):
     model = Weight.query.get_or_404(id)
     form = ModelForm(obj=model)
@@ -237,6 +241,7 @@ def edit(id):
 
 @weight_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(weight_api_docs['delete'])
+@login_required
 def delete(id):
     model = Weight.query.get_or_404(id)
     db.session.delete(model)

@@ -3,11 +3,12 @@ from datetime import datetime
 import logging
 import time
 import cv2
+import enum
 from ultralytics import YOLO
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from sqlalchemy import event
+from sqlalchemy import event, Enum
 from sqlalchemy.orm import Session
 from flask_socketio import emit
 
@@ -32,13 +33,18 @@ class Guest(db.Model, UserMixin):
     
     def __repr__(self):
         return f'<Guest {self.id}>'
+    
+class UserRole(enum.Enum):
+    user = 'user'
+    admin = 'admin'
+    guest = 'guest'
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(64), index=True, unique=True)
     password_hash = db.Column(db.String(256))
-    role = db.Column(db.String(10), default='user')
+    role = db.Column(db.Enum(UserRole), default=UserRole.user)
     approved = db.Column(db.Boolean(), default=None)
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
@@ -49,8 +55,8 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def is_manager(self): 
-        return self.role == 'admin'
+    def is_admin(self): 
+        return self.role == UserRole.admin
 
     def to_dict(self):
         return {
@@ -281,6 +287,8 @@ class DetectorType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), index=True, unique=True)
     description = db.Column(db.String(120))    
+    # permission = db.relationship('Permission', backref=db.backref('detectors', uselist=False))
+    # permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -289,6 +297,7 @@ class DetectorType(db.Model):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            # 'permission_id': self.permission_id,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }

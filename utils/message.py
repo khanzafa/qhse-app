@@ -27,6 +27,7 @@ class SeleniumManager:
         firefox_profile = FirefoxProfile(
             profile_directory=profile_path
         )
+        # firefox_options.add_argument('--headless')
         # firefox_profile.set_preference("javascript.enabled", False)
         firefox_options.profile = firefox_profile
         self.driver = webdriver.Firefox(options=firefox_options)

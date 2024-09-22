@@ -20,6 +20,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import os
 
 from utils.detector import DetectorManager
+from utils.message import selenium_manager
 
 # ppe_detector = PPEDetector()
 # gesture_detector = GestureForHelpDetector()
@@ -122,6 +123,9 @@ def create_app():
     for route in api_routes:
         app.register_blueprint(route)
     CORS(app)
+
+    # Selenium
+    selenium_manager.initialize_driver()
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")

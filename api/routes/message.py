@@ -1,5 +1,6 @@
 import logging
 from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, Response, jsonify
+from flask_login import login_required
 from app.models import MessageTemplate
 from app import db
 from app.forms import MessageTemplateForm
@@ -133,6 +134,7 @@ message_bp = Blueprint('message', __name__, url_prefix='/message')
 @message_bp.route('/', methods=['GET'])
 @message_bp.route('/<int:id>', methods=['GET'])
 @swag_from(message_api_docs['view'])
+@login_required
 def view(id=None):
     logging.debug(f"Permission ID: {session.get('permission_id')}")
     if id:
@@ -158,6 +160,7 @@ def view(id=None):
     
 @message_bp.route('/', methods=['POST'])    
 @swag_from(message_api_docs['create'])
+@login_required
 def create():
     form = MessageTemplateForm()
     if form.validate_on_submit():
@@ -169,30 +172,35 @@ def create():
         db.session.add(message)
         db.session.commit()
         flash('Message template added successfully!')
-        return Response(status=201)
+        # return Response(status=201)
         # return redirect(url_for('message.view'))
+        return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@message_bp.route('/<int:id>', methods=['PUT'])
+@message_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(message_api_docs['edit'])
+@login_required
 def edit(id):
     message = MessageTemplate.query.get_or_404(id)
     form = MessageTemplateForm(obj=message)
     if form.validate_on_submit():
         form.populate_obj(message)
         db.session.commit()
-        return Response(status=200)
+        # return Response(status=200)
         # return redirect(url_for('message.view'))
+        return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@message_bp.route('/<int:id>', methods=['DELETE'])
+@message_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(message_api_docs['delete'])
+@login_required
 def delete(id):
     message = MessageTemplate.query.get_or_404(id)
     db.session.delete(message)
     db.session.commit()
-    return Response(status=200)
+    # return Response(status=200)   
+    return redirect(url_for('notification.view'))
