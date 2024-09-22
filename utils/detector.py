@@ -18,10 +18,6 @@ import cv2
 import time
 import logging
 
-import threading
-import logging
-import cv2
-
 from utils.message import Message
 
 # Setup logging configuration
@@ -49,11 +45,12 @@ class CameraStreamManager:
             logging.info("Stopping all camera streams.")
             for camera_stream in self.camera_streams.values():
                 camera_stream.stop()
+                camera_stream.join()
             self.camera_streams.clear()
 
 class CameraStream(threading.Thread):
     def __init__(self, ip_address):
-        super().__init__()
+        super().__init__(name=f"CameraStream-{ip_address}")
         self.ip_address = ip_address
         self.capture = cv2.VideoCapture(0) if ip_address == 'http://0.0.0.0' else cv2.VideoCapture(ip_address)
         if not self.capture.isOpened():
@@ -86,7 +83,7 @@ class CameraStream(threading.Thread):
 
 class DetectorThread(threading.Thread):
     def __init__(self, app, detector_id, camera_stream, annotated_frames, notification_rules):
-        super().__init__()
+        super().__init__(name=f"DetectorThread-{detector_id}")
         self.app = app
         self.detector_id = detector_id
         self.camera_stream = camera_stream
@@ -169,7 +166,6 @@ class DetectorManager:
                         logging.warning(f"Camera stream for CCTV ID {cctv.id} is not active. Stopping detector {detector.id}")
                         detector.stop()
                         
-
     def update_detectors(self):
         with self.app.app_context():
             with self.lock:
@@ -200,17 +196,33 @@ class DetectorManager:
                             logging.warning(f"Camera stream for CCTV ID {cctv.id} is not active. Stopping detector {detector.id}")
                             detector.stop()
 
+                # Stop camera no longer used
+                active_camera_ips = {CCTV.query.get(detector.cctv_id).ip_address for detector in active_detectors}
+                to_stop = [ip_address for ip_address in self.camera_manager.camera_streams if ip_address not in active_camera_ips]
+
+                for ip_address in to_stop:
+                    logging.info(f"Stopping camera stream for IP: {ip_address}")
+                    self.camera_manager.camera_streams[ip_address].stop()
+                    del self.camera_manager.camera_streams[ip_address]
+
     def stop_all(self):
         with self.lock:
             logging.info("Stopping all detectors.")
             for detector_thread in self.detectors.values():
                 detector_thread.stop()
+                detector_thread.join()
             self.detectors.clear()
             self.camera_manager.stop_all()
+            if self.message_sender_thread is not None:
+                self.message_sender_thread.stop()
+                self.message_sender_thread.join()
+                self.message_sender_thread = None
+            logging.info("All detectors and message sender thread stopped.")
+
 
 class MessageSenderThread(threading.Thread):
     def __init__(self, app, message_queue):
-        super().__init__()
+        super().__init__(name="MessageSenderThread")
         self.app = app
         self.message_queue = message_queue
         self.running = True
@@ -232,8 +244,11 @@ class MessageSenderThread(threading.Thread):
 
     def stop(self):
         self.running = False
+        # Clear the queue to ensure the thread exits promptly
+        with self.message_queue.mutex:
+            self.message_queue.queue.clear()
+        self.message_queue.join()           
         logging.info("MessageSenderThread stopped")
-
 # Query untuk mendapatkan semua detektor yang aktif
 def get_active_detectors():
     # Fungsi ini perlu dikonfigurasi sesuai dengan implementasi database Anda

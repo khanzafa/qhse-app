@@ -36,7 +36,7 @@ class Guest(db.Model, UserMixin):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
-    phone_number = db.Column(db.String(30), index=True, unique=True)
+    email = db.Column(db.String(64), index=True, unique=True)
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(10), default='user')
     approved = db.Column(db.Boolean(), default=None)
@@ -56,7 +56,7 @@ class User(db.Model, UserMixin):
         return {
             'id': self.id,
             'name': self.name,
-            'phone_number': self.phone_number,
+            'email': self.email,
             'role': self.role,
             'created_at': self.created_at,
             'updated_at': self.updated_at

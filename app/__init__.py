@@ -4,7 +4,7 @@ import signal
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import threading
-from flask import Flask, current_app, session
+from flask import Flask, current_app, request, session
 from base64 import b64encode
 from app.extensions import db, migrate, swagger
 # from guide_bot.routes import guide_bot
@@ -34,17 +34,29 @@ socketio = SocketIO()
 
 # Misal: Manajer detektor yang telah kita buat sebelumnya
 detector_manager = DetectorManager(session)
+detector_thread = None  # Global variable to store the detector thread
 
 def run_detectors(app):
     detector_manager.initialize_detectors(app)
 
 # Tangkap sinyal untuk menghentikan detektor saat server dimatikan
 def handle_shutdown_signal(signal, frame):
+    global detector_thread  # Use the global variable
+
     print("Shutting down detector manager...")
     detector_manager.stop_all()
     print("Detector manager stopped.")
+    if detector_thread is not None:
+        print("Waiting for detector thread to join...")
+        detector_thread.join()  # Ensure the thread is properly joined
+        detector_thread = None
+        print("Detector thread joined.")
+
+    print("Shutting down server...")
+    os._exit(0)  # Force exit the program
 
 def create_app():
+    global detector_thread  # Use the global variable
     app = Flask(__name__)
     print("App created.")
     app.config.from_object('config.Config')
@@ -112,8 +124,8 @@ def create_app():
     CORS(app)
 
     # Jalankan thread detektor sebelum memulai Flask
-    detector_thread = threading.Thread(target=run_detectors, args=(app,))
-    # detector_thread.start()
+    detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
+    detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)
