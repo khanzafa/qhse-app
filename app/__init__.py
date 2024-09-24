@@ -69,7 +69,7 @@ def create_app():
     print("Auth blueprint registered.")
     # app.register_blueprint(api)
     # print("API blueprint registered.")
-    app.register_blueprint(aios)
+    # app.register_blueprint(aios)
     print("Auth blueprint registered.")
 
     user_home_dir = os.path.expanduser("~")
@@ -84,11 +84,11 @@ def create_app():
     # app.driver.get("https://web.whatsapp.com/")
     # app.wait = WebDriverWait(app.driver, 100)
 
-    threading.Thread(target=start_detector, args=(ppe_detector,)).start()
-    print("PPE detector started.")
-    threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    print("Gesture detector started.")
-    threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
-    print("Unfocused detector started.")
+    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
+    # print("PPE detector started.")
+    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
+    # print("Gesture detector started.")
+    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
+    # print("Unfocused detector started.")
 
     return app
