@@ -1,37 +1,76 @@
 # app/__init__.py
+# import threading
+import signal
+from flask_cors import CORS
+from flask_socketio import SocketIO
 import threading
-from flask import Flask, current_app
+from flask import Flask, current_app, request, session
 from base64 import b64encode
-from app.extensions import db, migrate
-from ppe_detection import PPEDetector
-from gesture_detection import GestureForHelpDetector
-from unfocused_detection import UnfocusedDetector
-from ppe_detection.routes import ppe
-from gesture_detection.routes import gesture
-from unfocused_detection.routes import unfocused
-from guide_bot.routes import guide_bot
-from api.routes import api
+from app.extensions import db, migrate, swagger
+# from guide_bot.routes import guide_bot
+from api.routes import api_routes
 from flask_login import LoginManager
 from app.models import User
-from aios.routes import aios
+from app.routes import main
+# from aios.routes import aios
+from flask_mail import Mail
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 import os
 
-ppe_detector = PPEDetector()
-gesture_detector = GestureForHelpDetector()
-unfocused_detector = UnfocusedDetector()
+from utils.detector import DetectorManager
+from utils.message import selenium_manager
+
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
+# Initialize Flask-Mail
+mail = Mail()
+
+# Initialize Flask-SocketIO
+socketio = SocketIO()
+
+# Misal: Manajer detektor yang telah kita buat sebelumnya
+detector_manager = DetectorManager(session)
+detector_thread = None  # Global variable to store the detector thread
+
+def run_detectors(app):
+    detector_manager.initialize_detectors(app)
+
+# Tangkap sinyal untuk menghentikan detektor saat server dimatikan
+def handle_shutdown_signal(signal, frame):
+    global detector_thread  # Use the global variable
+    
+    print("Shutting down detector manager...")
+    detector_manager.stop_all()
+    print("Detector manager stopped.")
+    if detector_thread is not None:
+        print("Waiting for detector thread to join...")
+        detector_thread.join()  # Ensure the thread is properly joined
+        detector_thread = None
+        print("Detector thread joined.")
+
+    print("Shutting down server...")
+    os._exit(0)  # Force exit the program
 
 def create_app():
-    
+    global detector_thread  # Use the global variable 
+
     app = Flask(__name__)
     print("App created.")
     app.config.from_object('config.Config')
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
+    # Konfigurasi direktori upload
+    UPLOAD_FOLDER = 'uploads'
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    
+    app.secret_key='haho'    
 
+    # Membuat direktori upload jika belum ada
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+        
     # Define the b64encode filter
     def base64_encode(data):
         return b64encode(data).decode('utf-8')
@@ -41,54 +80,46 @@ def create_app():
 
     db.init_app(app)
     print("Database initialized.")
+
     migrate.init_app(app, db)
     print("Migration initialized.")
+
+    swagger.init_app(app)
+    print("Swagger initialized.")
+
     login_manager.init_app(app)
     print("Login manager initialized.")
+
+    # Initialize Flask-SocketIO with the app instance
+    socketio.init_app(app)
+    print("SocketIO initialized.")
+    
+    # Initialize Flask-Mail with the app instance
+    mail.init_app(app)
+    print("Mail initialized.")
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    def start_detector(detector):
-        with app.app_context():
-            detector.run(app)
-
-    from app.routes import main
     from app.auth import auth as auth_blueprint
     app.register_blueprint(main)
     print("Main blueprint registered.")
-    app.register_blueprint(ppe)
-    print("PPE blueprint registered.")
-    app.register_blueprint(gesture)
-    print("Gesture blueprint registered.")
-    app.register_blueprint(unfocused)
-    print("Unfocused blueprint registered.")
-    app.register_blueprint(guide_bot)
-    print("Guide bot blueprint registered.")
     app.register_blueprint(auth_blueprint)
     print("Auth blueprint registered.")
-    # app.register_blueprint(api)
-    # print("API blueprint registered.")
-    # app.register_blueprint(aios)
-    print("Auth blueprint registered.")
+    for route in api_routes:
+        app.register_blueprint(route)
+    CORS(app)
 
-    user_home_dir = os.path.expanduser("~")
-    user_home_dir = user_home_dir.replace("\\", "/")
-    
-    option = webdriver.ChromeOptions()
-    # option.add_argument(f'user-data-dir={user_home_dir}/AppData/Local/Google/Chrome/User Data --headless')
-    # option.add_experimental_option("detach", True)
-    # option.add_experimental_option("excludeSwitches", ["enable-automation"])
-    # option.add_experimental_option('useAutomationExtension', False)
-    # app.driver = webdriver.Chrome(options=option)
-    # app.driver.get("https://web.whatsapp.com/")
-    # app.wait = WebDriverWait(app.driver, 100)
+    # Selenium
+    selenium_manager.initialize_driver()
 
-    # threading.Thread(target=start_detector, args=(ppe_detector,)).start()
-    # print("PPE detector started.")
-    # threading.Thread(target=start_detector, args=(gesture_detector,)).start()
-    # print("Gesture detector started.")
-    # threading.Thread(target=start_detector, args=(unfocused_detector,)).start()
-    # print("Unfocused detector started.")
+    # Jalankan thread detektor sebelum memulai Flask
+    detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
+    detector_thread.start()
+
+    # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
+    signal.signal(signal.SIGINT, handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
     return app

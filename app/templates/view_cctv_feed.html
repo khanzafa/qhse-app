@@ -7,7 +7,7 @@ content %}
     <img
       id="cctv-feed"
       class="absolute top-0 left-0 w-full h-full object-cover"
-      src="{{ url_for('main.cctv_stream', camera_id=camera_id) }}"
+      src="{{ url_for('cctv.stream', cctv_id=camera_id) }}"
       alt="CCTV Feed"
     />
   </div>

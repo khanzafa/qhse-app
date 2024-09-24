@@ -37,7 +37,7 @@ class GestureForHelpDetector(BaseDetector):
                 db.session.add(detected_obj)
                 db.session.commit()
                 
-                target = '"Nomerku"'
+                target = 'Y0L0'
                 message = f"Subject: *SOS DETECTED*||• Camera ID: {camera_id}||• Violation: cross-hands||• timestamp: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
                 
                 image_filename = f"unfocused_{camera_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"

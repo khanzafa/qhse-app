@@ -1,0 +1,205 @@
+{% extends "su_base.html" %}
+{% block content %}
+<div class="relative">
+    <!-- Sticky Buttons -->
+    <div class="flex justify-end items-center space-x-4 p-4 sticky top-0 bg-white z-10">
+        <button id="cancelBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            Cancel
+        </button>
+        <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Save
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-300" id="table-container">
+            <thead>
+                <tr class="w-full bg-gray-100 border-b">
+                    <th class="text-left px-4 py-2">No</th>
+                    <th class="text-left px-4 py-2">Name</th>
+                    <th class="text-left px-4 py-2">Email</th>
+                    <th class="text-left px-4 py-2">Role</th>
+                    <th class="text-left px-4 py-2">Access</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="border-b">
+                    <td class="px-4 py-2">{{ loop.index }}</td>
+                    <td class="px-4 py-2">{{ user.name }}</td>
+                    <td class="px-4 py-2">{{ user.email }}</td>
+                    <td class="px-4 py-2">{{ user.role }}</td>
+                    <td class="px-4 py-2">
+                        <button type="button"
+                            class="btn btn-primary bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            data-user-id="{{ user.id }}" data-user-name="{{ user.name }}"
+                            data-modal-toggle="accessModal" data-modal-target="#accessModal">
+                            Show
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Modal Edit Access -->
+        <div id="accessModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="bg-white rounded-lg shadow-xl w-1/3 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <!-- user id ini akan salah karena ini query utk munculin semua -->
+                        <h3 class="text-lg font-semibold" id="modal-title">Edit Access for <span
+                                id="modal-user-id-test"></span> <span id="modal-user-name"></span></h3>
+                        <button class="text-gray-400 hover:text-gray-600 focus:outline-none" id="closeAccessModal"
+                            data-modal-toggle="accessModal">
+                            ✖
+                        </button>
+                    </div>
+                    <form action="{{ url_for('main.grant_access') }}" method="POST" id="modal-form">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="user_id" id="modal-user-id" value="">
+                        <ul id="permissions">
+                            {% for perm_id, perm_name in form.permissions.choices %}
+                            <li>
+                                <span>{{ perm_id }}</span>
+                                <span>{{ user_permission_ids }}</span>
+                                <input checked id="{{ perm_id }}" name="permissions" type="checkbox"
+                                    value="{{ perm_id }}" {% if value in user_permission_ids %}selected{% endif %}>
+                                <label for="{{ perm_id }}">{{ perm_name }}</label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+            
+                        <button type="submit" class="btn btn-primary bg-blue-500 px-2 py-2 rounded">Update
+                            Permissions</button>
+                    </form>
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.getElementById('saveBtn').addEventListener('click', function () {
+        // Get all rows in the table body
+        const rows = document.querySelectorAll('tbody tr');
+        const approvedApplicants = [];
+
+        // Loop through each row to collect data only for checked applicants
+        rows.forEach(row => {
+            const checkbox = row.querySelector('input[name="approve"]');
+
+            // Only collect data if the checkbox is checked
+            if (checkbox.checked) {
+                const name = row.cells[1].innerText;
+                const email = row.cells[2].innerText;
+                const role = row.cells[3].innerText;
+
+                // Push the approved applicant's data into the array
+                approvedApplicants.push({
+                    name: name,
+                    email: email,
+                    role: role,
+                    approved: true
+                });
+            }
+        });
+
+        // Log the approved applicants
+        console.log("Approved applicants:", approvedApplicants);
+
+        if (approvedApplicants.length > 0) {
+            // Update the approved applicants permission using AJAX (using jQuery)
+            $.ajax({
+                url: '/su/update_approval', // Replace with your server endpoint
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ approvedApplicants: approvedApplicants }),
+                success: function (response) {
+                    console.log('Permissions updated successfully:', response);
+
+                    // Fetch the updated table content via AJAX
+                    $.ajax({
+                        url: '/su/get_updated_table', // New route to get updated table rows
+                        method: 'GET',
+                        success: function (updatedTableContent) {
+                            // Replace the existing table body with the new one
+                            document.querySelector('#table-container tbody').innerHTML = updatedTableContent;
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error fetching updated table:', status, error);
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error updating permissions:', status, error);
+                }
+            });
+        }
+        else {
+            console.log('No Applicants are checked')
+        }
+
+        location.reload()
+    });
+
+
+    document.getElementById('cancelBtn').addEventListener('click', function () {
+        // Uncheck all checkboxes
+        const checkboxes = document.querySelectorAll('input[name="approve"]');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+    });
+
+    // Open modal when Add button is clicked
+    document.querySelectorAll('[data-modal-toggle]').forEach(button => {
+        button.addEventListener('click', function () {
+            const userId = button.getAttribute('data-user-id');
+            const userName = button.getAttribute('data-user-name');
+            const modal = document.querySelector(button.getAttribute('data-modal-target'));
+
+            // Set the modal's user name and user ID
+            document.getElementById('modal-user-name').innerText = userName;
+            document.getElementById('modal-user-id-test').innerText = userId;
+            document.getElementById('modal-user-id').value = userId;
+
+            const target = document.querySelector(button.getAttribute('data-modal-target'));
+            target.classList.remove('hidden');
+
+            // Fetch user permissions via AJAX if needed
+            fetch(`/su/grant_access/${userId}`, { method: 'GET' })
+                .then(response => response.json())
+                .then(data => {
+                    // Populate the form with the permissions (if necessary)
+                    // const checkboxes = document.querySelectorAll('#modal-form #permissions li input[type="checkbox"]');
+                    // checkboxes.forEach(checkbox => {
+                    //     checkbox.checked = data.permissions.includes(parseInt(checkbox.value));
+                    // });
+
+
+                });
+        });
+    });
+
+    // Close modal when close button or "Close" is clicked
+    document.querySelectorAll('[data-close-modal]').forEach(button => {
+        button.addEventListener('click', function () {
+            const target = document.querySelector(button.getAttribute('data-close-modal'));
+            target.classList.add('hidden');
+        });
+    });
+
+    document.getElementById('closeAccessModal').addEventListener('click', function () {
+        document.getElementById('accessModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelAccessModal').addEventListener('click', function () {
+        document.getElementById('accessModal').classList.add('hidden');
+    });
+</script>
+{% endblock %}

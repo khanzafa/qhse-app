@@ -51,9 +51,9 @@
             <div class="flex items-center space-x-2">
                 <img src="/static/img/corporate-user-icon.png" alt="User Avatar" class="w-8 h-8 rounded-full" />
                 <!-- <span class="text-gray-700 font-medium">John Doe</span> -->
-                <span class="text-gray-700 font-medium">{{ current_user.name }}</span>
+                <span class="text-gray-700 font-medium">{{ session.get('otp_email') }}</span>
                 <!-- Logout Button -->
-                <a href="{{ url_for('auth.logout') }}" class="logout-button">Logout</a>
+                <a href="{{ url_for('auth.guidebot_logout') }}" class="logout-button">Logout</a>
             </div>
         </div>
     </header>
@@ -61,7 +61,7 @@
     <!-- Sidebar -->
     <div class="flex pt-16">
         <aside id="sidebar"
-            class="fixed top-16 left-0 h-full bg-red-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0">
+            class="fixed top-16 left-0 h-full bg-green-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0">
             <nav class="mt-4">
                 <!-- Dashboard (Back to HRMS) -->
                 <a href="{{ url_for('main.index') }}"

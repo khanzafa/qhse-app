@@ -9,6 +9,8 @@ from langchain_groq import ChatGroq
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEmbeddings, HuggingFaceEndpoint, HuggingFacePipeline
 from langchain_google_genai import ChatGoogleGenerativeAI
 from unstructured.partition.auto import partition
+from flask_login import current_user
+from flask import session, current_app
 import PIL
 import cv2
 
@@ -47,10 +49,10 @@ def create_conversational_chain(vector_store):
     ])
 
     # LLAMA GROQ
-    # llm = ChatGroq(
-    #     groq_api_key=os.getenv('GROQ_API_KEY'), 
-    #     model_name='llama3-70b-8192'
-    # )
+    llm = ChatGroq(
+        groq_api_key=os.getenv('GROQ_API_KEY'), 
+        model_name='llama3-70b-8192'
+    )
 
     # if not os.getenv("HUGGINGFACEHUB_API_TOKEN"):
     #     os.environ["HUGGINGFACEHUB_API_TOKEN"] = getpass.getpass("Enter your token: ")
@@ -67,13 +69,13 @@ def create_conversational_chain(vector_store):
     # llm = ChatHuggingFace(llm=endpoint)    
 
     # GEMINI
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-    )
+    # llm = ChatGoogleGenerativeAI(
+    #     model="gemini-1.5-flash",
+    #     temperature=0,
+    #     max_tokens=None,
+    #     timeout=None,
+    #     max_retries=2,
+    # )
 
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, output_key='answer')
 
@@ -119,9 +121,10 @@ def split_documents(text):
     return text_splitter.split_text(text)
 
 def load_vector_store(embeddings):
+    session_role = session.get('role')
     vector_store = Chroma(
-        collection_name="SPIL",
-        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}, clean_up_tokenization_spaces=True), 
-        persist_directory="vector_store"
+        collection_name=f"SPIL-{session_role}",
+        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
+        persist_directory=f"vector_store/{session_role}"
     )
     return vector_store

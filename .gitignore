@@ -12,3 +12,6 @@ vector_store/*
 data
 /vector_store
 tes.ipynb
+uploads/*
+notes
+weights/*

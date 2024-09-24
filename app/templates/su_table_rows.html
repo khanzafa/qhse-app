@@ -1,0 +1,14 @@
+<tbody>
+    {% for applicant in applicants %}
+    <tr class="border-b">
+        <td class="px-4 py-2">{{ loop.index }}</td>
+        <td class="px-4 py-2">{{ applicant.name }}</td>
+        <td class="px-4 py-2">{{ applicant.email }}</td>
+        <td class="px-4 py-2">{{ applicant.role }}</td>
+        <td class="px-4 py-2">
+            <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" name="approve"
+                value="{{ applicant.email }}">
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
