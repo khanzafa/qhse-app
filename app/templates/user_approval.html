@@ -12,7 +12,7 @@
                     <tr>
                         <th class="p-2 bg-gray-100">ID</th>
                         <th class="p-2 bg-gray-100">Name</th>
-                        <th class="p-2 bg-gray-100">Phone</th>
+                        <th class="p-2 bg-gray-100">Email</th>
                         <th class="p-2 bg-gray-100">Action</th>
                     </tr>
                 </thead>
@@ -21,7 +21,7 @@
                     <tr>
                         <td class="p-2">{{ applicant.id }}</td>
                         <td class="p-2">{{ applicant.name }}</td>
-                        <td class="p-2">{{ applicant.phone_number }}</td>
+                        <td class="p-2">{{ applicant.email }}</td>
                         <td class="p-2 flex">
                             <form method="POST" action="{{ url_for('admin.user_approval') }}">
                                 {{ form.hidden_tag() }}

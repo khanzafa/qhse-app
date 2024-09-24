@@ -19,10 +19,10 @@ def login():
         return redirect(url_for('admin.su'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(phone_number=form.phone_number.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
         
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid phone number or password')
+            flash('Invalid email or password')
             return redirect(url_for('auth.login'))
         
         if not user.approved:
@@ -42,7 +42,7 @@ def register():
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(name=form.name.data, phone_number=form.phone_number.data, role=form.role.data)
+        user = User(name=form.name.data, email=form.email.data, role=form.role.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()

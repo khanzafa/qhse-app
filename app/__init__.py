@@ -13,7 +13,7 @@ from flask_login import LoginManager
 from app.models import User
 from app.routes import main
 # from aios.routes import aios
-# from flask_mail import Mail
+from flask_mail import Mail
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -22,13 +22,10 @@ import os
 from utils.detector import DetectorManager
 from utils.message import selenium_manager
 
-# ppe_detector = PPEDetector()
-# gesture_detector = GestureForHelpDetector()
-# unfocused_detector = UnfocusedDetector()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
-# # Initialize Flask-Mail
-# mail = Mail()
+# Initialize Flask-Mail
+mail = Mail()
 
 # Initialize Flask-SocketIO
 socketio = SocketIO()
@@ -43,7 +40,7 @@ def run_detectors(app):
 # Tangkap sinyal untuk menghentikan detektor saat server dimatikan
 def handle_shutdown_signal(signal, frame):
     global detector_thread  # Use the global variable
-
+    
     print("Shutting down detector manager...")
     detector_manager.stop_all()
     print("Detector manager stopped.")
@@ -57,7 +54,8 @@ def handle_shutdown_signal(signal, frame):
     os._exit(0)  # Force exit the program
 
 def create_app():
-    global detector_thread  # Use the global variable
+    global detector_thread  # Use the global variable 
+
     app = Flask(__name__)
     print("App created.")
     app.config.from_object('config.Config')
@@ -92,32 +90,21 @@ def create_app():
     login_manager.init_app(app)
     print("Login manager initialized.")
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
-    
     # Initialize Flask-SocketIO with the app instance
     socketio.init_app(app)
     print("SocketIO initialized.")
     
-    # # Initialize Flask-Mail with the app instance
-    # mail.init_app(app)
+    # Initialize Flask-Mail with the app instance
+    mail.init_app(app)
+    print("Mail initialized.")
 
-    # def start_detector(detector):
-    #     with app.app_context():
-    #         detector.run(app)
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
     from app.auth import auth as auth_blueprint
     app.register_blueprint(main)
     print("Main blueprint registered.")
-    # app.register_blueprint(ppe)
-    # print("PPE blueprint registered.")
-    # app.register_blueprint(gesture)
-    # print("Gesture blueprint registered.")
-    # app.register_blueprint(unfocused)
-    # print("Unfocused blueprint registered.")
-    # app.register_blueprint(guide_bot)
-    # print("Guide bot blueprint registered.")
     app.register_blueprint(auth_blueprint)
     print("Auth blueprint registered.")
     for route in api_routes:

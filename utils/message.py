@@ -20,7 +20,7 @@ class SeleniumManager:
 
     def initialize_driver(self):
         # Tentukan direktori profil Firefox
-        profile_path = '/home/spil/.mozilla/firefox/n34kklbh.default-release'  # Ganti dengan path profil yang sesuai
+        profile_path = '/home/khanza/.mozilla/firefox/vivmnzdj.khanza'  # Ganti dengan path profil yang sesuai
 
         # Buat opsi Firefox dan profil
         firefox_options = Options()

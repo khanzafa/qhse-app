@@ -57,7 +57,7 @@ class ModelForm(FlaskForm):
         self.detector_type.choices = [(detector_type.id, detector_type.name) for detector_type in DetectorType.query.all()]
 
 class ContactForm(FlaskForm):
-    phone_number = StringField('Phone Number', validators=[Length(max=20)])
+    email = StringField('Email', validators=[Length(max=64)])
     name = StringField('Name', validators=[Length(max=30)])
     description = TextAreaField('Description', validators=[Length(max=100)])
     submit = SubmitField('Save')
@@ -86,13 +86,13 @@ class OTPForm(FlaskForm):
     submit = SubmitField('Login')
 
 class LoginForm(FlaskForm):
-    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=20)])
+    email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
 class RegistrationForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=64)])
-    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=20)])
+    email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128)])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     role = SelectField('Role', choices=[            
@@ -101,10 +101,10 @@ class RegistrationForm(FlaskForm):
     ], validators=[DataRequired()])
     submit = SubmitField('Register')
 
-    def validate_phone_number(self, phone_number):
-        user = User.query.filter_by(phone_number=phone_number.data).first()
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
         if user:
-            raise ValidationError('Phone number already registered.')
+            raise ValidationError('Email already registered.')
         
         
 class AccessForm(FlaskForm):

@@ -27,7 +27,7 @@ contact_api_docs = {
                     "id": {
                         "type": "integer"
                     },
-                    "phone_number": {
+                    "email": {
                         "type": "string"
                     },
                     "name": {
@@ -54,7 +54,7 @@ contact_api_docs = {
     "create" : {
         "parameters": [
             {
-                "name": "phone_number",
+                "name": "email",
                 "in": "formData",
                 "type": "string",
                 "required": True,
@@ -94,7 +94,7 @@ contact_api_docs = {
                 "description": "Numeric ID of the contact to edit"
             },
             {
-                "name": "phone_number",
+                "name": "email",
                 "in": "formData",
                 "type": "string",
                 "required": True,
@@ -155,7 +155,7 @@ def view(id=None):
         contact = Contact.query.get_or_404(id)
         contact = {
             'id': contact.id,
-            'phone_number': contact.phone_number,
+            'email': contact.email,
             'name': contact.name,
             'description': contact.description
         }
@@ -165,7 +165,7 @@ def view(id=None):
         for contact in Contact.query.filter(Contact.permission_id == session.get('permission_id')).all():
             contacts.append({
                 'id': contact.id,
-                'phone_number': contact.phone_number,
+                'email': contact.email,
                 'name': contact.name,
                 'description': contact.description
             })        
@@ -179,7 +179,7 @@ def create():
     form = ContactForm()
     if form.validate_on_submit():
         contact = Contact(
-            phone_number=form.phone_number.data,
+            email=form.email.data,
             name=form.name.data,
             description=form.description.data,
             permission_id=session.get('permission_id')

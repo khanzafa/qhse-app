@@ -28,8 +28,6 @@ def admin_required(f):
 @login_required
 @admin_required
 def user_approval():
-    if current_user.role.lower() != "admin":
-        abort(403)
     form = UserApprovalForm()
     
     if request.method == "GET":
@@ -58,8 +56,6 @@ def user_approval():
 @login_required
 @admin_required
 def user_permission(user_id=None):
-    if current_user.role.lower() != "admin":
-        abort(403)
     form = UserPermissionForm()
     if user_id:
         user_permissions = UserPermission.query.filter_by(user_id=user_id).all()
@@ -96,9 +92,6 @@ def user_permission(user_id=None):
 @login_required
 @admin_required
 def su():
-    print(current_user.role.lower())
-    if current_user.role.lower() != 'admin':
-        return redirect(url_for("main.index"))
     permissions = Permission.query.all()
     return render_template("su.html", permissions=permissions)
 

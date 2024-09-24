@@ -1,32 +1,40 @@
-from flask import current_app
-from app import db
-from app.models import User
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from app.models import User, UserRole
 from faker import Faker
 import random
 
+app = Flask(__name__)
+app.config.from_object('config.Config')
 fake = Faker()
+db = SQLAlchemy()
+db.init_app(app)
 
 def seed_users(n):
     for _ in range(n):
         name = fake.name()
-        phone_number = fake.unique.phone_number()
+        email = fake.unique.email()
         password = fake.password()
         
         # Random role between 'user', 'admin', 'guest'
-        role = random.choice(['user', 'admin', 'guest'])
+        role = random.choice([UserRole.user, UserRole.admin, UserRole.guest])
 
         # Randomly approve users (None or True)
         approved = random.choice([None, True])
 
         user = User(
             name=name,
-            phone_number=phone_number,
+            email=email,
             role=role,
             approved=approved
         )
         user.set_password(password)
-
+    
         db.session.add(user)
 
     db.session.commit()
     print(f'{n} users added successfully!')
+
+if __name__ == '__main__':
+    with app.app_context():        
+        seed_users(10)
