@@ -225,7 +225,6 @@ class DetectorManager:
                 self.message_sender_thread = None
             logging.info("All detectors and message sender thread stopped.")
 
-
 class MessageSenderThread(threading.Thread):
     def __init__(self, app, message_queue):
         super().__init__(name="MessageSenderThread")

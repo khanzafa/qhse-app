@@ -22,10 +22,8 @@ class SeleniumManager:
         self.actions = None
 
     def initialize_driver(self):
-        # Tentukan direktori profil Firefox
+        # Firefox Linux
         # profile_path = '/home/khanza/.mozilla/firefox/vivmnzdj.khanza'  # Ganti dengan path profil yang sesuai
-
-        # Buat opsi Firefox dan profil
         # firefox_options = Options()
         # firefox_profile = FirefoxProfile(
         #     profile_directory=profile_path
@@ -38,20 +36,17 @@ class SeleniumManager:
         # self.wait = WebDriverWait(self.driver, 150)
         # self.actions = ActionChains(self.driver)
 
-        # Konfigurasi opsi Chrome Linux
+        # Chrome Linux
         # option = webdriver.ChromeOptions()  
         # self.driver = webdriver.Chrome(options=option)
         # self.driver.get("https://web.whatsapp.com/")
         # self.wait = WebDriverWait(self.driver, 100)        
         # self.actions = ActionChains(self.driver)
         
-        # Configure Chrome options for Windows with headless mode
+        # Chrome Windows
         chrome_options = Options()
         chrome_options.add_argument("--user-data-dir=C:\\Users\\hp\\AppData\\Local\\Google\\Chrome\\User Data")
         chrome_options.add_argument("--profile-directory=Default")
-        # chrome_options.add_argument("--headless")  # Enable headless mode
-        
-        # Initialize Chrome WebDriver in headless mode
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 100)
@@ -61,7 +56,7 @@ class SeleniumManager:
         
         print(Back.BLUE+"Selenium driver initialized")        
         print(Style.RESET_ALL)
-        mailManager_wa.refresh_and_send()
+        mail_manager.refresh_and_send()
         print(Back.RED)
         logging.info('sdh selesai scan')
         print(Style.RESET_ALL)
@@ -90,13 +85,12 @@ class SeleniumManager:
 
 selenium_manager = SeleniumManager()
 
-class MailManager_wa():
+class MailManager():
     def __init__(self):
         self.barcode_path = '//canvas[@aria-label="Scan this QR code to link a device!"]'
         self.previous_data_ref = None
-        self.app = None
         
-    def initApp(self, app):
+    def init_app(self, app):
         self.app = app
         print(Back.MAGENTA)
         print("App initialized.")
@@ -162,7 +156,7 @@ class MailManager_wa():
                 print(Style.RESET_ALL)
                 return
             
-mailManager_wa = MailManager_wa()
+mail_manager = MailManager()
 
 class Message:
     def __init__(self, message_template, detected_object):
