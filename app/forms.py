@@ -12,7 +12,7 @@ from utils.auth import get_allowed_permission_ids
 class AddCCTVForm(FlaskForm):
     location = StringField('Location', validators=[DataRequired()])    
     type = SelectField('Type', choices=[('Cabin', 'Cabin'), ('Entrance', 'Entrance'), ('Exit', 'Exit'), ('Working Area', 'Working Area')], coerce=str)
-    ip_address = StringField('IP Address', validators=[URL()])        
+    ip_address = StringField('IP Address', validators=[URL(allow_ip=True)])        
     submit = SubmitField('Add CCTV')
 
 class EditCCTVForm(FlaskForm):
@@ -25,7 +25,7 @@ class EditCCTVForm(FlaskForm):
 class CCTVForm(FlaskForm):
     location = StringField('Location', validators=[DataRequired()])    
     type = StringField('Type')
-    ip_address = StringField('IP Address', validators=[URL(), DataRequired()])    
+    ip_address = StringField('IP Address', validators=[DataRequired()])    
     status = SelectField('Status', choices=[('0', 'Inactive'), ('1', 'Active')], coerce=int, default=0)
     submit = SubmitField('Save')
 

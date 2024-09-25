@@ -173,8 +173,8 @@ def view(id=None):
                 'ip_address': cctv.ip_address, 
                 'status': cctv.status
             })        
-        return jsonify(cctvs), 200
-        # return render_template('manage_cctv.html', cameras=cctvs, form=form)
+        # return jsonify(cctvs), 200
+        return render_template('manage_cctv.html', cameras=cctvs, form=form)
 
 @cctv_bp.route('/', methods=['POST'])
 @swag_from(cctv_api_docs['create'])
@@ -192,13 +192,13 @@ def create():
         db.session.add(cctv)
         db.session.commit()
         flash('CCTV added successfully!')
-        return Response(status=201)
-        # return redirect(url_for('cctv.view'))
+        # return Response(status=201)
+        return redirect(url_for('cctv.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@cctv_bp.route('/<int:id>', methods=['PUT'])
+@cctv_bp.route('/<int:id>/edit', methods=['POST'])
 @swag_from(cctv_api_docs['edit'])
 @login_required
 def edit(id):
@@ -214,13 +214,13 @@ def edit(id):
         cctv.permission_id = session.get('permission_id')
         db.session.commit()
         flash('CCTV edited successfully!')
-        return Response(status=204)
-        # return redirect(url_for('cctv.view'))
+        # return Response(status=204)
+        return redirect(url_for('cctv.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@cctv_bp.route('/<int:id>', methods=['DELETE'])
+@cctv_bp.route('/<int:id>/delete', methods=['POST'])
 @swag_from(cctv_api_docs['delete'])
 @login_required
 def delete(id):
@@ -228,8 +228,8 @@ def delete(id):
     cctv = CCTV.query.get_or_404(id)
     db.session.delete(cctv)
     db.session.commit()
-    # flash('CCTV deleted successfully!')
-    return Response(status=204)
+    flash('CCTV deleted successfully!')
+    # return Response(status=204)
     return redirect(url_for('cctv.view'))
 
 @cctv_bp.route('/<int:cctv_id>/stream')

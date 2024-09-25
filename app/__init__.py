@@ -9,6 +9,7 @@ from base64 import b64encode
 from app.extensions import db, migrate, swagger
 # from guide_bot.routes import guide_bot
 from api.routes import api_routes
+from app.routes import app_routes
 from flask_login import LoginManager
 from app.models import User
 from app.routes import main
@@ -107,7 +108,7 @@ def create_app():
     print("Main blueprint registered.")
     app.register_blueprint(auth_blueprint)
     print("Auth blueprint registered.")
-    for route in api_routes:
+    for route in app_routes:
         app.register_blueprint(route)
     CORS(app)
 

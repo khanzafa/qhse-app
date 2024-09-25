@@ -110,10 +110,10 @@ class DetectorThread(threading.Thread):
                         self.annotated_frames[self.detector_id] = annotated_frame
                         logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
                         # Add the message to the shared queue
-                        image_filename = f"ppe_violation_{self.detector_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-                        image_path = os.path.join(os.getcwd(), image_filename)
-                        cv2.imwrite(image_path, frame) 
-                        if detected_objects:
+                        image_filename = f"detected_{detector.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+                        image_path = os.path.join(os.getcwd(), image_filename)                         
+                        if detected_objects:    
+                            cv2.imwrite(image_path, frame)
                             for detected_object in detected_objects:
                                 for rule in self.notification_rules[self.detector_id]:
                                     # Query the NotificationRule instance again within the same session context
