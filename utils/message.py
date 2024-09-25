@@ -1,4 +1,5 @@
 # whatsapp_sender.py
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.firefox.options import Options
@@ -11,6 +12,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 import os
 import re
 import logging
+from colorama import Back, Style
+import flask_mail
 
 class SeleniumManager:
     def __init__(self):
@@ -20,20 +23,20 @@ class SeleniumManager:
 
     def initialize_driver(self):
         # Tentukan direktori profil Firefox
-        profile_path = '/home/khanza/.mozilla/firefox/vivmnzdj.khanza'  # Ganti dengan path profil yang sesuai
+        # profile_path = '/home/khanza/.mozilla/firefox/vivmnzdj.khanza'  # Ganti dengan path profil yang sesuai
 
         # Buat opsi Firefox dan profil
-        firefox_options = Options()
-        firefox_profile = FirefoxProfile(
-            profile_directory=profile_path
-        )
+        # firefox_options = Options()
+        # firefox_profile = FirefoxProfile(
+        #     profile_directory=profile_path
+        # )
         # firefox_options.add_argument('--headless')
         # firefox_profile.set_preference("javascript.enabled", False)
-        firefox_options.profile = firefox_profile
-        self.driver = webdriver.Firefox(options=firefox_options)
-        self.driver.get("https://web.whatsapp.com/")
-        self.wait = WebDriverWait(self.driver, 150)
-        self.actions = ActionChains(self.driver)
+        # firefox_options.profile = firefox_profile
+        # self.driver = webdriver.Firefox(options=firefox_options)
+        # self.driver.get("https://web.whatsapp.com/")
+        # self.wait = WebDriverWait(self.driver, 150)
+        # self.actions = ActionChains(self.driver)
 
         # Konfigurasi opsi Chrome Linux
         # option = webdriver.ChromeOptions()  
@@ -41,6 +44,27 @@ class SeleniumManager:
         # self.driver.get("https://web.whatsapp.com/")
         # self.wait = WebDriverWait(self.driver, 100)        
         # self.actions = ActionChains(self.driver)
+        
+        # Configure Chrome options for Windows with headless mode
+        chrome_options = Options()
+        chrome_options.add_argument("--user-data-dir=C:\\Users\\hp\\AppData\\Local\\Google\\Chrome\\User Data")
+        chrome_options.add_argument("--profile-directory=Default")
+        # chrome_options.add_argument("--headless")  # Enable headless mode
+        
+        # Initialize Chrome WebDriver in headless mode
+        self.driver = webdriver.Chrome(options=chrome_options)
+        self.driver.get("https://web.whatsapp.com/")
+        self.wait = WebDriverWait(self.driver, 100)
+        self.actions = ActionChains(self.driver)
+
+        logging.info('Selenium driver initialized')
+        
+        print(Back.BLUE+"Selenium driver initialized")        
+        print(Style.RESET_ALL)
+        mailManager_wa.refresh_and_send()
+        print(Back.RED)
+        logging.info('sdh selesai scan')
+        print(Style.RESET_ALL)
 
     def get_driver(self):
         if self.driver is None:
@@ -65,6 +89,80 @@ class SeleniumManager:
             self.actions = None  
 
 selenium_manager = SeleniumManager()
+
+class MailManager_wa():
+    def __init__(self):
+        self.barcode_path = '//canvas[@aria-label="Scan this QR code to link a device!"]'
+        self.previous_data_ref = None
+        self.app = None
+        
+    def initApp(self, app):
+        self.app = app
+        print(Back.MAGENTA)
+        print("App initialized.")
+        print(Style.RESET_ALL)
+        print(f"self app: {self.app}")
+        print(f"app: {app}")
+        
+    def send_barcode(self):
+        try:
+            barcode = selenium_manager.wait.until(EC.presence_of_element_located((By.XPATH, self.barcode_path)))  # Update this line
+            barcode_img = barcode.screenshot_as_png
+            with open('barcode.png', 'wb') as f:
+                f.write(barcode_img)
+            
+            # Send the barcode image via email
+            subject = "Your Whatsapp Barcode"
+            recipient = 'aihseintern@gmail.com'  # Get recipient email from environment variable
+            body = "Please find the attached barcode image."
+            
+            with open('barcode.png', 'rb') as f:
+                msg = flask_mail.Message(subject, sender=os.getenv('MAIL_USERNAME'), recipients=[recipient])
+                msg.body = body
+                msg.attach('barcode.png', 'image/png', f.read())
+            
+            with self.app.app_context():
+                from app import mail
+                mail.send(msg)
+            
+            print(Back.GREEN)
+            print("Barcode sent successfully!")
+            print(Style.RESET_ALL)
+            return "Barcode sent successfully!"
+        
+        except Exception as e:
+            print(Back.RED)
+            print(f"Error occurred: {e}")  # Log any errors that occur during sending
+            print(Style.RESET_ALL)
+            return "Failed to send barcode."
+
+    def refresh_and_send(self):
+        last_refresh = time.time()
+        
+        print("last_refresh: ", last_refresh)
+        
+        while True:
+            if time.time() - last_refresh > 50:
+                selenium_manager.driver.refresh()
+                last_refresh = time.time()
+            time.sleep(1)
+            try:
+                barcode_element = selenium_manager.driver.find_element("xpath", '//div[@class="_akau"]')
+                current_data_ref = barcode_element.get_attribute("data-ref")
+                if current_data_ref != self.previous_data_ref:
+                    print(Back.YELLOW)
+                    logging.info('ga sama jd kirim barcode lg')
+                    print(Style.RESET_ALL)
+                    self.send_barcode()
+                    self.previous_data_ref = current_data_ref
+            except Exception as e:
+                self.previous_data_ref = None
+                print(Back.RED)
+                logging.info(f"Barcode scanned successfully, element not found", {e})
+                print(Style.RESET_ALL)
+                return
+            
+mailManager_wa = MailManager_wa()
 
 class Message:
     def __init__(self, message_template, detected_object):

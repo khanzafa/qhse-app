@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 import logging
+import threading
 import time
 import cv2
 import enum
@@ -166,6 +167,8 @@ class Detector(db.Model):
         super().__init__(*args, **kwargs)
         # Instance attribute
         self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_frame": -1})
+        self.frame_number = 0   
+        self.lock = threading.Lock()
 
     def to_dict(self):
         return {
