@@ -24,6 +24,8 @@ GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 def sanitize_filename(filename):
     return re.sub(r'[<>:"/\\|?*\t\n]', '_', filename)
 
+
+
 # Don't forget to update the manage_documents route to save documents with their ids
 # @guide_bot.route('/guide-bot/documents', methods=['GET', 'POST'])
 # @login_required
@@ -377,6 +379,11 @@ def get_document_file(document_id):
 def download_document(id):
     document = Document.query.get_or_404(id)
     return send_file(io.BytesIO(document.file), as_attachment=True, download_name=document.title)
+
+@guide_bot.route('/aios')
+@login_required
+def index():
+    return render_template('aios/base.html')
 
 # Initialize variables
 history = []

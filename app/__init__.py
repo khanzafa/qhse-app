@@ -21,7 +21,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import os
 
 from utils.detector import DetectorManager
-from utils.message import selenium_manager
+from utils.message import selenium_manager, mailManager_wa
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -114,10 +114,11 @@ def create_app():
 
     # Selenium
     selenium_manager.initialize_driver()
+    mailManager_wa.initApp(app)
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
-    detector_thread.start()
+    # detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)
