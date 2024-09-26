@@ -106,7 +106,6 @@ def all_cards():
         {
             "title": card.title,
             "url": card.url,
-            "imageUrl": url_for("main.uploaded_file", filename=card.path),
             "permission_id": card.permission_id
         }
         for card in all_cards

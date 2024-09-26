@@ -114,10 +114,10 @@ def create_app():
 
     mail_manager.init_app(app)
     # Selenium
-    selenium_manager.initialize_driver()    
+    # selenium_manager.initialize_driver()    
 
     # Jalankan thread detektor sebelum memulai Flask
-    # detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
+    detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
     # detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
