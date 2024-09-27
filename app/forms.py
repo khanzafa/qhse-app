@@ -57,7 +57,7 @@ class ModelForm(FlaskForm):
         self.detector_type.choices = [(detector_type.id, detector_type.name) for detector_type in DetectorType.query.all()]
 
 class ContactForm(FlaskForm):
-    email = StringField('Email', validators=[Length(max=64)])
+    phone_number = StringField('Phone', validators=[Length(max=64)])
     name = StringField('Name', validators=[Length(max=30)])
     description = TextAreaField('Description', validators=[Length(max=100)])
     submit = SubmitField('Save')

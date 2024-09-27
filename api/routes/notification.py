@@ -147,28 +147,17 @@ def view(id=None):
         }
         return jsonify(notification), 200
     else:
-        # notifications = []
-        # for notification in NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all():
-        #     notifications.append({
-        #         'id': notification.id,
-        #         'detector_id': notification.detector_id,
-        #         'message_template_id': notification.message_template_id,
-        #         'contact_id': notification.contact_id,
-        #         'permission_id': notification.permission_id
-        #     })        
-        # return jsonify(notifications), 200
-        # messages = requests.get('http://localhost:5000/message/').json() # ini gabisa karena session nya gaada kalau pake requests    
-        notifications = NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all()
-        messages = []
-        for message in MessageTemplate.query.filter(MessageTemplate.permission_id == session.get('permission_id')).all():
-            messages.append({
-                'id': message.id,
-                'name': message.name,
-                'template': message.template,
-                'permission_id': message.permission_id
-            })
-        logging.debug(f"Messages: {messages}")
-        return render_template('manage_notification_rules.html', messages=messages, rules=notifications, rule_form=NotificationRuleForm(), message_form=MessageTemplateForm())
+        notifications = []
+        for notification in NotificationRule.query.filter(NotificationRule.permission_id == session.get('permission_id')).all():
+            notifications.append({
+                'id': notification.id,
+                'detector_id': notification.detector_id,
+                'message_template_id': notification.message_template_id,
+                'contact_id': notification.contact_id,
+                'permission_id': notification.permission_id
+            })        
+        return jsonify(notifications), 200        
+        # return render_template('manage_notification_rules.html', messages=messages, rules=notifications, rule_form=NotificationRuleForm(), message_form=MessageTemplateForm())
     
 @notification_bp.route('/', methods=['POST'])
 @swag_from(notification_api_docs['create'])
@@ -185,8 +174,8 @@ def create():
         db.session.add(notification)
         db.session.commit()
         flash('Notification rule added successfully!')
-        # return Response(status=201)
-        return redirect(url_for('notification.view'))
+        return Response(status=201)
+        # return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -200,8 +189,8 @@ def edit(id):
     if form.validate_on_submit():
         form.populate_obj(notification)
         db.session.commit()
-        # return Response(status=200)
-        return redirect(url_for('notification.view'))
+        return Response(status=200)
+        # return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -213,5 +202,5 @@ def delete(id):
     notification = NotificationRule.query.get_or_404(id)
     db.session.delete(notification)
     db.session.commit()
-    # return Response(status=200)
-    return redirect(url_for('notification.view'))
+    return Response(status=200)
+    # return redirect(url_for('notification.view'))

@@ -27,7 +27,7 @@ contact_api_docs = {
                     "id": {
                         "type": "integer"
                     },
-                    "email": {
+                    "phone_number": {
                         "type": "string"
                     },
                     "name": {
@@ -54,7 +54,7 @@ contact_api_docs = {
     "create" : {
         "parameters": [
             {
-                "name": "email",
+                "name": "phone_number",
                 "in": "formData",
                 "type": "string",
                 "required": True,
@@ -94,7 +94,7 @@ contact_api_docs = {
                 "description": "Numeric ID of the contact to edit"
             },
             {
-                "name": "email",
+                "name": "phone_number",
                 "in": "formData",
                 "type": "string",
                 "required": True,
@@ -155,7 +155,7 @@ def view(id=None):
         contact = Contact.query.get_or_404(id)
         contact = {
             'id': contact.id,
-            'email': contact.email,
+            'phone_number': contact.phone_number,
             'name': contact.name,
             'description': contact.description
         }
@@ -165,12 +165,12 @@ def view(id=None):
         for contact in Contact.query.filter(Contact.permission_id == session.get('permission_id')).all():
             contacts.append({
                 'id': contact.id,
-                'email': contact.email,
+                'phone_number': contact.phone_number,
                 'name': contact.name,
                 'description': contact.description
             })        
-        # return jsonify(contacts), 200
-        return render_template('manage_contact.html', whas=contacts, form=form)
+        return jsonify(contacts), 200
+        # return render_template('manage_contact.html', whas=contacts, form=form)
     
 @contact_bp.route('/', methods=['POST'])
 @swag_from(contact_api_docs['create'])
@@ -179,7 +179,7 @@ def create():
     form = ContactForm()
     if form.validate_on_submit():
         contact = Contact(
-            email=form.email.data,
+            phone_number=form.phone_number.data,
             name=form.name.data,
             description=form.description.data,
             permission_id=session.get('permission_id')
@@ -187,8 +187,8 @@ def create():
         db.session.add(contact)
         db.session.commit()
         flash('Contact added successfully!')
-        # return Response(status=201)
-        return redirect(url_for('contact.view'))
+        return Response(status=201)
+        # return redirect(url_for('contact.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -204,8 +204,8 @@ def edit(id):
         form.populate_obj(contact)
         db.session.commit()
         flash('Contact updated successfully!')
-        # return Response(status=200)
-        return redirect(url_for('contact.view'))
+        return Response(status=200)
+        # return redirect(url_for('contact.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -218,5 +218,5 @@ def delete(id):
     db.session.delete(contact)
     db.session.commit()
     flash('Contact deleted successfully!')
-    # return Response(status=200)
-    return redirect(url_for('contact.view'))
+    return Response(status=200)
+    # return redirect(url_for('contact.view'))

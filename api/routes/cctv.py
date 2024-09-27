@@ -149,8 +149,8 @@ cctv_bp = Blueprint('cctv', __name__, url_prefix='/cctv')
 @cctv_bp.route('/', methods=['GET'])
 @cctv_bp.route('/<int:id>', methods=['GET'])
 @swag_from(cctv_api_docs['view'])
-@login_required
 def view(id=None):
+    session['permission_id'] = 2
     logging.debug(f"Permission ID: {session.get('permission_id')}")
     form = CCTVForm()    
     if id:
@@ -173,12 +173,12 @@ def view(id=None):
                 'ip_address': cctv.ip_address, 
                 'status': cctv.status
             })        
+        logging.debug(f"CCTVs: {cctvs}")    
         return jsonify(cctvs), 200
         # return render_template('manage_cctv.html', cameras=cctvs, form=form)
 
 @cctv_bp.route('/', methods=['POST'])
 @swag_from(cctv_api_docs['create'])
-@login_required
 def create():
     form = CCTVForm()    
     if form.validate_on_submit():
@@ -200,7 +200,6 @@ def create():
 
 @cctv_bp.route('/<int:id>', methods=['PUT'])
 @swag_from(cctv_api_docs['edit'])
-@login_required
 def edit(id):
     cctv = CCTV.query.get_or_404(id)
     form = CCTVForm(obj=cctv)
@@ -222,7 +221,6 @@ def edit(id):
 
 @cctv_bp.route('/<int:id>', methods=['DELETE'])
 @swag_from(cctv_api_docs['delete'])
-@login_required
 def delete(id):
     logging.debug(f"Deleting CCTV with ID: {id}")
     cctv = CCTV.query.get_or_404(id)
@@ -230,11 +228,10 @@ def delete(id):
     db.session.commit()
     # flash('CCTV deleted successfully!')
     return Response(status=204)
-    return redirect(url_for('cctv.view'))
+    # return redirect(url_for('cctv.view'))
 
 @cctv_bp.route('/<int:cctv_id>/stream')
 @swag_from(cctv_api_docs['stream'])
-@login_required
 def stream(cctv_id):
     cctv = CCTV.query.get_or_404(cctv_id)
     def generate_frames():

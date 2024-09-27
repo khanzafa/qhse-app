@@ -176,18 +176,17 @@ def view(id=None):
         }
         return jsonify(detector), 200
     else:
-        # detectors = []
-        # for detector in Detector.query.filter(Detector.permission_id == session.get('permission_id')).all():
-        #     detectors.append({
-        #         'id': detector.id,
-        #         'cctv_id': detector.cctv_id,
-        #         'weight_id': detector.weight_id,
-        #         'running': detector.running,
-        #         'permission_id': detector.permission_id
-        #     })        
-        detectors = Detector.query.filter(Detector.permission_id == session.get('permission_id')).order_by(Detector.id).all()
-        # return jsonify(detectors), 200
-        return render_template('manage_detector.html', detectors=detectors, form=DetectorForm())
+        detectors = []
+        for detector in Detector.query.filter(Detector.permission_id == session.get('permission_id')).all():
+            detectors.append({
+                'id': detector.id,
+                'cctv_id': detector.cctv_id,
+                'weight_id': detector.weight_id,
+                'running': detector.running,
+                'permission_id': detector.permission_id
+            })                
+        return jsonify(detectors), 200
+        # return render_template('manage_detector.html', detectors=detectors, form=DetectorForm())
 
 @detector_bp.route('/', methods=['POST'])
 @swag_from(detector_api_docs['create'])
@@ -204,8 +203,8 @@ def create():
         db.session.add(detector)
         db.session.commit()
         flash('Detector added successfully!')
-        # return Response(status=201)
-        return redirect(url_for('detector.view'))
+        return Response(status=201)
+        # return redirect(url_for('detector.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -222,8 +221,8 @@ def edit(id):
         detector.running = form.running.data
         db.session.commit()
         flash('Detector updated successfully!')
-        # return Response(status=200)
-        return redirect(url_for('detector.view'))
+        return Response(status=200)
+        # return redirect(url_for('detector.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -236,8 +235,8 @@ def delete(id):
     db.session.delete(detector)
     db.session.commit()
     flash('Detector deleted successfully!')
-    # return Response(status=204)
-    return redirect(url_for('detector.view'))
+    return Response(status=204)
+    # return redirect(url_for('detector.view'))
 
 @detector_bp.route('/<int:detector_id>/stream')
 @swag_from(detector_api_docs['stream'])

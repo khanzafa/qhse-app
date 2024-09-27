@@ -172,9 +172,9 @@ def create():
         db.session.add(message)
         db.session.commit()
         flash('Message template added successfully!')
-        # return Response(status=201)
+        return Response(status=201)
         # return redirect(url_for('message.view'))
-        return redirect(url_for('notification.view'))
+        # return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -188,9 +188,9 @@ def edit(id):
     if form.validate_on_submit():
         form.populate_obj(message)
         db.session.commit()
-        # return Response(status=200)
+        return Response(status=200)
         # return redirect(url_for('message.view'))
-        return redirect(url_for('notification.view'))
+        # return redirect(url_for('notification.view'))
     else:
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
@@ -202,5 +202,5 @@ def delete(id):
     message = MessageTemplate.query.get_or_404(id)
     db.session.delete(message)
     db.session.commit()
-    # return Response(status=200)   
-    return redirect(url_for('notification.view'))
+    return Response(status=200)   
+    # return redirect(url_for('notification.view'))
