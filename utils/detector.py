@@ -119,7 +119,7 @@ class DetectorThread(threading.Thread):
                                     # Query the NotificationRule instance again within the same session context
                                     rule = NotificationRule.query.get(rule.id)
                                     template = rule.message_template.template
-                                    message = Message(template, detected_object.to_dict()).render()                                
+                                    message = Message(template, detected_object).render()                                
                                     print("====================================================================================================")
                                     print("MESSAGE MESSAGE MESSAGE: ", message)
                                     print("====================================================================================================")   

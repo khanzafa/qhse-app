@@ -141,3 +141,14 @@ class UserPermissionForm(FlaskForm):
         super().__init__(*args, **kwargs)
         self.user_id.choices = [(user.id, user.name) for user in User.query.all()]
         self.permission_id.choices = [(perm.id, perm.name) for perm in Permission.query.all()]
+        
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
+    submit = SubmitField('Submit')
+    
+class ResetPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
+    otp = PasswordField('OTP', validators=[DataRequired(), Length(min=6, max=6)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128)])
+    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Submit')

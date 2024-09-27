@@ -7,7 +7,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 import pytz
 from app import db
 from app.models import User, Guest
-from app.forms import LoginForm, RegistrationForm, OTPForm
+from app.forms import ForgotPasswordForm, LoginForm, RegistrationForm, OTPForm, ResetPasswordForm
 from flask_mail import Message
 from colorama import Fore, Back, Style
 
@@ -22,9 +22,10 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         
         if user is None or not user.check_password(form.password.data):
+            # if user.password_hash != form.password.data:
             flash('Invalid email or password')
             return redirect(url_for('auth.login'))
-        
+            
         if not user.approved:
             print('Not Approved')
             flash('Your account is not approved. Please contact the administrator.')
@@ -150,7 +151,7 @@ def guidebot_login():
 def generate_otp():
     return str(random.randint(100000, 999999))  # 6-digit OTP
 
-OTP_EXPIRY_TIME = 1  # minutes
+OTP_EXPIRY_TIME = 3  # minutes
 
 @auth.route("/guidebot_logout", methods=['GET', 'POST'])
 def guidebot_logout():
@@ -160,3 +161,58 @@ def guidebot_logout():
     session.pop('otp_email', None)
     return redirect(url_for('auth.guidebot_login'))
     
+@auth.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        # user = User.query.filter_by(email=form.email.data).first()
+        session['otp_email'] = form.email.data
+        if form.email.data:
+            send_password_reset_email()
+        else:
+            flash('Email not found. Please register first.', 'danger')
+        return redirect(url_for('auth.reset_password'))
+    return render_template('forgot_password.html', form=form)
+
+def send_password_reset_email():
+    otp = generate_otp()
+    expiry_time = datetime.now() + timedelta(minutes=OTP_EXPIRY_TIME)
+    
+    # Store OTP and expiry time in session
+    session['otp'] = otp
+    session['otp_expiry'] = expiry_time
+    
+    # Send OTP via email
+    from app import mail
+    msg = Message(subject='Your OTP for Forgot Password', sender=os.getenv('MAIL_USERNAME'), recipients=[session.get('otp_email')])
+    msg.body = f"Your OTP is {otp}. It will expire in {OTP_EXPIRY_TIME} minutes."
+
+    try:
+        mail.send(msg)
+        flash('An OTP has been sent to your email. Please check your inbox.', 'info')
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        flash('Failed to send OTP to email. Please try again later.', 'danger')
+    print("REQ OTP")
+    
+    
+@auth.route('/reset_password', methods=['GET', 'POST'])
+def reset_password():
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        if form.otp.data == session.get('otp'):
+            if form.password.data == form.password2.data:
+                user = User.query.filter_by(email=session.get('otp_email')).first()
+                if user:
+                    user.set_password(form.password.data)
+                    # user.password_hash = form.password.data
+                    db.session.commit()
+                    flash('Password reset successful. You can now login.', 'success')
+                    return redirect(url_for('auth.login'))
+                else:
+                    flash('User not found. Please register first.', 'danger')
+            else:
+                flash('Passwords do not match. Please try again.', 'danger')
+        else:   
+            flash('Invalid OTP. Please try again.', 'danger')
+    return render_template('reset_password.html', form=form)
