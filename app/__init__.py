@@ -113,11 +113,12 @@ def create_app():
     CORS(app, supports_credentials=True)  # Izinkan credentials (cookies) di-cross domain
 
     mail_manager.init_app(app)
-    # selenium_manager.initialize_driver()    
+    # Selenium
+    selenium_manager.initialize_driver()    
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
-    # detector_thread.start()
+    detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)

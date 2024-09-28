@@ -134,9 +134,6 @@ def search():
         {
             "title": result.title,
             "url": result.url,  # Assuming `url` contains the link for the menu item
-            "imageUrl": url_for(
-                "admin.uploaded_file", filename=result.path
-            ),  # Assuming path is stored for image location
             "permission_id": result.permission_id
         }
         for result in search_results

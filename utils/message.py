@@ -2,8 +2,8 @@
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+# from selenium.webdriver.firefox.options import Options
+# from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -45,8 +45,8 @@ class SeleniumManager:
         
         # Chrome Windows
         chrome_options = Options()
-        chrome_options.add_argument("--user-data-dir=C:\\Users\\hp\\AppData\\Local\\Google\\Chrome\\User Data")
-        chrome_options.add_argument("--profile-directory=Default")
+        # chrome_options.add_argument("--user-data-dir=C:\\Users\\hp\\AppData\\Local\\Google\\Chrome\\User Data")
+        # chrome_options.add_argument("--profile-directory=Default")
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 100)
@@ -93,7 +93,7 @@ class MailManager():
     def init_app(self, app):
         self.app = app
         print(Back.MAGENTA)
-        print("App initialized.")
+        print("Mail Manager initialized.")
         print(Style.RESET_ALL)
         print(f"self app: {self.app}")
         print(f"app: {app}")
@@ -125,9 +125,6 @@ class MailManager():
             return "Barcode sent successfully!"
         
         except Exception as e:
-            print(Back.RED)
-            print(f"Error occurred: {e}")  # Log any errors that occur during sending
-            print(Style.RESET_ALL)
             return "Failed to send barcode."
 
     def refresh_and_send(self):
@@ -144,9 +141,6 @@ class MailManager():
                 barcode_element = selenium_manager.driver.find_element("xpath", '//div[@class="_akau"]')
                 current_data_ref = barcode_element.get_attribute("data-ref")
                 if current_data_ref != self.previous_data_ref:
-                    print(Back.YELLOW)
-                    logging.info('ga sama jd kirim barcode lg')
-                    print(Style.RESET_ALL)
                     self.send_barcode()
                     self.previous_data_ref = current_data_ref
             except Exception as e:
@@ -184,31 +178,35 @@ class Message:
         actions = selenium_manager.get_actions()
 
         try:
-            contact_path = f'//span[contains(@title, "{target_name}")]'
+            # contact_path = f'//span[contains(@title, "eh")]'
+            contact_path = f'//span[@title="{target_name}"]'       
             contact = wait.until(EC.presence_of_element_located((By.XPATH, contact_path)))
             contact.click()
 
-            text_box_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]/p'
+            text_box_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[1]/div/div[1]/p'
             text_box = wait.until(EC.presence_of_element_located((By.XPATH, text_box_xpath)))
-
+            
+            # Loop through the message but send it all at once
             actions.move_to_element(text_box).click().send_keys(message).perform()
 
             if image_path:
-                attachment_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div'
+                attachment_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]/div[2]/div/div/div/span'
                 attachment_button = wait.until(EC.presence_of_element_located((By.XPATH, attachment_button_xpath)))
 
                 attachment_button.click()
-
-                image_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/ul/div/div[2]/li/div/input'
+                
+                image_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]/div[2]/div/span/div/ul/div/div[2]/li/div/input'
                 image_button = wait.until(EC.presence_of_element_located((By.XPATH, image_button_xpath)))
 
                 image_button.send_keys(image_path)
+                
+                # /html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[2]
 
                 send_button_xpath = '/html/body/div[1]/div/div/div[2]/div[2]/div[2]/span/div/div/div/div[2]/div/div[2]/div[2]/div/div'
                 send_button = wait.until(EC.presence_of_element_located((By.XPATH, send_button_xpath)))
 
                 send_button.click()
-                actions.move_to_element(text_box).send_keys(Keys.ESCAPE).send_keys(Keys.ESCAPE).send_keys(Keys.ESCAPE).perform()
+                # actions.move_to_element(text_box).send_keys(Keys.ESCAPE).send_keys(Keys.ESCAPE).send_keys(Keys.ESCAPE).perform()
             else:
                 actions.move_to_element(text_box).send_keys(Keys.RETURN).perform()
                 actions.move_to_element(text_box).send_keys(Keys.ESCAPE).send_keys(Keys.ESCAPE).send_keys(Keys.ESCAPE).perform()

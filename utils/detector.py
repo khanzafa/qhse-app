@@ -96,6 +96,9 @@ class DetectorThread(threading.Thread):
         self.running = True
         self.annotated_frames = annotated_frames
         self.notification_rules = notification_rules
+        self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
+        self.frame_number = 0
+        self.lock = threading.Lock()
         logging.info(f"Initialized DetectorThread for detector ID: {self.detector_id}")
 
     def run(self):
@@ -106,24 +109,31 @@ class DetectorThread(threading.Thread):
                 with self.app.app_context():
                     detector = Detector.query.get(self.detector_id)
                     try:
-                        detected_objects, annotated_frame = detector.process_frame(frame)
-                        self.annotated_frames[self.detector_id] = annotated_frame
-                        logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
-                        # Add the message to the shared queue
-                        image_filename = f"detected_{detector.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
-                        image_path = os.path.join(os.getcwd(), image_filename)                         
-                        if detected_objects:    
-                            cv2.imwrite(image_path, frame)
-                            for detected_object in detected_objects:
-                                for rule in self.notification_rules[self.detector_id]:
-                                    # Query the NotificationRule instance again within the same session context
-                                    rule = NotificationRule.query.get(rule.id)
-                                    template = rule.message_template.template
-                                    message = Message(template, detected_object).render()                                
-                                    print("====================================================================================================")
-                                    print("MESSAGE MESSAGE MESSAGE: ", message)
-                                    print("====================================================================================================")   
-                                    message_queue.put((rule.contact.name, message, image_path))  # Add message to the queue
+                        self.detected_objects_tracker['last_time'] = time.time()
+                        detected_objects_tracker = self.detected_objects_tracker
+                        frame_number = self.frame_number
+                        with self.lock:
+                            detected_objects, annotated_frame, self.detected_objects_tracker, self.frame_number = detector.process_frame(frame, detected_objects_tracker, frame_number)
+                            print(Back.YELLOW)
+                            print(f"detected objects tracker: {self.detected_objects_tracker}")
+                            print(Style.RESET_ALL)
+                            self.annotated_frames[self.detector_id] = annotated_frame
+                            logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
+                            # Add the message to the shared queue
+                            image_filename = f"detected_{detector.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+                            image_path = os.path.join(os.getcwd(), image_filename)                         
+                            if detected_objects:    
+                                cv2.imwrite(image_path, frame)
+                                for detected_object in detected_objects:
+                                    for rule in self.notification_rules[self.detector_id]:
+                                        # Query the NotificationRule instance again within the same session context
+                                        rule = NotificationRule.query.get(rule.id)
+                                        template = rule.message_template.template
+                                        message = Message(template, detected_object).render()                                
+                                        print("====================================================================================================")
+                                        print("MESSAGE MESSAGE MESSAGE: ", message)
+                                        print("====================================================================================================")   
+                                        message_queue.put((rule.contact.name, message, image_path))  # Add message to the queue
                     except Exception as e:
                         logging.error(f"Error processing frame for detector ID: {self.detector_id}: {e}")
                     finally:

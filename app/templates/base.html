@@ -172,6 +172,15 @@
       sidebar.classList.toggle("-translate-x-full");
     });
   </script>
+  <script>
+    // Auto-hide flash messages after 3 seconds
+    setTimeout(function () {
+        var flashContainer = document.getElementById('flash-container');
+        if (flashContainer) {
+            flashContainer.style.display = 'none';
+        }
+    }, 3000); // 3 seconds
+</script>
   {% endblock %}
 </body>
 
