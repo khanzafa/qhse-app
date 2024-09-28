@@ -79,21 +79,21 @@
             <div class="mb-4">
                 <label class="block text-gray-700" for="title">Title:</label>
                 <input class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    type="text" id="title" name="title" style="color: black;" required><br><br>
+                    type="text" id="title" name="title" style="color: black;" required><br>
             </div>
 
-            <div class="mb-4">
+            <!-- <div class="mb-4">
                 <label class="block text-gray-700" for="url">URL:</label>
                 <input class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                     type="text" id="url" name="url" style="color: black;">
-            </div>
+            </div> -->
 
-            <div class="mb-4">
+            <!-- <div class="mb-4">
                 <label class="block text-gray-700" for="file">Upload Gambar:</label>
                 <input type="file" id="file" name="file">
-            </div>
+            </div> -->
 
-            <div class="mb-4">
+            <!-- <div class="mb-4">
                 <label for="permission" class="block text-gray-700">Permission:</label>
                 <select name="existing_permission" id="permission" class="border-2 rounded-md">
                     <option value="" selected>Select an existing permission</option>
@@ -101,16 +101,16 @@
                     <option value="{{ perm.id }}">{{ perm.name }}</option>
                     {% endfor %}
                 </select>
-            </div>
+            </div> -->
             
-            <span class="my-4">Or create a new permission:</span>
+            <!-- <span class="my-4">Or create a new permission:</span> -->
             <div class="mb-2">
                 <label for="new_permission" class="block text-gray-700">Permission name:</label>
-                <input type="text" name="new_permission" id="new_permission" placeholder="Leave this empty to use existing perms" class="border-2 rounded-md w-3/4">
+                <input type="text" name="new_permission" id="new_permission" placeholder="PAIER / QHSE / etc" class="border-2 rounded-md w-3/4" required>
             </div>
             <div class="mb-4">
                 <label for="new_permission_description" class="block text-gray-700">Permission description:</label>
-                <input type="text" name="new_permission_description" id="new_permission_description" placeholder="Leave this empty to use existing perms" class="border-2 rounded-md w-3/4">
+                <input type="text" name="new_permission_description" id="new_permission_description" placeholder="Keterangan" class="border-2 rounded-md w-3/4" required>
             </div>
 
             <!-- Modal Footer Buttons -->
