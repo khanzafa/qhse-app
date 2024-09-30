@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 import threading
 import time
+from colorama import Back, Style
 import cv2
 import enum
 from flask import jsonify
@@ -166,11 +167,7 @@ class Detector(db.Model):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Instance attribute
-        # self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_frame": -1})
-        # self.frame_number = 0
-        self.lock = threading.Lock()
-
+    
     def to_dict(self):
         return {
             'id': self.id,
@@ -190,8 +187,8 @@ class Detector(db.Model):
         db.session.commit()
         print(f"Detector {self.id} stopped.")
     
-    def process_frame(self, frame):
-        detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_frame": -1})
+    def process_frame(self, frame, detected_objects_tracker, frame_number):
+        detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
         frame_number = 0
         model = YOLO(self.weight.path)
         results = model.track(frame, stream=False, persist=True)
@@ -238,19 +235,21 @@ class Detector(db.Model):
                 
                 'name': name,
                 'timestamp': datetime.now(),
+                'track_id': track_id,
             }
             
-            
+            current_time = time.time()
+            frame_number += 1
             # Frame
             if track_id is not None:
-                print(f"Initial count: {detected_objects_tracker[track_id]['count']}, Last frame: {detected_objects_tracker[track_id]['last_frame']}")
+                print(f"Initial count: {detected_objects_tracker[track_id]['count']}, Last time: {detected_objects_tracker[track_id]['last_time']}")
                 # If first time detection or reset count due to detection gap
                 if detected_objects_tracker[track_id]["count"] == 0:
                     # First detection, add to detection objects list
                     detected_objects.append(detected_object_info)
                     detected_objects_tracker[track_id]["count"] += 1
-                    # Detected again in consecutive frames
-                elif detected_objects_tracker[track_id]["last_frame"] == frame_number - 1:
+                # Detected again after 5 seconds
+                elif current_time - self.detected_objects_tracker[track_id]["last_time"] >= 5:
                     detected_objects_tracker[track_id]["count"] += 1
                 else:
                     # Reset count if there's a gap in detection
@@ -263,13 +262,16 @@ class Detector(db.Model):
                     detected_objects_tracker[track_id]["count"] = 0  # Reset the count after sending the message
 
                 # Update last_frame at the end, regardless of the branch
-                detected_objects_tracker[track_id]["last_frame"] = frame_number
+                detected_objects_tracker[track_id]["last_time"] = current_time
             
-            logging.info(f"Frame number: {frame_number}")
+            # logging.info(f"Track id: {track_id}")
+            # logging.info(f"Frame number: {frame_number}")
+                
+            detected_object_info['track_id'] = track_id
             db.session.add(detected_object)
             db.session.commit()
             
-        return detected_objects, annotated_frame
+        return detected_objects, annotated_frame, detected_objects_tracker, frame_number
  
 
 # Event listener
@@ -286,10 +288,10 @@ def before_commit_detector(session):
 
 @event.listens_for(Session, 'after_commit')
 def after_commit_detector(session):
-    logging.info("After commit event for Detector")
-    logging.info(f"Session new: {_thread_local.new}")
-    logging.info(f"Session dirty: {_thread_local.dirty}")
-    logging.info(f"Session deleted: {_thread_local.deleted}")
+    # logging.info("After commit event for Detector")
+    # logging.info(f"Session new: {_thread_local.new}")
+    # logging.info(f"Session dirty: {_thread_local.dirty}")
+    # logging.info(f"Session deleted: {_thread_local.deleted}")
     from app import detector_manager, socketio
     for obj in _thread_local.new:
         if isinstance(obj, Detector) and 'running' in obj.__dict__:

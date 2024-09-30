@@ -1,6 +1,6 @@
 ## **Introduction**
 
-**Q-Sight Project : QHSE Monitoring & Object Detection Platform** is a project developed for the Human Resources Management System (HRMS) at PT. Salam Pacific Indonesia Lines. Its purpose is to manage employee safety reports, identification, and investigation processes. Additionally, the project features a chatbot to assist with managing system information and procedures.
+**HCCA AI Vision Project : QHSE Monitoring & Object Detection Platform** is a project developed for the Human Resources Management System (HRMS) at PT. Salam Pacific Indonesia Lines. Its purpose is to manage employee safety reports, identification, and investigation processes. Additionally, the project features a chatbot to assist with managing system information and procedures.
 
 ## **Installation**
 

@@ -99,128 +99,94 @@ def index():
     # Render the index template and pass the menu data
     return render_template("index.html", menus=menus)
 
+
 @main.route('/report/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     session_permission = session.get('permission_id')
 
-    num_cctv = CCTV.query.count()
-    num_detectors = Detector.query.count()
+    num_cctv = CCTV.query.filter_by(permission_id=session_permission).count()
+    num_detectors = Detector.query.filter_by(permission_id=session_permission).count()
 
-    # Deklarasi filter untuk permission_id 1 dan 2
-    filter_permission_1 = [DetectedObject.permission_id == 1]
-    filter_permission_2 = [DetectedObject.permission_id == 2]
+    current_date = datetime.utcnow()
+    seven_days_ago = current_date - timedelta(days=7)
 
-    # Gunakan session_permission untuk menentukan filter mana yang dipakai
-    if session_permission == 1:
-        detection_filters = filter_permission_1
-    elif session_permission == 2:
-        detection_filters = filter_permission_2
-    else:
-        detection_filters = []  # Jika tidak ada permission yang sesuai
+    daily_counts = (
+        db.session.query(
+            db.func.DATE(DetectedObject.timestamp).label('detection_date'),
+            db.func.count(DetectedObject.id).label('count')
+        )
+        .filter(
+            DetectedObject.permission_id == session_permission,
+            DetectedObject.timestamp >= seven_days_ago
+        )
+        .group_by(db.func.DATE(DetectedObject.timestamp))
+        .order_by(db.func.DATE(DetectedObject.timestamp))
+        .all()
+    )
 
-    # Menghitung jumlah deteksi berdasarkan jenis objek
-    detection_counts = {
-        "no_helmet": DetectedObject.query.filter(DetectedObject.name == "no-helmet", *detection_filters).count(),
-        "no_vest": DetectedObject.query.filter(DetectedObject.name == "no-vest", *detection_filters).count(),
-        "drowsy": DetectedObject.query.filter(DetectedObject.name == "drowsy", *detection_filters).count(),
-        "phone": DetectedObject.query.filter(DetectedObject.name == "phone", *detection_filters).count(),
-        "no_seatbelt": DetectedObject.query.filter(DetectedObject.name == "no-seatbelt", *detection_filters).count(),
-        "danger": DetectedObject.query.filter(DetectedObject.name == "cross-hand", *detection_filters).count(),
-        "fire": DetectedObject.query.filter(DetectedObject.name == "fire", *detection_filters).count(),
-        "smoke": DetectedObject.query.filter(DetectedObject.name == "smoke", *detection_filters).count(),
-        "sleep": DetectedObject.query.filter(DetectedObject.name == "sleep", *detection_filters).count()
-    }
+    daily_counts_dict = {row.detection_date: row.count for row in daily_counts}
+    daily_detected_object_counts = [daily_counts_dict.get((current_date - timedelta(days=i)).date(), 0) for i in range(7)]
 
-    num_no_ppe_detected = detection_counts["no_helmet"] + detection_counts["no_vest"]
-    num_reckless_driver_detected = detection_counts["drowsy"] + detection_counts["phone"] + detection_counts["no_seatbelt"]
+    last_7_days = [(current_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
 
-    results = db.session.query(DetectedObject, CCTV).select_from(DetectedObject) \
-        .join(Detector).join(CCTV) \
-        .filter(*detection_filters).all()
+    results = (
+        db.session.query(
+            CCTV.location,
+            db.func.count(DetectedObject.id).label('count')
+        )
+        .join(Detector, DetectedObject.detector_id == Detector.id)
+        .join(CCTV, Detector.cctv_id == CCTV.id)
+        .filter(
+            DetectedObject.permission_id == session_permission,
+            DetectedObject.timestamp >= seven_days_ago
+        )
+        .group_by(CCTV.location)
+        .all()
+    )
 
-    cameras = {camera.id: camera.location for obj, camera in results}
-    cameras = {'all': "All Cameras", **cameras}
-
-    selected_camera_ppe = request.form.get('camera', 'all')
-    selected_camera_driver = request.form.get('camera', 'all')
-    selected_camera_danger = request.form.get('camera', 'all')
-    selected_camera_paier = request.form.get('camera', 'all')
-
-    def filter_by_camera(camera_id, object_name):
-        query = db.session.query(DetectedObject).filter(DetectedObject.name == object_name, *detection_filters)
-        if camera_id != 'all':
-            query = query.join(Detector).join(CCTV).filter(CCTV.id == camera_id)
-        return query.count()
-
-    total_no_helmet_all = filter_by_camera(selected_camera_ppe, 'no-helmet')
-    total_no_vest_all = filter_by_camera(selected_camera_ppe, 'no-vest')
-    total_drowsy_all = filter_by_camera(selected_camera_driver, 'drowsy')
-    total_no_seatbelt_all = filter_by_camera(selected_camera_driver, 'no-seatbelt')
-    total_phone_all = filter_by_camera(selected_camera_driver, 'phone')
-    total_reckless_all = total_drowsy_all + total_no_seatbelt_all + total_phone_all
-    total_gesture_help_all = filter_by_camera(selected_camera_danger, 'cross-hand')
-    total_fire_help_all = filter_by_camera(selected_camera_paier, 'fire')
-    total_smoke_help_all = filter_by_camera(selected_camera_paier, 'smoke')
-    total_sleep_help_all = filter_by_camera(selected_camera_paier, 'sleep')
-
-    latest_entry = DetectedObject.query.filter(*detection_filters).order_by(DetectedObject.timestamp.desc()).first()
-    latest_date = latest_entry.timestamp if latest_entry else datetime.utcnow()
-    earliest_date = latest_date - timedelta(days=7)
-
-    today = datetime.today()
-    last_7_days = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
-
-    def fetch_daily_counts(object_name, camera_id):
-        counts = []
-        for i in range(7):
-            query = db.session.query(DetectedObject).filter(
-                DetectedObject.name == object_name,
-                DetectedObject.timestamp.between(latest_date - timedelta(days=i+1), latest_date - timedelta(days=i)),
-                *detection_filters
-            )
-            if camera_id != 'all':
-                query = query.join(Detector).join(CCTV).filter(CCTV.id == camera_id)
-            counts.append(query.count())
-        return counts
-
-    num_no_vest_detected_per_day = fetch_daily_counts('no-vest', selected_camera_ppe)
-    num_no_helmet_detected_per_day = fetch_daily_counts('no-helmet', selected_camera_ppe)
     
-    num_drowsy_detected_per_day = fetch_daily_counts('drowsy', selected_camera_driver)
-    num_phone_detected_per_day = fetch_daily_counts('phone', selected_camera_driver)
-    num_no_seatbelt_detected_per_day = fetch_daily_counts('no-seatbelt', selected_camera_driver)
+    detected_objects_by_location = {location: count for location, count in results}
+    locations, counts = zip(*detected_objects_by_location.items()) if detected_objects_by_location else ([], [])
 
-    num_danger_gesture_detected_per_day = fetch_daily_counts('cross-hand', selected_camera_danger)
-    
-    num_fire_detected_per_day = fetch_daily_counts('fire', selected_camera_paier)
-    num_smoke_detected_per_day = fetch_daily_counts('smoke', selected_camera_paier)
-    num_sleep_detected_per_day = fetch_daily_counts('sleep', selected_camera_paier)
+    results_object_types = (
+    db.session.query(
+        DetectedObject.name,
+        db.func.count(DetectedObject.id).label('count')
+    )
+    .filter(DetectedObject.permission_id == session_permission)
+    .group_by(DetectedObject.name)
+    .order_by(db.func.count(DetectedObject.id).desc())
+    .limit(10)  # Limit to top 10 detected object types
+    .all()
+    )
+
+    detected_objects_types = {name: count for name, count in results_object_types}
+    object_types, object_counts = zip(*detected_objects_types.items()) if detected_objects_types else ([], [])
+
     return render_template(
         'dashboard.html',
         num_cctv=num_cctv,
+        detected_objects_by_location=detected_objects_by_location,
         num_detectors=num_detectors,
-        num_no_helmet_detected=detection_counts["no_helmet"],
-        num_no_vest_detected=detection_counts["no_vest"],
-        num_fire_detected=detection_counts["fire"],
-        num_smoke_detected=detection_counts["smoke"],
-        num_sleep_detected=detection_counts["sleep"],
-        num_no_ppe_detected=num_no_ppe_detected,
-        num_reckless_driver_detected=num_reckless_driver_detected,
-        num_danger_detected=detection_counts["danger"],
-        cameras=cameras,
         last_7_days=last_7_days,
-        num_no_vest_detected_per_day=num_no_vest_detected_per_day,
-        num_no_helmet_detected_per_day=num_no_helmet_detected_per_day,
-        num_drowsy_detected_per_day=num_drowsy_detected_per_day,
-        num_phone_detected_per_day=num_phone_detected_per_day,
-        num_no_seatbelt_detected_per_day=num_no_seatbelt_detected_per_day,
-        num_danger_gesture_detected_per_day=num_danger_gesture_detected_per_day,
-        num_fire_detected_per_day=num_fire_detected_per_day,
-        num_smoke_detected_per_day=num_smoke_detected_per_day,
-        num_sleep_detected_per_day=num_sleep_detected_per_day,
-        session_permission=session_permission
+        session_permission=session_permission,
+        num_all_detection=DetectedObject.query.filter_by(permission_id=session_permission).count(),
+        count_of_detected_object=DetectedObject.query.filter(
+            DetectedObject.permission_id == session_permission,
+            DetectedObject.name.isnot(None)
+        ).count(),
+        daily_detected_object_counts=daily_detected_object_counts,
+        locations=locations,
+        counts=counts,
+        object_types=object_types,
+        object_counts=object_counts
     )
+
+
+
+
+
 
 @main.route('/set_session', methods=['POST'])
 def set_session():

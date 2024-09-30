@@ -106,7 +106,6 @@ def all_cards():
         {
             "title": card.title,
             "url": card.url,
-            "imageUrl": url_for("main.uploaded_file", filename=card.path),
             "permission_id": card.permission_id
         }
         for card in all_cards
@@ -135,9 +134,6 @@ def search():
         {
             "title": result.title,
             "url": result.url,  # Assuming `url` contains the link for the menu item
-            "imageUrl": url_for(
-                "admin.uploaded_file", filename=result.path
-            ),  # Assuming path is stored for image location
             "permission_id": result.permission_id
         }
         for result in search_results
@@ -169,11 +165,13 @@ def su_upload():
     
     if existing_permission_id and new_permission:
         flash("You cannot select an existing permission and create a new one at the same time.", "error")
-        return redirect(url_for("admin.su"))
+        # return redirect(url_for("admin.su"))
+        return render_template("su.html")
 
     if not title:
         flash("Title is required!", "error")
-        return redirect(url_for("admin.su"))
+        # return redirect(url_for("admin.su"))
+        return render_template("su.html")
     
     if existing_permission_id:
         perm_id = existing_permission_id

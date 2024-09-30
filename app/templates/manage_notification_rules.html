@@ -14,42 +14,43 @@
       </div>
       <ul class="space-y-4">
         {% for message in messages %}
-
-        <li
-          class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition"
-        >
-          <!-- Name -->
-          <span class="font-medium text-gray-700">{{ message.name }}</span>
-          <!-- Action Button -->
-          <div class="flex space-x-2">
-            <button
-              title="Edit Message"
-              onclick="openMessageModal('{{ message.id }}', '{{ message.name | escape }}', '{{ message.template | escape }}')"
-              class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-            >
-              <i class="fas fa-edit"></i>
-            </button>
-            <form
-              method="POST"
-              action="{{ url_for('message.delete', id=message.id) }}"
-            >
-              {{ message_form.hidden_tag() }}
+        <li>
+          <div
+            class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition"
+          >
+            <!-- Name -->
+            <span class="font-medium text-gray-700">{{ message.name }}</span>
+            <!-- Action Button -->
+            <div class="flex space-x-2">
               <button
-                title="Delete Message"
-                type="submit"
-                class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
+                title="Edit Message"
+                onclick="openMessageModal('{{ message.id }}', '{{ message.name | escape }}', '{{ message.template | escape }}')"
+                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
               >
-                <i class="fas fa-trash-alt"></i>
+                <i class="fas fa-edit"></i>
               </button>
-            </form>
+              <form
+                method="POST"
+                action="{{ url_for('message.delete', id=message.id) }}"
+              >
+                {{ message_form.hidden_tag() }}
+                <button
+                  title="Delete Message"
+                  type="submit"
+                  class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          <!-- Template Content -->
+          <div class="p-4 bg-gray-100 rounded-lg shadow-sm">
+            <pre class="text-sm text-gray-700 whitespace-pre-wrap">
+    {{ message.template }}</pre
+            >
           </div>
         </li>
-        <!-- Template Content -->
-        <div class="p-4 bg-gray-100 rounded-lg shadow-sm">
-          <pre class="text-sm text-gray-700 whitespace-pre-wrap">
-{{ message.template }}</pre
-          >
-        </div>
         {% endfor %}
       </ul>
     </div>
@@ -229,6 +230,8 @@
   </div>
 </div>
 
+{% endblock %} {% block scripts %}
+
 <!-- Scripts for Modals -->
 <script>
   // Message Modal Functions
@@ -306,7 +309,6 @@
     }
   };
 
-  // Call MESSAGE API
   function submitMessageForm(event) {
     event.preventDefault();
     const form = document.getElementById("messageForm");
@@ -333,7 +335,7 @@
             response.json().then((data) => {
               alert("Error: " + data.message);
             });
-          }        
+          }
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -354,7 +356,7 @@
           if (response.ok) {
             window.location.href = "{{ url_for('notification.view') }}";
           } else {
-            response.json().then((data) => {    
+            response.json().then((data) => {
               alert("Error: " + data.message);
             });
           }
@@ -364,7 +366,7 @@
         });
     }
   }
-  // Call Notification API
+
   function submitNotificationForm(event) {
     event.preventDefault();
     const form = document.getElementById("ruleForm");
@@ -393,7 +395,7 @@
             response.json().then((data) => {
               alert("Error: " + data.message);
             });
-          }        
+          }
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -415,7 +417,7 @@
           if (response.ok) {
             window.location.href = "{{ url_for('notification.view') }}";
           } else {
-            response.json().then((data) => {    
+            response.json().then((data) => {
               alert("Error: " + data.message);
             });
           }
@@ -425,6 +427,65 @@
         });
     }
   }
-</script>   
+
+  function submitRuleForm(event) {
+    event.preventDefault();
+    const form = document.getElementById("ruleForm");
+    const id = document.getElementById("rule_id").value;
+    const name = form.name.value;
+    const template = form.template.value;
+
+    if (id) {
+      // Update
+      fetch(`/notification/${id}/edit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          detector_id: form.detector_id.value,
+          contact_id: form.contact_id.value,
+          message_template_id: form.message_template_id.value,
+        }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = "{{ url_for('notification.view') }}";
+          } else {
+            response.json().then((data) => {
+              alert("Error: " + data.message);
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    } else {
+      fetch("/notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          detector_id: form.detector_id.value,
+          contact_id: form.contact_id.value,
+          message_template_id: form.message_template_id.value,
+        }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = "{{ url_for('notification.view') }}";
+          } else {
+            response.json().then((data) => {
+              alert("Error: " + data.message);
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+  }
+</script>
 
 {% endblock %}
