@@ -175,7 +175,7 @@ def view(id=None):
             })        
         logging.debug(f"CCTVs: {cctvs}")    
         return jsonify(cctvs), 200
-        # return render_template('manage_cctv.html', cameras=cctvs, form=form)
+        return render_template('manage_cctv.html', cameras=cctvs, form=form)
 
 @cctv_bp.route('/', methods=['POST'])
 @swag_from(cctv_api_docs['create'])

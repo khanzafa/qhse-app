@@ -167,7 +167,7 @@ class Detector(db.Model):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+    
     def to_dict(self):
         return {
             'id': self.id,

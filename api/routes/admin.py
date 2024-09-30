@@ -165,11 +165,13 @@ def su_upload():
     
     if existing_permission_id and new_permission:
         flash("You cannot select an existing permission and create a new one at the same time.", "error")
-        return redirect(url_for("admin.su"))
+        # return redirect(url_for("admin.su"))
+        return render_template("su.html")
 
     if not title:
         flash("Title is required!", "error")
-        return redirect(url_for("admin.su"))
+        # return redirect(url_for("admin.su"))
+        return render_template("su.html")
     
     if existing_permission_id:
         perm_id = existing_permission_id

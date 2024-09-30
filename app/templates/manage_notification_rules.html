@@ -4,44 +4,39 @@
 {% block content %}
 <!-- Main Content -->
 <div class="container mx-auto py-8 lg:flex lg:space-x-8 space-y-8 lg:space-y-0">
-    <!-- Template Messages Section -->
-    <div class="w-full lg:w-1/2">
-        <div class="bg-white shadow-lg rounded-lg p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-gray-800">Template Messages</h2>
-                <i class="fas fa-plus-circle text-red-600 text-xl cursor-pointer hover:text-red-700 transition"
-                    onclick="openMessageModal()"></i>
-            </div>
-            <ul class="space-y-4">
-                {% for message in messages %}
+  <!-- Template Messages Section -->
+  <div class="w-full lg:w-1/2">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-semibold text-gray-800">Template Messages</h2>
+        <i class="fas fa-plus-circle text-red-600 text-xl cursor-pointer hover:text-red-700 transition"
+          onclick="openMessageModal()"></i>
+      </div>
+      <ul class="space-y-4">
+        {% for message in messages %}
 
-                <li
-                    class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                    <!-- Name -->
-                    <span class="font-medium text-gray-700">{{ message.name }}</span>
-                    <!-- Action Button -->
-                    <div class="flex space-x-2">
-                        <button
-                            onclick="openMessageModal('{{ message.id }}', '{{ message.name | escape }}', `{{ message.template | escape }}`)"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <form method="POST" action="{{ url_for('message.delete', id=message.id) }}">
-                            {{ message_form.hidden_tag() }}
-                            <button type="submit"
-                                class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
-                    </div>
-                </li>
-                <!-- Template Content -->
-                <div class="p-4 bg-gray-100 rounded-lg shadow-sm">
-                    <pre class="text-sm text-gray-700 whitespace-pre-wrap">
+        <li class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition">
+          <!-- Name -->
+          <span class="font-medium text-gray-700">{{ message.name }}</span>
+          <!-- Action Button -->
+          <div class="flex space-x-2">
+            <button
+              onclick="openMessageModal('{{ message.id }}', '{{ message.name | escape }}', `{{ message.template | escape }}`)"
+              class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+              <i class="fas fa-edit"></i>
+            </button>
+            <form method="POST" action="{{ url_for('message.delete', id=message.id) }}">
+              {{ message_form.hidden_tag() }}
+              <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </form>
+          </div>
+        </li>
+        <!-- Template Content -->
+        <div class="p-4 bg-gray-100 rounded-lg shadow-sm">
+          <pre class="text-sm text-gray-700 whitespace-pre-wrap">
     {{ message.template }}</pre>
-                </div>
-                {% endfor %}
-            </ul>
         </div>
         {% endfor %}
       </ul>
@@ -53,10 +48,8 @@
     <div class="bg-white shadow-lg rounded-lg p-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-semibold text-gray-800">Notification Rules</h2>
-        <i
-          class="fas fa-plus-circle text-red-600 text-xl cursor-pointer hover:text-red-700 transition"
-          onclick="openRuleModal()"
-        ></i>
+        <i class="fas fa-plus-circle text-red-600 text-xl cursor-pointer hover:text-red-700 transition"
+          onclick="openRuleModal()"></i>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full table-auto text-sm text-left">
@@ -77,18 +70,11 @@
               <td class="px-4 py-3 flex space-x-2">
                 <button
                   onclick="openRuleModal('{{ rule.id }}', '{{ rule.detector_id }}', '{{ rule.contact_id }}', '{{ rule.message_template_id }}')"
-                  class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition"
-                >
+                  class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition">
                   <i class="fas fa-edit"></i>
                 </button>
-                <form
-                  action="{{ url_for('notification.delete', id=rule.id) }}"
-                  method="POST"
-                >
-                  <button
-                    type="submit"
-                    class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
-                  >
+                <form action="{{ url_for('notification.delete', id=rule.id) }}" method="POST">
+                  <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition">
                     <i class="fas fa-trash-alt"></i>
                   </button>
                 </form>
@@ -104,70 +90,75 @@
 
 <!-- Message Template Modal -->
 <div id="messageModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
-    <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6 relative">
-        <button onclick="closeMessageModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
-            ✖
-        </button>
-        <h2 class="text-xl font-semibold mb-4" id="messageModalTitle">
-            Add New Message
-        </h2>
-        <form id="messageForm" onsubmit="submitMessageForm(event)" class="space-y-4">
-            {{ message_form.hidden_tag() }}
-            <input type="hidden" name="rule_id" id="message_id" value="" />
-            <div>
-                <label for="name" class="block font-medium text-gray-700">Message Name</label>
-                {{ message_form.name(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500') }}
-            </div>
-            <div>
-                <label for="template" class="block font-medium text-gray-700">Message Template</label>
-                {{ message_form.template(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500') }}
-                <small class="text-gray-500">Use the following placeholders: @detector_id, @name,
-                    @timestamp</small>
-            </div>
-            <!-- Cancel -->
-            <button type="button" onclick="closeMessageModal()"
-                class="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400 transition">
-                Back
-            </button>
-            <!-- Submit -->
-            <button type="submit" name="submit_message"
-                class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
-                Submit
-            </button>
-        </form>
-    </div>
+  <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6 relative">
+    <button onclick="closeMessageModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+      ✖
+    </button>
+    <h2 class="text-xl font-semibold mb-4" id="messageModalTitle">
+      Add New Message
+    </h2>
+    <form id="messageForm" onsubmit="submitMessageForm(event)" class="space-y-4">
+      {{ message_form.hidden_tag() }}
+      <input type="hidden" name="rule_id" id="message_id" value="" />
+      <div>
+        <label for="name" class="block font-medium text-gray-700">Message Name</label>
+        {{ message_form.name(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500
+        focus:ring-red-500') }}
+      </div>
+      <div>
+        <label for="template" class="block font-medium text-gray-700">Message Template</label>
+        {{ message_form.template(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500
+        focus:ring-red-500') }}
+        <small class="text-gray-500">Use the following placeholders: @detector_id, @name,
+          @timestamp</small>
+      </div>
+      <!-- Cancel -->
+      <button type="button" onclick="closeMessageModal()"
+        class="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400 transition">
+        Back
+      </button>
+      <!-- Submit -->
+      <button type="submit" name="submit_message"
+        class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+        Submit
+      </button>
+    </form>
+  </div>
 </div>
 
 <!-- Notification Rule Modal -->
 <div id="ruleModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
-    <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6 relative">
-        <button onclick="closeRuleModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
-            ✖
-        </button>
-        <h2 class="text-xl font-semibold mb-4" id="ruleModalTitle">
-            Add New Notification Rule
-        </h2>
-        <form id="ruleForm" method="POST" action="{{ url_for('notification.create') }}" class="space-y-4">
-            {{ rule_form.hidden_tag() }}
-            <input type="hidden" name="rule_id" id="rule_id" value="" />
-            <div>
-                <label for="detector_id" class="block font-medium text-gray-700">Detector</label>
-                {{ rule_form.detector_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500') }}
-            </div>
-            <div>
-                <label for="contact_id" class="block font-medium text-gray-700">Contact</label>
-                {{ rule_form.contact_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500') }}
-            </div>
-            <div>
-                <label for="message_template_id" class="block font-medium text-gray-700">Message Template</label>
-                {{ rule_form.message_template_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500') }}
-            </div>
-            <button type="submit" name="submit_rule"
-                class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
-                Submit
-            </button>
-        </form>
-    </div>
+  <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6 relative">
+    <button onclick="closeRuleModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+      ✖
+    </button>
+    <h2 class="text-xl font-semibold mb-4" id="ruleModalTitle">
+      Add New Notification Rule
+    </h2>
+    <form id="ruleForm" method="POST" action="{{ url_for('notification.create') }}" class="space-y-4">
+      {{ rule_form.hidden_tag() }}
+      <input type="hidden" name="rule_id" id="rule_id" value="" />
+      <div>
+        <label for="detector_id" class="block font-medium text-gray-700">Detector</label>
+        {{ rule_form.detector_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500
+        focus:ring-red-500') }}
+      </div>
+      <div>
+        <label for="contact_id" class="block font-medium text-gray-700">Contact</label>
+        {{ rule_form.contact_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500
+        focus:ring-red-500') }}
+      </div>
+      <div>
+        <label for="message_template_id" class="block font-medium text-gray-700">Message Template</label>
+        {{ rule_form.message_template_id(class_='mt-1 block w-full rounded-md border-gray-300 shadow-sm
+        focus:border-red-500 focus:ring-red-500') }}
+      </div>
+      <button type="submit" name="submit_rule"
+        class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+        Submit
+      </button>
+    </form>
+  </div>
 </div>
 
 <!-- Scripts for Modals -->
@@ -274,7 +265,7 @@
             response.json().then((data) => {
               alert("Error: " + data.message);
             });
-          }        
+          }
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -295,7 +286,7 @@
           if (response.ok) {
             window.location.href = "{{ url_for('notification.view') }}";
           } else {
-            response.json().then((data) => {    
+            response.json().then((data) => {
               alert("Error: " + data.message);
             });
           }
@@ -305,6 +296,67 @@
         });
     }
   }
-</script>   
+
+  // Call API
+  function submitRuleForm(event) {
+    event.preventDefault();
+    const form = document.getElementById("ruleForm");
+    const id = document.getElementById("rule_id").value;
+    const name = form.name.value;
+    const template = form.template.value;
+
+    if (id) {
+      // Update
+      fetch(`/notification/${id}/edit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          detector_id: form.detector_id.value,
+          contact_id: form.contact_id.value,
+          message_template_id: form.message_template_id.value,
+        }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = "{{ url_for('notification.view') }}";
+          } else {
+            response.json().then((data) => {
+              alert("Error: " + data.message);
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    } else {
+      // Create
+      fetch("/notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          detector_id: form.detector_id.value,
+          contact_id: form.contact_id.value,
+          message_template_id: form.message_template_id.value,
+        }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = "{{ url_for('notification.view') }}";
+          } else {
+            response.json().then((data) => {
+              alert("Error: " + data.message);
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+  }
+</script>
 
 {% endblock %}
