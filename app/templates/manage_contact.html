@@ -28,19 +28,22 @@ content %}
         <!-- Phone Number Field -->
         <div class="form-group">
           {{ form.phone_number.label(class="block text-gray-700 font-medium mb-2") }}
-          {{ form.phone_number(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+          {{ form.phone_number(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
         </div>
 
         <!-- Name Field -->
         <div class="form-group">
-          {{ form.name.label(class="block text-gray-700 font-medium mb-2") }} 
-          {{ form.name(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+          {{ form.name.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ form.name(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
         </div>
 
         <!-- Description Field -->
         <div class="form-group">
-          {{ form.description.label(class="block text-gray-700 font-medium mb-2") }} 
-          {{ form.description(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+          {{ form.description.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ form.description(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
         </div>
 
         <input type="hidden" name="is_group" value="false" />
@@ -63,14 +66,16 @@ content %}
 
         <!-- Name Field -->
         <div class="form-group">
-          {{ form.name.label(class="block text-gray-700 font-medium mb-2") }} 
-          {{ form.name(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+          {{ form.name.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ form.name(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
         </div>
 
         <!-- Description Field -->
         <div class="form-group">
-          {{ form.description.label(class="block text-gray-700 font-medium mb-2") }} 
-          {{ form.description(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+          {{ form.description.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ form.description(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
         </div>
 
         <input type="hidden" name="is_group" value="true" />
@@ -197,9 +202,10 @@ content %}
   document.querySelectorAll(".edit-btn").forEach((button) => {
     button.addEventListener("click", function () {
       const contactId = this.dataset.id;
+      console.log('contact id', contactId)
       const isGroup = this.dataset.isGroup;
+      console.log("isGroup", isGroup);
       if (isGroup === "True") {
-        console.log("isGroup", isGroup);
         document
           .getElementById("edit-phone-number-group")
           .classList.add("hidden");
@@ -213,27 +219,7 @@ content %}
       document.getElementById("edit-name").value = this.dataset.name;
       document.getElementById("edit-description").value =
         this.dataset.description;
-      document.getElementById("edit-form").action = fetch(
-        `/contact/${contactId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}",
-          },
-          body: JSON.stringify({
-            _method: "PUT",
-            name: this.dataset.name,
-            phone_number: this.dataset.phone,
-            description: this.dataset.description,
-            is_group: isGroup,
-          }),
-        }
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data);
-        });
+      document.getElementById("edit-form").action = `/contact/${contactId}/edit`
       document.getElementById("edit-modal").classList.remove("hidden");
     });
   });

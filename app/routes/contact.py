@@ -157,7 +157,8 @@ def view(id=None):
             'id': contact.id,
             'phone_number': contact.phone_number,
             'name': contact.name,
-            'description': contact.description
+            'description': contact.description,
+            'is_group': contact.is_group
         }
         return jsonify(contact), 200        
     else:
@@ -167,7 +168,8 @@ def view(id=None):
                 'id': contact.id,
                 'phone_number': contact.phone_number,
                 'name': contact.name,
-                'description': contact.description
+                'description': contact.description,
+                'is_group': contact.is_group
             })        
         # return jsonify(contacts), 200
         return render_template('manage_contact.html', whas=contacts, form=form)
@@ -182,7 +184,8 @@ def create():
             phone_number=form.phone_number.data,
             name=form.name.data,
             description=form.description.data,
-            permission_id=session.get('permission_id')
+            permission_id=session.get('permission_id'),
+            is_group = (form.phone_number.data is None or form.phone_number.data == "")
         )
         db.session.add(contact)
         db.session.commit()
