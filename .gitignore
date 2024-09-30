@@ -16,3 +16,4 @@ uploads/*
 notes
 weights/*
 barcode.png
+yolov8n-pose.pt

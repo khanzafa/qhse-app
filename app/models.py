@@ -15,6 +15,7 @@ from sqlalchemy import event, Enum
 from sqlalchemy.orm import Session
 from flask_socketio import emit
 
+
 class Guest(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), index=True, unique=True)
@@ -190,85 +191,119 @@ class Detector(db.Model):
     def process_frame(self, frame, detected_objects_tracker, frame_number):
         detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
         frame_number = 0
-        model = YOLO(self.weight.path)
-        results = model.track(frame, stream=False, persist=True)
-        annotated_frame = results[0].plot()
-        detected_objects = []
-        for c in results[0].boxes:
-            track_id = c.id if hasattr(c, 'id') else None
-            track_id = int(track_id.item()) 
-            class_id = c.cls
-            name = model.names[int(class_id)]
-            
+        
+        detector = db.session.query(Detector).filter(Detector.id == self.id).first()
+        cctv = db.session.query(CCTV).join(Detector).filter(Detector.id == self.id).first()
+        
+        if self.weight.detector_type.name == 'Help Gesture':
+            from gesture_detection.gesture import Gesture
+            annotated_frame, gesture_name = Gesture(frame=frame).process_results()
+            print(Back.GREEN)
+            print(gesture_name)
+            print(Style.RESET_ALL)
             detected_object = DetectedObject(
-                detector_id=self.id,
-                name=name,
-                frame=cv2.imencode('.jpg', frame)[1].tobytes(),
-                timestamp=datetime.now(),
-                permission_id=self.permission_id                
-            )
-            
-            detector = db.session.query(Detector).filter(Detector.id == self.id).first()
-            
-            # query cctv
-            cctv = db.session.query(CCTV).join(Detector).filter(Detector.id == self.id).first()
+                    detector_id=self.id,
+                    name=gesture_name,
+                    frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                    timestamp=datetime.now(),
+                    permission_id=self.permission_id                
+                )
             
             detected_object_info = {
-                # cctv
-                'cctv_id': cctv.id,
-                'cctv_location': cctv.location,
-                'cctv_type': cctv.type,
-                'ip_address': cctv.ip_address,
-                'cctv_status': cctv.status,
-                'cctv_permission_id': cctv.permission_id,
-                'cctv_created_at': cctv.created_at,
-                'cctv_updated_at': cctv.updated_at,
-                
-                # detector
-                'detector_id': detector.id,
-                'detector_type_id': detector.detector_type_id,
-                'weight_id': detector.weight_id,
-                'running': detector.running,
-                'detector_permission_id': detector.permission_id,
-                'detector_created_at': detector.created_at,
-                'detector_updated_at': detector.updated_at,
-                
-                'name': name,
-                'timestamp': datetime.now(),
-                'track_id': track_id,
-            }
-            
-            current_time = time.time()
-            frame_number += 1
-            # Frame
-            if track_id is not None:
-                print(f"Initial count: {detected_objects_tracker[track_id]['count']}, Last time: {detected_objects_tracker[track_id]['last_time']}")
-                # If first time detection or reset count due to detection gap
-                if detected_objects_tracker[track_id]["count"] == 0:
-                    # First detection, add to detection objects list
-                    detected_objects.append(detected_object_info)
-                    detected_objects_tracker[track_id]["count"] += 1
-                # Detected again after 5 seconds
-                elif current_time - self.detected_objects_tracker[track_id]["last_time"] >= 5:
-                    detected_objects_tracker[track_id]["count"] += 1
-                else:
-                    # Reset count if there's a gap in detection
-                    detected_objects_tracker[track_id]["count"] = 1
+                    # cctv
+                    'cctv_id': cctv.id,
+                    'cctv_location': cctv.location,
+                    'cctv_type': cctv.type,
+                    'ip_address': cctv.ip_address,
+                    'cctv_status': cctv.status,
+                    'cctv_permission_id': cctv.permission_id,
+                    'cctv_created_at': cctv.created_at,
+                    'cctv_updated_at': cctv.updated_at,
                     
-                # Check if the object has been detected for 15 consecutive frames
-                if detected_objects_tracker[track_id]["count"] >= 15:
-                    # Add to detected objects list
-                    detected_objects.append(detected_object_info)
-                    detected_objects_tracker[track_id]["count"] = 0  # Reset the count after sending the message
-
-                # Update last_frame at the end, regardless of the branch
-                detected_objects_tracker[track_id]["last_time"] = current_time
+                    # detector
+                    'detector_id': detector.id,
+                    'detector_type_id': detector.detector_type_id,
+                    'weight_id': detector.weight_id,
+                    'running': detector.running,
+                    'detector_permission_id': detector.permission_id,
+                    'detector_created_at': detector.created_at,
+                    'detector_updated_at': detector.updated_at,
+                    
+                    'name': gesture_name,
+                    'timestamp': datetime.now(),
+                }
+        else:
+            model = YOLO(self.weight.path)
+            results = model.track(frame, stream=False, persist=True)
+            annotated_frame = results[0].plot()
+            detected_objects = []
+            current_time = time.time()
             
-            # logging.info(f"Track id: {track_id}")
-            # logging.info(f"Frame number: {frame_number}")
+            for c in results[0].boxes:
+                track_id = c.id if hasattr(c, 'id') else None
+                track_id = int(track_id.item()) 
+                class_id = c.cls
+                name = model.names[int(class_id)]
                 
-            detected_object_info['track_id'] = track_id
-            db.session.add(detected_object)
+                detected_object_info = {
+                    # cctv
+                    'cctv_id': cctv.id,
+                    'cctv_location': cctv.location,
+                    'cctv_type': cctv.type,
+                    'ip_address': cctv.ip_address,
+                    'cctv_status': cctv.status,
+                    'cctv_permission_id': cctv.permission_id,
+                    'cctv_created_at': cctv.created_at,
+                    'cctv_updated_at': cctv.updated_at,
+                    
+                    # detector
+                    'detector_id': detector.id,
+                    'detector_type_id': detector.detector_type_id,
+                    'weight_id': detector.weight_id,
+                    'running': detector.running,
+                    'detector_permission_id': detector.permission_id,
+                    'detector_created_at': detector.created_at,
+                    'detector_updated_at': detector.updated_at,
+                    
+                    'name': name,
+                    'timestamp': datetime.now(),
+                    'track_id': track_id,
+                }
+                
+                
+                frame_number += 1
+                
+                # Object tracking logic
+                if track_id is not None:
+                    tracker = detected_objects_tracker.get(track_id, {"count": 0, "last_time": current_time})
+
+                    # First detection or reset due to time gap
+                    if tracker["count"] == 0 or current_time - tracker["last_time"] >= 5:
+                        detected_objects.append(detected_object_info)
+                        tracker["count"] = 1  # Reset count if a time gap occurs
+                    else:
+                        tracker["count"] += 1
+
+                    # Detect object consistently over 15 frames
+                    if tracker["count"] >= 15:
+                        detected_objects.append(detected_object_info)
+                        tracker["count"] = 0  # Reset after detection
+
+                    # Update tracker info
+                    detected_objects_tracker[track_id] = tracker
+                
+                # logging.info(f"Track id: {track_id}")
+                # logging.info(f"Frame number: {frame_number}")
+                
+                detected_object = DetectedObject(
+                    detector_id=self.id,
+                    name=name,
+                    frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                    timestamp=datetime.now(),
+                    permission_id=self.permission_id                
+                )
+                    
+                db.session.add(detected_object)
             db.session.commit()
             
         return detected_objects, annotated_frame, detected_objects_tracker, frame_number

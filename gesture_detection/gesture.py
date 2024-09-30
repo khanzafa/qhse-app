@@ -1,8 +1,10 @@
+from colorama import Back, Style
+import cv2
 import numpy as np
-
+from ultralytics import YOLO
 
 class Gesture:
-    def __init__(self):    
+    def __init__(self, frame):    
         self.X_POS = 0
         self.Y_POS = 1
         self.CONF = 2
@@ -25,9 +27,11 @@ class Gesture:
             "right_knee": 14,
             "left_ankle": 15,
             "right_ankle": 16
-        }        
+        }
+        self.model = YOLO('yolov8n-pose.pt')
+        self.frame = frame
     
-    def calculate_angle(a, b, c):
+    def calculate_angle(self, a, b, c):
         ab = np.array(a) - np.array(b)
         bc = np.array(c) - np.array(b)
         dot_product = np.dot(ab, bc)
@@ -115,5 +119,59 @@ class Gesture:
                 self.are_wrist_keypoints_same(keypoints_dict["left_wrist"], keypoints_dict["right_wrist"])):
                 return "ARMS_CROSSING"
 
+    
+    def process_results(self):
+        pose_results = self.model.track(self.frame, stream=False, persist=True)
+        annotated_frame = pose_results[0].plot()
+        for obj_idx in range(len(pose_results[0].keypoints)):
+                track_id = pose_results[0].boxes[obj_idx].id
+                track_id = int(track_id.item())
+                
+                self.keypoints = pose_results[0].keypoints[obj_idx].data[0]
+                # Ensure keypoints exist and are not empty
+                if self.keypoints is not None and self.keypoints.size(0) > 0:
+                    
+                    keypoints_dict = self.get_keypoints()
+                    
+                    # Calculate elbow angles using keypoints_dict
+                    right_elbow_angle = self.calculate_angle(keypoints_dict['right_shoulder'], 
+                                                            keypoints_dict['right_elbow'], 
+                                                            keypoints_dict['right_wrist'])
 
-        
+                    left_elbow_angle = self.calculate_angle(keypoints_dict['left_shoulder'], 
+                                                            keypoints_dict['left_elbow'], 
+                                                            keypoints_dict['left_wrist'])
+
+                    # Annotate the right elbow angle on the frame
+                    cv2.putText(
+                        annotated_frame, 'Right Elbow Angle:',
+                        (int(keypoints_dict['right_elbow'][0]), int(keypoints_dict['right_elbow'][1]) - 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2, cv2.LINE_AA
+                    )
+                    cv2.putText(
+                        annotated_frame, f'{right_elbow_angle:.2f} deg',
+                        (int(keypoints_dict['right_elbow'][0]), int(keypoints_dict['right_elbow'][1]) - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2, cv2.LINE_AA
+                    )
+
+                    # Annotate the left elbow angle on the frame
+                    cv2.putText(
+                        annotated_frame, 'Left Elbow Angle:',
+                        (int(keypoints_dict['left_elbow'][0]), int(keypoints_dict['left_elbow'][1]) - 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2, cv2.LINE_AA
+                    )
+                    cv2.putText(
+                        annotated_frame, f'{left_elbow_angle:.2f} deg',
+                        (int(keypoints_dict['left_elbow'][0]), int(keypoints_dict['left_elbow'][1]) - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2, cv2.LINE_AA
+                    )
+                    
+                    gestureName = self.get_gesture_type()
+                    
+                    if gestureName:
+                        cv2.putText(
+                            annotated_frame, gestureName,
+                            (int(keypoints_dict['nose'][0]), int(keypoints_dict['nose'][1]) - 30),  # Fetch nose coordinates from dict
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2, cv2.LINE_AA
+                        )
+        return annotated_frame, gestureName
