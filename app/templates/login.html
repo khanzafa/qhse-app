@@ -1,84 +1,138 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        .flash-message {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 0.375rem;
-            color: white;
-            font-weight: bold;
-            background-color: black;
-        }
+      .flash-message {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.375rem;
+        color: white;
+        font-weight: bold;
+        background-color: black;
+      }
 
-        .flash-success {
-            background-color: #38a169;
-        }
+      .flash-success {
+        background-color: #38a169;
+      }
 
-        /* Green for success */
-        .flash-error {
-            background-color: #e53e3e;
-        }
+      /* Green for success */
+      .flash-error {
+        background-color: #e53e3e;
+      }
 
-        /* Red for error */
+      /* Red for error */
     </style>
-</head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+  </head>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <header style="position: fixed; top: 0; width: 100%; z-index: 1000; text-align: center; padding: 10px 0;">
-        <!-- Flash Message Section -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div id="flash-container">
-            {% for category, message in messages %}
-            <div class="flash-message flash-{{ category }}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
+  <body class="bg-gray-100 flex items-center justify-center h-screen">
+    <header
+      style="
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        text-align: center;
+        padding: 10px 0;
+      "
+    >
+      <!-- Flash Message Section -->
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div id="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
     </header>
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 class="text-2xl font-bold mb-6">Login</h2>
-        <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
-            {{ form.hidden_tag() }}
-            <div class="flex flex-col">
-                <label for="email" class="text-sm font-semibold mb-1">{{ form.email.label }}</label>
-                {{ form.email(class="border border-gray-300 p-2 rounded-md") }}
-            </div>
-            <div class="flex flex-col">
-                <label for="password" class="text-sm font-semibold mb-1">{{ form.password.label }}</label>
-                {{ form.password(class="border border-gray-300 p-2 rounded-md") }}
-            </div>
-            <div>
-                {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md cursor-pointer") }}
-            </div>
-        </form>
-        <p class="mt-4 text-center text-sm">
-            Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-blue-500">Register here</a>.
-        </p>
+      <h2 class="text-2xl font-bold mb-6">Login</h2>
+      <form
+        method="POST"
+        action="{{ url_for('auth.login') }}"
+        class="space-y-4"
+      >
+        {{ form.hidden_tag() }}
+        <div class="flex flex-col">
+          <label for="email" class="text-sm font-semibold mb-1"
+            >{{ form.email.label }}</label
+          >
+          {{ form.email(class="border border-gray-300 p-2 rounded-md") }}
+        </div>
+        <div class="flex flex-col relative">
+          <label for="password" class="text-sm font-semibold mb-1"
+            >{{ form.password.label }}</label
+          >
+          <input
+            type="password"
+            name="password"
+            id="password"
+            class="border border-gray-300 p-2 rounded-md w-full pr-10"
+            required
+          />
+          <span
+            id="togglePassword"
+            class="absolute inset-y-0 right-0 flex items-center justify-center pr-3 pt-6 cursor-pointer"
+          >
+            <i class="fas fa-eye-slash" id="eyeIcon"></i>
+          </span>
+        </div>
+        <div>
+          {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md
+          cursor-pointer") }}
+        </div>
+      </form>
 
-        <p class="mt-4 text-center text-sm">
-            Forgot your password? <a href="{{ url_for('auth.forgot_password') }}" class="text-blue-500">Reset here</a>.
-        </p>
+      <p class="mt-4 text-center text-sm">
+        Don't have an account?
+        <a href="{{ url_for('auth.register') }}" class="text-blue-500"
+          >Register here</a
+        >.
+      </p>
+
+      <p class="mt-4 text-center text-sm">
+        Forgot your password?
+        <a href="{{ url_for('auth.forgot_password') }}" class="text-blue-500"
+          >Reset here</a
+        >.
+      </p>
     </div>
 
     <script>
-        // Auto-hide flash messages after 3 seconds
-        setTimeout(function () {
-            var flashContainer = document.getElementById('flash-container');
-            if (flashContainer) {
-                flashContainer.style.display = 'none';
-            }
-        }, 3000); // 3 seconds
-    </script>
-</body>
+      // Auto-hide flash messages after 3 seconds
+      setTimeout(function () {
+        var flashContainer = document.getElementById("flash-container");
+        if (flashContainer) {
+          flashContainer.style.display = "none";
+        }
+      }, 3000); // 3 seconds
 
+      const togglePassword = document.getElementById("togglePassword");
+      const passwordInput = document.getElementById("password");
+      const eyeIcon = document.getElementById("eyeIcon");
+
+      togglePassword.addEventListener("click", function () {
+        const isPassword = passwordInput.getAttribute("type") === "password"; // Cek tipe input
+        passwordInput.setAttribute("type", isPassword ? "text" : "password"); // Toggle tipe input
+
+        // Mengubah ikon berdasarkan tipe input
+        if (isPassword) {
+          eyeIcon.classList.remove("fa-eye-slash"); // Hapus ikon mata tertutup
+          eyeIcon.classList.add("fa-eye"); // Tambah ikon mata terbuka
+        } else {
+          eyeIcon.classList.remove("fa-eye"); // Hapus ikon mata terbuka
+          eyeIcon.classList.add("fa-eye-slash"); // Tambah ikon mata tertutup
+        }
+      });
+    </script>
+  </body>
 </html>
