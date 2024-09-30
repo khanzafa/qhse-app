@@ -184,6 +184,12 @@ def view(id=None):
 def create():
     form = CCTVForm()    
     if form.validate_on_submit():
+        # Check if the location already exists in the database
+        existing_cctv = CCTV.query.filter_by(location=form.location.data).first()
+        if existing_cctv:
+            # Location already exists, flash a message and redirect
+            flash('Location already exists. Please use a different one.', 'error')
+            return redirect(url_for('cctv.view'))
         cctv = CCTV(
             location=form.location.data,
             type=form.type.data, 
@@ -208,6 +214,12 @@ def edit(id):
     form = CCTVForm(obj=cctv)
     logging.debug(f"Form data: {form.data}")
     if form.validate_on_submit():
+        # # Check if the location already exists in the database
+        existing_cctv = CCTV.query.filter_by(location=form.location.data).first()
+        if existing_cctv.id != id:
+            # Location already exists, flash a message and redirect
+            flash('Location already exists. Please use a different one.', 'error')
+            return redirect(url_for('cctv.view'))
         logging.debug(f"Form validated: {form.data}")
         cctv.location = form.location.data
         cctv.type = form.type.data
@@ -227,12 +239,15 @@ def edit(id):
 @login_required
 def delete(id):
     logging.debug(f"Deleting CCTV with ID: {id}")
+     # Check if there are any detectors using this CCTV
+    if Detector.query.filter_by(cctv_id=id).first():
+        flash('Cannot delete CCTV. It is currently in use by a detector.', 'error')
+        return redirect(url_for('cctv.view'))
+    
     cctv = CCTV.query.get_or_404(id)
     db.session.delete(cctv)
     db.session.commit()
     flash('CCTV deleted successfully!')
-    # return Response(status=204)
-    return redirect(url_for('cctv.view'))
 
 @cctv_bp.route('/<int:cctv_id>/stream')
 @swag_from(cctv_api_docs['stream'])
