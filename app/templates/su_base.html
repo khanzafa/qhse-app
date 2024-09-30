@@ -1,53 +1,62 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.2/dist/cdn.min.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.2/dist/cdn.min.js"
+      defer
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     {% block style %}{% endblock %}
 
     <style>
-        .flash-message {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 0.375rem;
-            color: white;
-            font-weight: bold;
-        }
+      .flash-message {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.375rem;
+        color: white;
+        font-weight: bold;
+      }
 
-        .flash-success {
-            background-color: #38a169;
-        }
+      .flash-success {
+        background-color: #38a169;
+      }
 
-        /* Green for success */
-        .flash-error {
-            background-color: #e53e3e;
-        }
+      /* Green for success */
+      .flash-error {
+        background-color: #e53e3e;
+      }
 
-        /* Red for error */
+      /* Red for error */
     </style>
-</head>
+  </head>
 
-<body class="bg-gray-100">
+  <body class="bg-gray-100">
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-30 h-16 flex items-center justify-between px-6">
-        <!-- Logo and App Name -->
-        <div class="flex items-center">
-            <div id="logo" class="text-xl font-semibold">
-                <img src="/static/img/spil_logo.svg" alt="Logo" class="h-8" />
-            </div>
-            <!-- Span App Name -->
-            <span id="page_name" class="text-2xl font-bold ml-2 tracking-wide">Admin</span>
+    <header
+      class="fixed top-0 left-0 right-0 bg-white shadow-md z-30 h-16 flex items-center justify-between px-6"
+    >
+      <!-- Logo and App Name -->
+      <div class="flex items-center">
+        <div id="logo" class="text-xl font-semibold">
+          <img src="/static/img/spil_logo.svg" alt="Logo" class="h-8" />
         </div>
+        <!-- Span App Name -->
+        <span id="page_name" class="text-2xl font-bold ml-2 tracking-wide"
+          >Admin</span
+        >
+      </div>
 
-        <!-- Search Bar -->
-        <!-- <div class="flex-1 mx-6">
+      <!-- Search Bar -->
+      <!-- <div class="flex-1 mx-6">
     <input
       type="text"
       placeholder="Search..."
@@ -55,163 +64,184 @@
     />
   </div> -->
 
-        <!-- Running Text -->
-        <div class="marquee text-blue-600 font-semibold text-lg">
-            <marquee direction="left" scrollamount="12">
-                Super User Page - Salam Pacific Indonesia
-                Lines
-            </marquee>
+      <!-- Running Text -->
+      <div class="marquee text-blue-600 font-semibold text-lg">
+        <marquee direction="left" scrollamount="12">
+          Super User Page - PT Salam Pacific Indonesia Lines
+        </marquee>
+      </div>
+
+      <!-- User Profile & Notifications -->
+      <div class="flex items-center space-x-4">
+        <!-- Notifications Icon -->
+        <div class="relative">
+          <i
+            class="fas fa-bell text-gray-600 hover:text-gray-800 cursor-pointer"
+          ></i>
+          <span
+            class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"
+          ></span>
         </div>
 
-        <!-- User Profile & Notifications -->
-        <div class="flex items-center space-x-4">
-            <!-- Notifications Icon -->
-            <div class="relative">
-                <i class="fas fa-bell text-gray-600 hover:text-gray-800 cursor-pointer"></i>
-                <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
-            </div>
-
-            <!-- User Profile -->
-            <div class="flex items-center space-x-2">
-                <img src="/static/img/corporate-user-icon.png" alt="User Avatar" class="w-8 h-8 rounded-full" />
-                <!-- <span class="text-gray-700 font-medium">John Doe</span> -->
-                <span class="text-gray-700 font-medium">{{ current_user.name }}</span>
-                <!-- Logout Button -->
-                <a href="{{ url_for('auth.logout') }}" class="logout-button">Logout</a>
-            </div>
+        <!-- User Profile -->
+        <div class="flex items-center space-x-2">
+          <img
+            src="/static/img/corporate-user-icon.png"
+            alt="User Avatar"
+            class="w-8 h-8 rounded-full"
+          />
+          <!-- <span class="text-gray-700 font-medium">John Doe</span> -->
+          <span class="text-gray-700 font-medium">{{ current_user.name }}</span>
+          <!-- Logout Button -->
+          <a href="{{ url_for('auth.logout') }}" class="logout-button"
+            >Logout</a
+          >
         </div>
+      </div>
     </header>
 
     <!-- Flash Message Section -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
     <div id="flash-container">
-        {% for category, message in messages %}
-        <div class="flash-message flash-{{ category }}">
-            {{ message }}
-        </div>
-        {% endfor %}
+      {% for category, message in messages %}
+      <div class="flash-message flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
     </div>
-    {% endif %}
-    {% endwith %}
+    {% endif %} {% endwith %}
 
     <!-- Sidebar -->
     <div class="flex pt-16">
-        <aside id="sidebar"
-            class="fixed top-16 left-0 h-full bg-red-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0">
-            <nav class="mt-4">
-                <!-- HOME -->
-                <a href="{{ url_for('admin.su') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                    <i class="fa-solid fa-house mr-3"></i>
-                    Menu
-                </a>
+      <aside
+        id="sidebar"
+        class="fixed top-16 left-0 h-full bg-red-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0"
+      >
+        <nav class="mt-4">
+          <!-- HOME -->
+          <a
+            href="{{ url_for('admin.su') }}"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
+          >
+            <i class="fa-solid fa-house mr-3"></i>
+            Menu
+          </a>
 
-                <!-- Register Approval -->
-                <a href="{{ url_for('admin.user_approval') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                    <i class="fa-solid fa-users-gear mr-3"></i>
-                    User Approval
-                </a>
+          <!-- Register Approval -->
+          <a
+            href="{{ url_for('admin.user_approval') }}"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
+          >
+            <i class="fa-solid fa-users-gear mr-3"></i>
+            User Approval
+          </a>
 
-                <!-- Grant Access to user -->
-                <a href="{{ url_for('admin.user_permission') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                    <i class="fa-solid fa-list-check mr-3"></i>
-                    Grant access to users
-                </a>
+          <!-- Grant Access to user -->
+          <a
+            href="{{ url_for('admin.user_permission') }}"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center"
+          >
+            <i class="fa-solid fa-list-check mr-3"></i>
+            Grant access to users
+          </a>
 
-                <br>
-            </nav>
-        </aside>
+          <br />
+        </nav>
+      </aside>
     </div>
 
     <main class="flex-1 p-10 ml-64">{% block content %} {% endblock %}</main>
 
-
     <!-- Toggle Button for Sidebar -->
-    <button id="sidebarToggle" class="fixed top-16 left-0 z-50 m-4 p-2 bg-gray-800 text-white rounded-md md:hidden">
-        >
+    <button
+      id="sidebarToggle"
+      class="fixed top-16 left-0 z-50 m-4 p-2 bg-gray-800 text-white rounded-md md:hidden"
+    >
+      >
     </button>
 
     <script>
-        const sidebar = document.getElementById("sidebar");
-        const toggleButton = document.getElementById("sidebarToggle");
+      const sidebar = document.getElementById("sidebar");
+      const toggleButton = document.getElementById("sidebarToggle");
 
-        toggleButton.addEventListener("click", () => {
-            sidebar.classList.toggle("-translate-x-full");
+      toggleButton.addEventListener("click", () => {
+        sidebar.classList.toggle("-translate-x-full");
+      });
+
+      // function utk html di su.html
+      document.addEventListener("DOMContentLoaded", function () {
+        const dropdownButton = document.getElementById("dropdown-button");
+        const dropdownMenu = document.getElementById("dropdown");
+
+        dropdownButton.addEventListener("click", function () {
+          dropdownMenu.classList.toggle("hidden");
         });
 
-        // function utk html di su.html
-        document.addEventListener('DOMContentLoaded', function () {
-            const dropdownButton = document.getElementById('dropdown-button');
-            const dropdownMenu = document.getElementById('dropdown');
-
-            dropdownButton.addEventListener('click', function () {
-                dropdownMenu.classList.toggle('hidden');
-            });
-
-            document.addEventListener('click', function (event) {
-                if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
-                    dropdownMenu.classList.add('hidden');
-                }
-            });
+        document.addEventListener("click", function (event) {
+          if (
+            !dropdownButton.contains(event.target) &&
+            !dropdownMenu.contains(event.target)
+          ) {
+            dropdownMenu.classList.add("hidden");
+          }
         });
+      });
 
-        $(document).ready(function () {
+      $(document).ready(function () {
+        showAllCards();
+        // search cards
+        $("#search-form").on("submit", function (event) {
+          event.preventDefault(); // Prevent form submission
+
+          var query = $("#search-dropdown").val();
+
+          if (query.trim() === "") {
+            // If the query is empty, show all cards
             showAllCards();
-            // search cards
-            $('#search-form').on('submit', function (event) {
-                event.preventDefault(); // Prevent form submission
-
-                var query = $('#search-dropdown').val();
-
-                if (query.trim() === '') {
-                    // If the query is empty, show all cards
-                    showAllCards();
-                } else {
-                    // Perform the search
-                    $.ajax({
-                        url: '/admin/su/search', // Replace with your search endpoint
-                        type: 'GET',
-                        contentType: 'application/json',
-                        data: { query: query },
-                        success: function (data) {
-                            displayResults(data);
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error fetching search results:', error);
-                            $('#search-results').html('<p class="text-red-500">Error loading search results. Please try again.</p>');
-                        }
-                    });
-                }
+          } else {
+            // Perform the search
+            $.ajax({
+              url: "/admin/su/search", // Replace with your search endpoint
+              type: "GET",
+              contentType: "application/json",
+              data: { query: query },
+              success: function (data) {
+                displayResults(data);
+              },
+              error: function (xhr, status, error) {
+                console.error("Error fetching search results:", error);
+                $("#search-results").html(
+                  '<p class="text-red-500">Error loading search results. Please try again.</p>'
+                );
+              },
             });
+          }
+        });
 
-            function showAllCards() {
-                // Fetch all cards from the server or show the existing ones
-                $.ajax({
-                    url: '/admin/su/all-cards', // Replace with the endpoint to fetch all cards
-                    type: 'GET',
-                    success: function (data) {
-                        displayResults(data);
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching all cards:', error);
-                    }
-                });
-            }
+        function showAllCards() {
+          // Fetch all cards from the server or show the existing ones
+          $.ajax({
+            url: "/admin/su/all-cards", // Replace with the endpoint to fetch all cards
+            type: "GET",
+            success: function (data) {
+              displayResults(data);
+            },
+            error: function (xhr, status, error) {
+              console.error("Error fetching all cards:", error);
+            },
+          });
+        }
 
-            function displayResults(data) {
-                var resultsContainer = $('#search-results');
-                resultsContainer.empty(); // Clear previous results
-                if (Array.isArray(data) && data.length) {
-                    $.each(data, function (index, item) {
-
-                        var card = $('<a>', {
-                            href: "javascript:void(0);",
-                            class: 'relative grid h-64 sm:h-72 md:h-60 w-full sm:w-[18rem] md:w-[20rem] flex-col items-end justify-center overflow-hidden rounded-lg bg-white shadow-md hover:shadow-2xl hover:scale-105 hover:border hover:border-slate-300 hover:brightness-110 transition-all duration-300 cursor-pointer',
-                            'data-id': item.permission_id
-                        }).html(`
+        function displayResults(data) {
+          var resultsContainer = $("#search-results");
+          resultsContainer.empty(); // Clear previous results
+          if (Array.isArray(data) && data.length) {
+            $.each(data, function (index, item) {
+              var card = $("<a>", {
+                href: "javascript:void(0);",
+                class:
+                  "relative grid h-64 sm:h-72 md:h-60 w-full sm:w-[18rem] md:w-[20rem] flex-col items-end justify-center overflow-hidden rounded-lg bg-white shadow-md hover:shadow-2xl hover:scale-105 hover:border hover:border-slate-300 hover:brightness-110 transition-all duration-300 cursor-pointer",
+                "data-id": item.permission_id,
+              }).html(`
                     <div class="absolute inset-0 m-0 h-full w-full overflow-hidden rounded-none bg-transparent bg-[url('${item.imageUrl}')] bg-cover bg-center">
                         <div class="to-bg-black-10 absolute inset-0 h-full w-full bg-gradient-to-t from-black/80 via-black/50"></div>
                     </div>
@@ -219,49 +249,47 @@
                         <h2 class="mb-6 text-3xl font-medium text-white">${item.title}</h2>
                     </div>
                 `);
-                        resultsContainer.append(card);
-                    });
-                } else {
-                    resultsContainer.html('<p>No results found.</p>');
-                }
-            }
-
-            $(document).on('click', '.relative', function () {
-                var permission_id = $(this).data('id');
-
-                // Unbind the event handler to prevent multiple triggers
-                $(this).off('click');
-
-                $.ajax({
-                    url: '/set_session',
-                    method: 'POST',
-                    data: {
-                        id: permission_id
-                    },
-                    success: function (response) {
-                        // Optionally handle the success response
-                        console.log('Session value set successfully.');
-                        window.location.href = "{{ url_for('main.dashboard') }}";
-                    },
-                    error: function (xhr, status, error) {
-                        // Optionally handle the error response
-                        console.error('An error occurred:', error);
-                    }
-                });
+              resultsContainer.append(card);
             });
+          } else {
+            resultsContainer.html("<p>No results found.</p>");
+          }
+        }
 
-        })
+        $(document).on("click", ".relative", function () {
+          var permission_id = $(this).data("id");
 
-        // Auto-hide flash messages after 3 seconds
-        setTimeout(function () {
-            var flashContainer = document.getElementById('flash-container');
-            if (flashContainer) {
-                flashContainer.style.display = 'none';
-            }
-        }, 3000); // 3 seconds
+          // Unbind the event handler to prevent multiple triggers
+          $(this).off("click");
+
+          $.ajax({
+            url: "/set_session",
+            method: "POST",
+            data: {
+              id: permission_id,
+            },
+            success: function (response) {
+              // Optionally handle the success response
+              console.log("Session value set successfully.");
+              window.location.href = "{{ url_for('main.dashboard') }}";
+            },
+            error: function (xhr, status, error) {
+              // Optionally handle the error response
+              console.error("An error occurred:", error);
+            },
+          });
+        });
+      });
+
+      // Auto-hide flash messages after 3 seconds
+      setTimeout(function () {
+        var flashContainer = document.getElementById("flash-container");
+        if (flashContainer) {
+          flashContainer.style.display = "none";
+        }
+      }, 3000); // 3 seconds
     </script>
 
     {% block script %}scripts{% endblock %}
-</body>
-
+  </body>
 </html>

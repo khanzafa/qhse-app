@@ -114,8 +114,7 @@ def create_app():
     CORS(app, supports_credentials=True)  # Izinkan credentials (cookies) di-cross domain
 
     mail_manager.init_app(app)
-    # Selenium
-    # selenium_manager.initialize_driver()    
+ 
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
