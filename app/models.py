@@ -472,9 +472,8 @@ class suMenu(db.Model):
     title = db.Column(db.String(100), unique=True, nullable=False)
     url = db.Column(db.String(100), default="", nullable=True)
     file = db.Column(db.LargeBinary, default=None, nullable=True) # image
-    path = db.Column(db.String(120), index=True, default="", nullable=True)
     permission = db.relationship('Permission', backref=db.backref('sumenus', uselist=False))
     permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
     
     def __repr__(self):
-        return f'<GroupContact {self.title}>'
+        return f'<Menu {self.title}>'

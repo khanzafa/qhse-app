@@ -197,6 +197,7 @@ content %}
   document.querySelectorAll(".edit-btn").forEach((button) => {
     button.addEventListener("click", function () {
       const contactId = this.dataset.id;
+      console.log("Contact ID", contactId);
       const isGroup = this.dataset.isGroup;
       if (isGroup === "True") {
         console.log("isGroup", isGroup);
@@ -213,30 +214,11 @@ content %}
       document.getElementById("edit-name").value = this.dataset.name;
       document.getElementById("edit-description").value =
         this.dataset.description;
-      document.getElementById("edit-form").action = fetch(
-        `/contact/${contactId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}",
-          },
-          body: JSON.stringify({
-            _method: "PUT",
-            name: this.dataset.name,
-            phone_number: this.dataset.phone,
-            description: this.dataset.description,
-            is_group: isGroup,
-          }),
-        }
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data);
-        });
+      document.getElementById("edit-form").action = `/contact/${contactId}/edit`               
       document.getElementById("edit-modal").classList.remove("hidden");
     });
   });
+  
   document
     .getElementById("close-edit-modal")
     .addEventListener("click", function () {

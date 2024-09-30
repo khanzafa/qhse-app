@@ -88,6 +88,7 @@ main = Blueprint("main", __name__)
 GRAPHICS_DIR = "app/static/graphics"
 
 @main.route("/", methods=["GET"])
+@login_required
 def index():    
     # Get the permission IDs for the current user
     allowed_permission_ids = get_allowed_permission_ids()    

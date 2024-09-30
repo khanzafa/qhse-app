@@ -1,0 +1,210 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- Search bar -->
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-bold">Menu</h1>
+    <input
+      type="text"
+      name="search"
+      placeholder="Search"
+      class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      oninput="filterMenus()"
+    />
+  </div>
+
+  <!-- Display Menu Items -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for menu in menus %} {% if menu.url %}
+    <div
+      onclick="window.location.href='{{ menu.url }}'"
+      class="bg-white p-6 rounded-lg shadow-lg"
+    >
+      {% else %}
+      <div
+        onclick="setSession('{{ menu.permission_id }}')"
+        class="bg-white p-6 rounded-lg shadow-lg"
+      >
+        {% endif %}
+        <div class="flex items-center justify-center mb-4">
+          {% if menu.file %}
+          <img
+            src="data:image/png;base64,{{ menu.file | b64encode }}"
+            alt="{{ menu.title }}"
+            class="w-full h-48 object-cover rounded-lg"
+          />
+          {% else %}
+          <img
+            src="/static/img/spil_logo.svg"
+            alt="{{ menu.title }}"
+            class="w-full h-48 object-cover rounded-lg"
+          />
+          {% endif %}
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">
+          {{ menu.title }}
+        </h3>
+
+        <p class="text-gray-600 mt-4">
+          Permission:
+          <span class="font-medium">{{ menu.permission.name }}</span>
+        </p>
+
+        <!-- Edit/Delete Buttons -->
+        <div class="mt-6 flex justify-between"></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Floating Add Button -->
+    <div class="fixed bottom-8 right-8">
+      <button
+        class="bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        onclick="openModal()"
+      >
+        + Add Menu
+      </button>
+    </div>
+
+    <!-- Modal Background -->
+    <div
+      id="modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+    >
+      <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <!-- Modal Header -->
+        <h2 class="text-2xl font-bold mb-4">Add New Menu</h2>
+
+        <!-- Modal Content (Form) -->
+        <form
+          id="add-menu-form"
+          method="POST"
+          enctype="multipart/form-data"
+          class="space-y-6 bg-white p-6 rounded-lg shadow-lg"
+        >
+          {{ form.hidden_tag() }}
+
+          <div class="form-group">
+            {{ form.title.label(class="block text-sm font-medium text-gray-700")
+            }} {{ form.title(class="block w-full px-4 py-2 border
+            border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
+            focus:border-blue-500") }}
+          </div>
+
+          <div class="form-group">
+            {{ form.url.label(class="block text-sm font-medium text-gray-700")
+            }} {{ form.url(class="block w-full px-4 py-2 border border-gray-300
+            rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500")
+            }}
+          </div>
+
+          <div id="exist-permission" class="flex-group">
+            {{ form.permission_id.label(class="block text-sm font-medium text-gray-700 inline-block") }} 
+            <span id="open-p" class="text-sm text-blue-500 cursor-pointer ml-2" onclick="openPermission()">New Permission</span>
+            {{ form.permission_id(class="block w-full px-4
+            py-2 border border-gray-300 rounded-lg focus:ring-2
+            focus:ring-blue-500 focus:border-blue-500") }}
+          </div>
+
+
+          <div id="new-permission" class="flex-group hidden">
+              {{ form.permission_name.label(class="block text-sm font-medium text-gray-700 inline-block") }}
+              <span id="close-p" class="text-sm text-blue-500 cursor-pointer ml-2 hidden"
+              onclick="closePermission()">Existing Permission
+            </span>
+              {{ form.permission_name(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500")}}
+          </div>
+          
+          <div class="form-group">
+            {{ form.file.label(class="block text-sm font-medium text-gray-700")
+            }} {{ form.file(class="block w-full px-4 py-2 border border-gray-300
+            rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500")
+            }}
+          </div>
+          <!-- Modal Footer Buttons -->
+          <div class="flex justify-end space-x-4">
+            <button
+              type="button"
+              class="bg-gray-500 text-white px-4 py-2 rounded-lg"
+              onclick="closeModal()"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endblock %} {% block scripts %}
+  <script>
+    function openModal() {
+      document.getElementById("modal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+      document.getElementById("modal").classList.add("hidden");
+    }
+    
+    function openPermission() {
+      document.getElementById("new-permission").classList.remove("hidden");
+      document.getElementById("exist-permission").classList.add("hidden");
+      document.getElementById("open-p").classList.add("hidden");
+      document.getElementById("close-p").classList.remove("hidden");
+    }
+
+    function closePermission() {
+      document.getElementById("new-permission").classList.add("hidden");
+      document.getElementById("exist-permission").classList.remove("hidden");
+      document.getElementById("open-p").classList.remove("hidden");
+      document.getElementById("close-p").classList.add("hidden");
+    }
+
+    function filterMenus() {
+      let search = document.querySelector("input[name='search']").value;
+      let menus = document.querySelectorAll(".grid > div");
+
+      menus.forEach((menu) => {
+        let title = menu.querySelector("h3").textContent;
+        if (title.toLowerCase().includes(search.toLowerCase())) {
+          menu.style.display = "block";
+        } else {
+          menu.style.display = "none";
+        }
+      });
+    }
+
+    // Function to call api set session
+    function setSession(permissionId) {
+      // Prepare the form data
+      let formData = new FormData();
+      formData.append("id", permissionId);
+
+      // Send a POST request to the Flask backend
+      fetch("/set_session", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            // Handle success response
+            window.location.href = "{{ url_for('main.dashboard') }}";
+          } else {
+            // Handle error response
+            alert("Error: " + data.message);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("An error occurred while setting the session.");
+        });
+    }
+  </script>
+  {% endblock %}
+</div>

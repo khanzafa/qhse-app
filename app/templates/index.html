@@ -10,7 +10,7 @@
 
     <!-- Container -->
     <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-6">Available Menus</h1>
+        <h1 class="text-3xl font-bold mb-6">Salam Pacific Indonesia Lines</h1>
 
         <!-- Grid to display menus -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -21,7 +21,7 @@
                     {% if menu.file %}
                     <img src="data:image/jpeg;base64,{{ menu.file | b64encode | safe }}" alt="{{ menu.title }}" class="w-full h-32 object-cover mb-4">
                     {% else %}
-                    <img src="https://via.placeholder.com/640x360" alt="{{ menu.title }}" class="w-full h-32 object-cover mb-4">
+                    <img src="/static/img/spil_logo.svg" alt="{{ menu.title }}" class="w-full h-32 object-cover mb-4">
                     {% endif %}
                     <h2 class="text-xl font-semibold">{{ menu.title }}</h2>
                     <a href="javascript:void(0);" onclick="setSession('{{ menu.permission_id }}')" class="text-blue-500 hover:text-blue-600 mt-2 block">Go to {{ menu.title }}</a>

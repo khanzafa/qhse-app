@@ -11,10 +11,21 @@ db = SQLAlchemy()
 db.init_app(app)
 
 def seed_users(n):
+    admin = User(
+            name="Admin",
+            email="admin@spil.id",
+            role=UserRole.admin,
+            approved=True
+        )
+    
+    user.set_password("12345678")
+
+    db.session.add(user)
+    
     for _ in range(n):
         name = fake.name()
         email = fake.unique.email()
-        password = fake.password()
+        password = "12345678"
         
         # Random role between 'user', 'admin', 'guest'
         role = random.choice([UserRole.user, UserRole.admin, UserRole.guest])

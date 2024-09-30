@@ -108,15 +108,20 @@ def create_app():
     print("Main blueprint registered.")
     app.register_blueprint(auth_blueprint)
     print("Auth blueprint registered.")
-    for route in api_routes:
+    for route in app_routes:
         app.register_blueprint(route)
-    CORS(app, supports_credentials=True)  # Izinkan credentials (cookies) di-cross domain
+    CORS(
+        app, 
+        resources={r"/*": {"origins": "*"}},
+        origins= ["*"],
+        supports_credentials=True,     
+    )
 
     mail_manager.init_app(app)
     # selenium_manager.initialize_driver()    
 
     # Jalankan thread detektor sebelum memulai Flask
-    detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
+    # detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
     # detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan

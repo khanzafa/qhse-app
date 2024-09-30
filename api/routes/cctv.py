@@ -1,5 +1,6 @@
-from flask import render_template, redirect, url_for, flash, session, Response, Blueprint, jsonify, abort
+from flask import render_template, redirect, request, url_for, flash, session, Response, Blueprint, jsonify, abort
 from flask_login import login_required
+from flask_cors import CORS, cross_origin
 from app.models import CCTV
 from app import db
 from app.forms import AddCCTVForm, CCTVForm, EditCCTVForm
@@ -143,16 +144,16 @@ cctv_api_docs = {
     }
 }
 
-cctv_bp = Blueprint('cctv', __name__, url_prefix='/cctv')
+# cctv_bp = Blueprint('cctv', __name__, url_prefix='/cctv')
+cctv_bp = Blueprint('cctv', __name__)
 
 # CCTV    
-@cctv_bp.route('/', methods=['GET'])
-@cctv_bp.route('/<int:id>', methods=['GET'])
+@cctv_bp.route('/cctv/', methods=['GET'])
+@cctv_bp.route('/cctv/<int:id>', methods=['GET'])
 @swag_from(cctv_api_docs['view'])
 def view(id=None):
     session['permission_id'] = 2
-    logging.debug(f"Permission ID: {session.get('permission_id')}")
-    form = CCTVForm()    
+    logging.debug(f"Permission ID: {session.get('permission_id')}")   
     if id:
         cctv = CCTV.query.get_or_404(id)
         cctv = {
@@ -175,30 +176,20 @@ def view(id=None):
             })        
         logging.debug(f"CCTVs: {cctvs}")    
         return jsonify(cctvs), 200
-        # return render_template('manage_cctv.html', cameras=cctvs, form=form)
 
-@cctv_bp.route('/', methods=['POST'])
+@cctv_bp.route('/cctv/', methods=['POST'])
 @swag_from(cctv_api_docs['create'])
 def create():
-    form = CCTVForm()    
-    if form.validate_on_submit():
-        cctv = CCTV(
-            location=form.location.data,
-            type=form.type.data, 
-            ip_address=form.ip_address.data, 
-            status=0, 
-            permission_id=session.get('permission_id')
-        )
-        db.session.add(cctv)
-        db.session.commit()
-        flash('CCTV added successfully!')
-        return Response(status=201)
-        # return redirect(url_for('cctv.view'))
-    else:
-        logging.debug(f"Form validation failed: {form.errors}")
-    abort(400)
+    logging.info("Creating CCTV")
+    results_dummy = {
+        "location": "Lobby",
+        "type": "Dome",
+        "ip_address": "http://"
+    }
 
-@cctv_bp.route('/<int:id>', methods=['PUT'])
+    return jsonify(results_dummy), 201
+
+@cctv_bp.route('/cctv/<int:id>', methods=['PUT'])
 @swag_from(cctv_api_docs['edit'])
 def edit(id):
     cctv = CCTV.query.get_or_404(id)
@@ -219,7 +210,7 @@ def edit(id):
         logging.debug(f"Form validation failed: {form.errors}")
     abort(400)
 
-@cctv_bp.route('/<int:id>', methods=['DELETE'])
+@cctv_bp.route('/cctv/<int:id>', methods=['DELETE'])
 @swag_from(cctv_api_docs['delete'])
 def delete(id):
     logging.debug(f"Deleting CCTV with ID: {id}")
@@ -230,7 +221,7 @@ def delete(id):
     return Response(status=204)
     # return redirect(url_for('cctv.view'))
 
-@cctv_bp.route('/<int:cctv_id>/stream')
+@cctv_bp.route('/cctv/<int:cctv_id>/stream')
 @swag_from(cctv_api_docs['stream'])
 def stream(cctv_id):
     cctv = CCTV.query.get_or_404(cctv_id)

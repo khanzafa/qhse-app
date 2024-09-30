@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, session, Response, Blueprint, jsonify, abort
 from flask_login import login_required
-from app.models import CCTV
+from app.models import CCTV, Detector
 from app import db
 from app.forms import AddCCTVForm, CCTVForm, EditCCTVForm
 import cv2
@@ -166,12 +166,14 @@ def view(id=None):
     else:
         cctvs = []
         for cctv in CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).all():
+            detectors = Detector.query.filter(Detector.cctv_id == cctv.id).all()
             cctvs.append({
                 'id': cctv.id, 
                 'location': cctv.location, 
                 'type': cctv.type, 
                 'ip_address': cctv.ip_address, 
-                'status': cctv.status
+                'status': cctv.status,
+                'is_used': len(detectors) > 0
             })        
         # return jsonify(cctvs), 200
         return render_template('manage_cctv.html', cameras=cctvs, form=form)

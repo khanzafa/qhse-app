@@ -78,7 +78,21 @@ class NotificationRuleForm(FlaskForm):
         self.detector_id.choices = [(detector.id, detector.id) for detector in Detector.query.filter(Detector.permission_id == session.get('permission_id')).all()]
         self.contact_id.choices = [(contact.id, contact.name) for contact in Contact.query.filter(Contact.permission_id == session.get('permission_id')).all()]
         self.message_template_id.choices = [(template.id, template.name) for template in MessageTemplate.query.filter(MessageTemplate.permission_id == session.get('permission_id')).all()]
-        
+
+class MenuForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    url = StringField('URL')
+    file = FileField('File')
+    permission_id = SelectField('Permission', coerce=int, validators=[DataRequired()])    
+    permission_name = StringField('Permission Name', default=None)
+    submit = SubmitField('Save')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.permission_id.choices = [(permission.id, permission.name) for permission in Permission.query.all()]        
+
+    def validate_on_submit(self, extra_validators=None) :
+        return super().validate_on_submit(extra_validators)
 
 class OTPForm(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired()])
@@ -105,8 +119,7 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('Email already registered.')
-        
-        
+             
 class AccessForm(FlaskForm):
     # This will create checkboxes for all permissions dynamically
     permissions = SelectMultipleField(

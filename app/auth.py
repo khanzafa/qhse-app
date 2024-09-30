@@ -16,7 +16,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('admin.su'))
+        return redirect(url_for('admin.menu'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -33,7 +33,7 @@ def login():
         
         login_user(user)
         if user.is_admin():
-            return redirect(url_for('admin.su'))    
+            return redirect(url_for('admin.menu'))    
         return redirect(url_for('main.index'))        
     return render_template('login.html', form=form)
 
