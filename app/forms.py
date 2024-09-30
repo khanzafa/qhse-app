@@ -83,9 +83,10 @@ class NotificationRuleForm(FlaskForm):
 class MenuForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     url = StringField('URL')
-    file = FileField('File')
+    file = FileField('Image')
     permission_id = SelectField('Permission', coerce=int, validators=[DataRequired()])    
     permission_name = StringField('Permission Name', default=None)
+    permission_description = TextAreaField('Permission Description', default=None, validators=[Length(max=100)])
     submit = SubmitField('Save')
 
     def __init__(self, *args, **kwargs):

@@ -25,7 +25,7 @@ class Gesture:
             "right_knee": 14,
             "left_ankle": 15,
             "right_ankle": 16
-        }
+        }        
     
     def calculate_angle(a, b, c):
         ab = np.array(a) - np.array(b)

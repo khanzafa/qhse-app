@@ -26,9 +26,15 @@
         <div id="logo" class="text-xl font-semibold">
           <img src="/static/img/spil_logo.svg" alt="Logo" class="h-8" />
         </div>
+        {% if current_user.is_admin() and "/admin" in request.path %}
+        <span class="text-2xl font-bold ml-3 tracking-wide text-gray-800"
+          >Admin Panel</span
+        >
+        {% else %}
         <span class="text-2xl font-bold ml-3 tracking-wide text-gray-800"
           >{{permission_name }}</span
         >
+        {% endif %}
       </div>
 
       <!-- Running Text -->
@@ -58,11 +64,13 @@
             class="w-10 h-10 rounded-full border border-gray-300"
           />
           <span class="text-gray-700 font-medium">{{ current_user.name }}</span>
-          <a
-            href="{{ url_for('auth.logout') }}"
-            class="text-red-600 hover:text-red-800 font-semibold"
-            >Logout</a
-          >
+        <!-- Logout -->
+        <a
+          href="{{ url_for('auth.logout') }}"
+          class="text-red-500 hover:text-red-600"
+        >
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
         </div>
       </div>
     </header>
@@ -74,39 +82,8 @@
         class="fixed top-16 left-0 h-full bg-red-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0"
       >
         <nav class="mt-4">
-          {% if current_user.is_admin and "/admin" in request.path %}
-          <!-- HOME -->
-          <a
-            href="{{ url_for('admin.menu') }}"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/admin/menu' in request.path else '' }}"
-          >
-            <i class="fa-solid fa-house mr-3"></i>
-            Menu
-          </a>
-
-          <!-- Register Approval -->
-          <a
-            href="{{ url_for('admin.user_approval') }}"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/admin/user-approval' in request.path else '' }}"
-          >
-            <i class="fa-solid fa-users-gear mr-3"></i>
-            User Approval
-          </a>
-
-          <!-- Grant Access to user -->
-          <a
-            href="{{ url_for('admin.user_permission') }}"
-            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/admin/user-permission' in request.path else '' }}"
-          >
-            <i class="fa-solid fa-list-check mr-3"></i>
-            Grant access to users
-          </a>
-
-          {% else %}
-
-          <!-- Menu -->
-          <!-- check kalau role admin balik ke manu admin -->
-          {% if current_user.is_admin %}
+          <!-- Menu -->          
+          {% if current_user.is_admin() %}
           <a
             href="{{ url_for('admin.menu') }}"
             class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/home' in request.path else '' }}"
@@ -124,6 +101,24 @@
           </a>
           {% endif %}
 
+          {% if current_user.is_admin() and "/admin" in request.path %}
+          <!-- Register Approval -->
+          <a
+            href="{{ url_for('admin.user_approval') }}"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/admin/user-approval' in request.path else '' }}"
+          >
+            <i class="fa-solid fa-users-gear mr-3"></i>
+            User Approval
+          </a>
+          <!-- Grant Access to user -->
+          <a
+            href="{{ url_for('admin.user_permission') }}"
+            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/admin/user-permission' in request.path else '' }}"
+          >
+            <i class="fa-solid fa-list-check mr-3"></i>
+            Grant access to users
+          </a>
+          {% else %}          
           <!-- Master Menu -->
           <div
             x-data="{ open: {{ 'true' if '/cctv' in request.path else 'false' }} }"
@@ -139,7 +134,7 @@
                 :class="open ? 'rotate-90' : 'rotate-0'"
                 class="inline-block transform transition-transform duration-200 ml-auto"
               >
-                >
+              <i class="fas fa-angle-right"></i>
               </span>
             </a>
 
@@ -209,9 +204,7 @@
           </div>
 
           <!-- Report -->
-          <div
-            x-data="{ open: {{ 'true' if '/report' in request.path else 'false' }} }"
-          >
+          <div x-data="{ open: {{ 'true' if '/report' in request.path else 'false' }} }">
             <a
               href="#"
               @click.prevent="open = !open"
@@ -223,7 +216,7 @@
                 :class="open ? 'rotate-90' : 'rotate-0'"
                 class="inline-block transform transition-transform duration-200 ml-auto"
               >
-                >
+                <i class="fas fa-angle-right"></i>
               </span>
             </a>
 

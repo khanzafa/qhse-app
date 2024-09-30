@@ -100,7 +100,7 @@ def menu():
                 flash("Please select a permission!", "danger")
                 return redirect(url_for("admin.menu"))            
             else:
-                permission = Permission(name=form.permission_name.data)
+                permission = Permission(name=form.permission_name.data, description=form.permission_description.data)
                 db.session.add(permission)
                 db.session.commit()
                 permission_id = permission.id
