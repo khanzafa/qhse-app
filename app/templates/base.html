@@ -97,16 +97,16 @@
 
               <!-- Dropdown: Model -->
               <div x-show="open" class="pl-10">
-                <a href="{{ url_for('weight.view') }}"
-                  class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/model/manage' in request.path else '' }}">
-                  <i class="fas fa-cube mr-3"></i>
-                  Model
-                </a>
                 <a href="{{ url_for('detector.view') }}"
-                  class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/detector/manage' in request.path else '' }}">
-                  <i class="fas fa-crosshairs mr-3"></i>
-                  Detector
-                </a>
+                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/detector/manage' in request.path else '' }}">
+                <i class="fas fa-crosshairs mr-3"></i>
+                Detector
+              </a>
+              <a href="{{ url_for('weight.view') }}"
+                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/model/manage' in request.path else '' }}">
+                <i class="fas fa-cube mr-3"></i>
+                Model
+              </a>
                 <a href="{{ url_for('contact.view') }}"
                   class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/contact/manage' in request.path else '' }}">
                   <i class="fas fa-address-book mr-3"></i>
