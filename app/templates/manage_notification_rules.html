@@ -12,9 +12,8 @@
           onclick="openMessageModal()"
         ></i>
       </div>
-      <ul class="space-y-4">
+      <div class="space-y-4">
         {% for message in messages %}
-        <li>
           <div
             class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition"
           >
@@ -50,9 +49,8 @@
     {{ message.template }}</pre
             >
           </div>
-        </li>
         {% endfor %}
-      </ul>
+      </div>
     </div>
   </div>
 
@@ -137,18 +135,29 @@
       {{ message_form.hidden_tag() }}
       <input type="hidden" name="rule_id" id="message_id" value="" />
       <div>
-        <label for="name" class="block font-medium text-gray-700"
-          >Message Name</label
-        >
-        {{ message_form.name(class_='mt-1 block w-full rounded-md
-        border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500') }}
+        {{ 
+          message_form.name.label(
+            class_='block font-medium text-gray-700'
+          )       
+        }}
+        {{ 
+          message_form.name(
+            class_='mt-1 h-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500'
+          ) 
+        }}
       </div>
       <div>
-        <label for="template" class="block font-medium text-gray-700"
-          >Message Template</label
-        >
-        {{ message_form.template(class_='mt-1 block w-full rounded-md
-        border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500') }}
+        {{ 
+          message_form.template.label(
+            class_='block font-medium text-gray-700'
+          ) 
+        }}
+        {{ 
+          message_form.template(
+            class_='mt-1 block w-full h-60 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500'
+                        
+          ) 
+        }}
         <small class="text-gray-500"
           >Use the following placeholders: @detector_id, @name,
           @timestamp</small

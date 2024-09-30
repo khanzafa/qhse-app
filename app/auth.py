@@ -23,12 +23,12 @@ def login():
         
         if user is None or not user.check_password(form.password.data):
             # if user.password_hash != form.password.data:
-            flash('Invalid email or password')
+            flash('Invalid email or password', 'danger')
             return redirect(url_for('auth.login'))
             
         if not user.approved:
             print('Not Approved')
-            flash('Your account is not approved. Please contact the administrator.')
+            flash('Your account is not approved. Please contact the administrator.', 'danger')
             return redirect(url_for('auth.login'))
         
         login_user(user)
@@ -47,7 +47,7 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Registration successful')
+        flash('Registration successful', 'success')
         return redirect(url_for('auth.login'))
     return render_template('register.html', form=form)
 

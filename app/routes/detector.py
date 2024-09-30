@@ -11,158 +11,11 @@ from flasgger import swag_from
 
 logging.basicConfig(level=logging.DEBUG)
 
-detector_api_docs = {
-    "view" : {
-        "parameters": [
-            {
-                "name": "id",
-                "in": "path",
-                "type": "integer",
-                "required": False,
-                "description": "Numeric ID of the detector to get"
-            }
-        ],
-        "definitions": {
-            "Detector": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "cctv_id": {
-                        "type": "integer"
-                    },
-                    "weight_id": {
-                        "type": "integer"
-                    },
-                    "running": {
-                        "type": "boolean"
-                    },
-                    "permission_id": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "responses": {
-            "200": {
-                "description": "A list of detectors or a specific detector",
-                "schema": {
-                    "$ref": "#/definitions/Detector"
-                }
-            },
-            "404": {
-                "description": "Detector not found"
-            }
-        }
-    },
-    "create" : {
-        "parameters": [
-            {
-                "name": "cctv_id",
-                "in": "formData",
-                "type": "integer",
-                "required": True,
-                "description": "ID of the CCTV"
-            },
-            {
-                "name": "weight_id",
-                "in": "formData",
-                "type": "integer",
-                "required": True,   
-                "description": "ID of the weight"
-            },
-            {
-                "name": "running",
-                "in": "formData",
-                "type": "boolean",
-                "required": True,
-                "description": "Running status of the detector"
-            }
-        ],
-        "responses": {
-            "201": {
-                "description": "Detector added successfully"
-            }
-        }
-    },
-    "edit" : {
-        "parameters": [
-            {
-                "name": "id",
-                "in": "path",
-                "type": "integer",
-                "required": True,
-                "description": "Numeric ID of the detector to edit"
-            },
-            {
-                "name": "cctv_id",
-                "in": "formData",
-                "type": "integer",
-                "required": True,
-                "description": "ID of the CCTV"
-            },
-            {
-                "name": "weight_id",
-                "in": "formData",
-                "type": "integer",
-                "required": True,
-                "description": "ID of the weight"
-            },
-            {
-                "name": "running",
-                "in": "formData",
-                "type": "boolean",
-                "required": True,
-                "description": "Running status of the detector"
-            }
-        ],
-        "responses": {
-            "200": {
-                "description": "Detector updated successfully"
-            }
-        }
-    },
-    "delete" : {
-        "parameters": [
-            {
-                "name": "id",
-                "in": "path",
-                "type": "integer",
-                "required": True,
-                "description": "Numeric ID of the detector to delete"
-            }
-        ],
-        "responses": {
-            "204": {
-                "description": "Detector deleted successfully"
-            }
-        }
-    },
-    "stream" : {
-        "parameters": [
-            {
-                "name": "detector_id",
-                "in": "path",
-                "type": "integer",
-                "required": True,
-                "description": "Numeric ID of the detector to stream"
-            }
-        ],
-        "responses": {
-            "200": {
-                "description": "Detector stream"
-            }
-        }
-    }
-}
-
 detector_bp = Blueprint('detector', __name__, url_prefix='/detector')
 
 # DETECTOR
 @detector_bp.route('/', methods=['GET'])
 @detector_bp.route('/<int:id>', methods=['GET'])
-@swag_from(detector_api_docs['view'])
 @login_required
 def view(id=None):
     if id:
@@ -190,7 +43,6 @@ def view(id=None):
         return render_template('manage_detector.html', detectors=detectors, form=DetectorForm())
 
 @detector_bp.route('/', methods=['POST'])
-@swag_from(detector_api_docs['create'])
 @login_required
 def create():
     form = DetectorForm()
@@ -203,7 +55,7 @@ def create():
         )
         db.session.add(detector)
         db.session.commit()
-        flash('Detector added successfully!')
+        flash('Detector added successfully!', 'success')
         # return Response(status=201)
         return redirect(url_for('detector.view'))
     else:
@@ -211,7 +63,6 @@ def create():
     abort(400)
 
 @detector_bp.route('/<int:id>/edit', methods=['POST'])
-@swag_from(detector_api_docs['edit'])
 @login_required
 def edit(id):
     detector = Detector.query.get_or_404(id)
@@ -221,7 +72,7 @@ def edit(id):
         detector.weight_id = form.weight_id.data or detector.weight_id
         detector.running = form.running.data
         db.session.commit()
-        flash('Detector updated successfully!')
+        flash('Detector updated successfully!', 'success')
         # return Response(status=200)
         return redirect(url_for('detector.view'))
     else:
@@ -229,18 +80,16 @@ def edit(id):
     abort(400)
 
 @detector_bp.route('/<int:id>/delete', methods=['POST'])
-@swag_from(detector_api_docs['delete'])
 @login_required
 def delete(id):
     detector = Detector.query.get_or_404(id)
     db.session.delete(detector)
     db.session.commit()
-    flash('Detector deleted successfully!')
+    flash('Detector deleted successfully!', 'success')
     # return Response(status=204)
     return redirect(url_for('detector.view'))
 
 @detector_bp.route('/<int:detector_id>/stream')
-@swag_from(detector_api_docs['stream'])
 @login_required
 def detector_stream(detector_id):
     from app import detector_manager

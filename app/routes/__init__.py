@@ -7,32 +7,6 @@ from app.routes.notification import notification_bp
 from app.routes.report import report_bp
 from app.routes.weight import weight_bp
 from app.routes.admin import admin_bp
-
-app_routes = [
-    cctv_bp,
-    contact_bp,
-    detector_bp,
-    document_bp,
-    message_bp,
-    notification_bp,
-    report_bp,
-    weight_bp,
-    admin_bp,
-
-]
-
-
-
-import base64
-import io
-import os
-import re
-import cv2
-import pandas as pd
-
-# import plotly.graph_objects as go
-# import plotly.io as pio
-import requests
 from datetime import datetime, timedelta
 from collections import Counter
 from flask import (
@@ -64,28 +38,23 @@ from app.models import (
     Weight,
     suMenu,
 )
-from app.forms import (
-    AccessForm,
-    AddCCTVForm,
-    EditCCTVForm,
-    MessageTemplateForm,
-    ModelForm,
-    NotificationRuleForm,
-    SelectCCTVForm,
-    ContactForm,
-    DetectorForm,
-    LoginForm,
-    RegistrationForm,
-)
-# from app import gesture_detector, ppe_detector, unfocused_detector
 from flask_login import current_user, login_user, logout_user, login_required
 import logging
-
 from utils.auth import get_allowed_permission_ids
 
+app_routes = [
+    cctv_bp,
+    contact_bp,
+    detector_bp,
+    document_bp,
+    message_bp,
+    notification_bp,
+    report_bp,
+    weight_bp,
+    admin_bp,
+]
+
 main = Blueprint("main", __name__)
-# current_user = {'name': 'John'}
-GRAPHICS_DIR = "app/static/graphics"
 
 @main.route("/", methods=["GET"])
 @login_required
@@ -98,7 +67,6 @@ def index():
     
     # Render the index template and pass the menu data
     return render_template("index.html", menus=menus)
-
 
 @main.route('/report/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -182,11 +150,6 @@ def dashboard():
         object_types=object_types,
         object_counts=object_counts
     )
-
-
-
-
-
 
 @main.route('/set_session', methods=['POST'])
 def set_session():

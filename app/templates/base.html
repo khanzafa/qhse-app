@@ -64,13 +64,13 @@
             class="w-10 h-10 rounded-full border border-gray-300"
           />
           <span class="text-gray-700 font-medium">{{ current_user.name }}</span>
-        <!-- Logout -->
-        <a
-          href="{{ url_for('auth.logout') }}"
-          class="text-red-500 hover:text-red-600"
-        >
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
+          <!-- Logout -->
+          <a
+            href="{{ url_for('auth.logout') }}"
+            class="text-red-500 hover:text-red-600"
+          >
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
         </div>
       </div>
     </header>
@@ -82,7 +82,7 @@
         class="fixed top-16 left-0 h-full bg-red-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0"
       >
         <nav class="mt-4">
-          <!-- Menu -->          
+          <!-- Menu -->
           {% if current_user.is_admin() %}
           <a
             href="{{ url_for('admin.menu') }}"
@@ -99,9 +99,8 @@
             <i class="fas fa-home mr-3"></i>
             Menu
           </a>
-          {% endif %}
-
-          {% if current_user.is_admin() and "/admin" in request.path %}
+          {% endif %} {% if current_user.is_admin() and "/admin" in request.path
+          %}
           <!-- Register Approval -->
           <a
             href="{{ url_for('admin.user_approval') }}"
@@ -118,10 +117,16 @@
             <i class="fa-solid fa-list-check mr-3"></i>
             Grant access to users
           </a>
-          {% else %}          
+          {% else %}
           <!-- Master Menu -->
           <div
-            x-data="{ open: {{ 'true' if '/cctv' in request.path else 'false' }} }"
+            x-data="{ open: 
+              {{ 'true' if '/cctv' in request.path 
+              or '/weight' in request.path
+              or '/detector' in request.path
+              or '/contact' in request.path
+              or '/notification' in request.path              
+              else 'false' }} }"
           >
             <a
               href="#"
@@ -134,7 +139,7 @@
                 :class="open ? 'rotate-90' : 'rotate-0'"
                 class="inline-block transform transition-transform duration-200 ml-auto"
               >
-              <i class="fas fa-angle-right"></i>
+                <i class="fas fa-angle-right"></i>
               </span>
             </a>
 
@@ -151,7 +156,12 @@
 
               <!-- Object Detection -->
               <div
-                x-data="{ open: {{ 'true' if '/weight' in request.path else 'false' }} }"
+                x-data="{ open: 
+                  {{ 'true' if '/weight' in request.path 
+                  or '/detector' in request.path
+                  or '/contact' in request.path
+                  or '/notification' in request.path                  
+                  else 'false' }} }"
               >
                 <a
                   href="#"
@@ -172,28 +182,28 @@
                 <div x-show="open" class="pl-10">
                   <a
                     href="{{ url_for('weight.view') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/model/manage' in request.path else '' }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/weight' in request.path else '' }}"
                   >
                     <i class="fas fa-cube mr-3"></i>
                     Model
                   </a>
                   <a
                     href="{{ url_for('detector.view') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/detector/manage' in request.path else '' }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/detector' in request.path else '' }}"
                   >
                     <i class="fas fa-crosshairs mr-3"></i>
                     Detector
                   </a>
                   <a
                     href="{{ url_for('contact.view') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/contact/manage' in request.path else '' }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/contact' in request.path else '' }}"
                   >
                     <i class="fas fa-address-book mr-3"></i>
                     Contact
                   </a>
                   <a
                     href="{{ url_for('notification.view') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/object-detection/message/manage' in request.path else '' }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center {{ 'bg-gray-700' if '/notification' in request.path else '' }}"
                   >
                     <i class="fas fa-envelope mr-3"></i>
                     Notification
@@ -204,7 +214,9 @@
           </div>
 
           <!-- Report -->
-          <div x-data="{ open: {{ 'true' if '/report' in request.path else 'false' }} }">
+          <div
+            x-data="{ open: {{ 'true' if '/report' in request.path else 'false' }} }"
+          >
             <a
               href="#"
               @click.prevent="open = !open"
@@ -246,28 +258,33 @@
 
     <!-- Main Content -->
     <main class="flex-1 p-10 ml-64">
-      {% for mesg in get_flashed_messages() %}
-      <div
-        class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative"
-        role="alert"
-      >
-        <span class="block sm:inline">{{ mesg }}</span>
-        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-          <svg
-            class="fill-current h-6 w-6 text-yellow-500 cursor-pointer"
-            role="button"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            onclick="this.parentElement.parentElement.style.display='none'"
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, mesg in messages %}
+          <div
+            id="flash-container"
+            class="
+              {% if category == 'success' %}
+                bg-green-200 text-green-800 border-green-500
+              {% elif category == 'info' %}
+                bg-blue-200 text-blue-800 border-blue-500
+              {% elif category == 'danger' %}
+                bg-red-200 text-red-800 border-red-500
+              {% elif category == 'error' %}
+                bg-red-200 text-red-800 border-red-500
+              {% else %}
+                bg-gray-200 text-gray-800 border-gray-500
+              {% endif %}
+              border-l-4 p-4 mt-4 rounded-md
+            "
           >
-            <title>Close</title>
-            <path
-              d="M14.348 5.652a1 1 0 00-1.414 0L10 8.586 7.066 5.652a1 1 0 10-1.414 1.414L8.586 10l-2.934 2.934a1 1 0 101.414 1.414L10 11.414l2.934 2.934a1 1 0 001.414-1.414L11.414 10l2.934-2.934a1 1 0 000-1.414z"
-            />
-          </svg>
-        </span>
-      </div>
-      {% endfor %} {% block content %}{% endblock %}
+            <p>{{ mesg }}</p>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+      
+      {% block content %}{% endblock %}
     </main>
 
     <!-- Block Modal -->
@@ -290,118 +307,13 @@
         sidebar.classList.toggle("-translate-x-full");
       });
 
-      $(document).ready(function () {
-        showAllCards();
-        // search cards
-        $("#search-form").on("submit", function (event) {
-          event.preventDefault(); // Prevent form submission
-
-          var query = $("#search-dropdown").val();
-
-          if (query.trim() === "") {
-            // If the query is empty, show all cards
-            showAllCards();
-          } else {
-            // Perform the search
-            $.ajax({
-              url: "/admin/su/search", // Replace with your search endpoint
-              type: "GET",
-              contentType: "application/json",
-              data: { query: query },
-              success: function (data) {
-                displayResults(data);
-              },
-              error: function (xhr, status, error) {
-                console.error("Error fetching search results:", error);
-                $("#search-results").html(
-                  '<p class="text-red-500">Error loading search results. Please try again.</p>'
-                );
-              },
-            });
-          }
-        });
-
-        function showAllCards() {
-          // Fetch all cards from the server or show the existing ones
-          $.ajax({
-            url: "/admin/su/all-cards", // Replace with the endpoint to fetch all cards
-            type: "GET",
-            success: function (data) {
-              displayResults(data);
-            },
-            error: function (xhr, status, error) {
-              console.error("Error fetching all cards:", error);
-            },
-          });
-        }
-
-        function displayResults(data) {
-          var resultsContainer = $("#search-results");
-          resultsContainer.empty(); // Clear previous results
-          if (Array.isArray(data) && data.length) {
-            $.each(data, function (index, item) {
-              var card = $("<a>", {
-                href: "javascript:void(0);",
-                class:
-                  "relative grid h-64 sm:h-72 md:h-60 w-full sm:w-[18rem] md:w-[20rem] flex-col items-end justify-center overflow-hidden rounded-lg bg-white shadow-md hover:shadow-2xl hover:scale-105 hover:border hover:border-slate-300 hover:brightness-110 transition-all duration-300 cursor-pointer",
-                "data-id": item.permission_id,
-              }).html(`
-                    <div class="absolute inset-0 m-0 h-full w-full overflow-hidden rounded-none bg-transparent bg-[url('${item.imageUrl}')] bg-cover bg-center">
-                        <div class="to-bg-black-10 absolute inset-0 h-full w-full bg-gradient-to-t from-black/80 via-black/50"></div>
-                    </div>
-                    <div class="relative text-center p-6 px-6 py-14 md:px-12">
-                        <h2 class="mb-6 text-3xl font-medium text-white">${item.title}</h2>
-                    </div>
-                `);
-              resultsContainer.append(card);
-            });
-          } else {
-            resultsContainer.html("<p>No results found.</p>");
-          }
-        }
-
-        $(document).on("click", ".relative", function () {
-          var permission_id = $(this).data("id");
-
-          // Unbind the event handler to prevent multiple triggers
-          $(this).off("click");
-
-          $.ajax({
-            url: "/set_session",
-            method: "POST",
-            data: {
-              id: permission_id,
-            },
-            success: function (response) {
-              // Optionally handle the success response
-              console.log("Session value set successfully.");
-              window.location.href = "{{ url_for('main.dashboard') }}";
-            },
-            error: function (xhr, status, error) {
-              // Optionally handle the error response
-              console.error("An error occurred:", error);
-            },
-          });
-        });
-      });
-
       // Auto-hide flash messages after 3 seconds
-      setTimeout(function () {
-        var flashContainer = document.getElementById("flash-container");
+      setTimeout(() => {
+        const flashContainer = document.getElementById("flash-container");
         if (flashContainer) {
           flashContainer.style.display = "none";
         }
-      }, 3000); // 3 seconds
-    </script>
-
-    <script>
-      // Auto-hide flash messages after 3 seconds
-      setTimeout(function () {
-        var flashContainer = document.getElementById("flash-container");
-        if (flashContainer) {
-          flashContainer.style.display = "none";
-        }
-      }, 3000); // 3 seconds
+      }, 3000);
     </script>
     {% endblock %}
   </body>

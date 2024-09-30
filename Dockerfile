@@ -8,13 +8,13 @@ WORKDIR /app
 COPY . /app
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r linux-requirements.txt
 
 # Make port 80 available to the world outside this container
 EXPOSE 5000
 
 # Define environment variable
-ENV DATABASE_URL=postgresql://postgres:110303@localhost/qhse_app GROQ_API_KEY='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' HUGGINGFACEHUB_API_TOKEN=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 GOOGLE_API_KEY=AIzaSyCYJFCq7gIcueWwlZsmxu3pmFFkoyMHiBc
+ENV FLASK_APP=app/__init__.py
 
-# Run app.py when the container launches
-CMD ["flask", "run"]
+# Run the application
+CMD ["flask", "run", "--host=0.0.0.0"]
