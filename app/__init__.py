@@ -35,6 +35,8 @@ socketio = SocketIO()
 detector_manager = DetectorManager(session)
 detector_thread = None  # Global variable to store the detector thread
 
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+
 def run_detectors(app):
     detector_manager.initialize_detectors(app)
 
@@ -62,8 +64,7 @@ def create_app():
     app.config.from_object('config.Config')
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     app.config["WTF_CSRF_ENABLED"] = False
-    # Konfigurasi direktori upload
-    UPLOAD_FOLDER = 'uploads'
+    # Konfigurasi direktori upload    
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     
     app.secret_key='haho'    

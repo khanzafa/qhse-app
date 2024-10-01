@@ -155,7 +155,7 @@ class Weight(db.Model):
 class Detector(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cctv_id = db.Column(db.Integer, db.ForeignKey('cctv.id'))
-    cctv = db.relationship('CCTV', backref=db.backref('detectors', uselist=False))
+    cctv = db.relationship('CCTV', backref=db.backref('detectors', uselist=False, lazy=True))
     detector_type = db.relationship('DetectorType', backref=db.backref('detectors', uselist=False))
     detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
     weight = db.relationship('Weight', backref=db.backref('detectors', uselist=False))
@@ -309,52 +309,51 @@ class Detector(db.Model):
         return detected_objects, annotated_frame, detected_objects_tracker, frame_number
  
 
-# Event listener
-from threading import local
+# # EVENT LISTENERS
+# # Thread-local storage for session data
+# from threading import local
+# _thread_local = local()
 
-# Thread-local storage for session data
-_thread_local = local()
+# @event.listens_for(Session, 'before_commit')
+# def before_commit_detector(session):
+#     _thread_local.new = list(session.new)
+#     _thread_local.dirty = list(session.dirty)
+#     _thread_local.deleted = list(session.deleted)
 
-@event.listens_for(Session, 'before_commit')
-def before_commit_detector(session):
-    _thread_local.new = list(session.new)
-    _thread_local.dirty = list(session.dirty)
-    _thread_local.deleted = list(session.deleted)
+# @event.listens_for(Session, 'after_commit')
+# def after_commit_detector(session):
+#     # logging.info("After commit event for Detector")
+#     # logging.info(f"Session new: {_thread_local.new}")
+#     # logging.info(f"Session dirty: {_thread_local.dirty}")
+#     # logging.info(f"Session deleted: {_thread_local.deleted}")
+#     from app import detector_manager, socketio
+#     for obj in _thread_local.new:
+#         if isinstance(obj, Detector) and 'running' in obj.__dict__:
+#             socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
+#             detector_manager.update_detectors()
+#         if isinstance(obj, CCTV) and 'status' in obj.__dict__:
+#             socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
+#             detector_manager.update_detectors()
+#     for obj in _thread_local.dirty:
+#         if isinstance(obj, Detector) and 'running' in obj.__dict__:
+#             socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
+#             detector_manager.update_detectors()
+#         if isinstance(obj, CCTV) and 'status' in obj.__dict__:
+#             socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
+#             detector_manager.update_detectors()
+#     for obj in _thread_local.deleted:
+#         if isinstance(obj, Detector):
+#             socketio.emit('status_update', {'detector_id': obj.id, 'running': False})
+#             detector_manager.update_detectors()
+#         if isinstance(obj, CCTV):
+#             socketio.emit('status_update', {'cctv_id': obj.id, 'status': False})
+#             detector_manager.update_detectors()
 
-@event.listens_for(Session, 'after_commit')
-def after_commit_detector(session):
-    # logging.info("After commit event for Detector")
-    # logging.info(f"Session new: {_thread_local.new}")
-    # logging.info(f"Session dirty: {_thread_local.dirty}")
-    # logging.info(f"Session deleted: {_thread_local.deleted}")
-    from app import detector_manager, socketio
-    for obj in _thread_local.new:
-        if isinstance(obj, Detector) and 'running' in obj.__dict__:
-            socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
-            detector_manager.update_detectors()
-        if isinstance(obj, CCTV) and 'status' in obj.__dict__:
-            socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
-            detector_manager.update_detectors()
-    for obj in _thread_local.dirty:
-        if isinstance(obj, Detector) and 'running' in obj.__dict__:
-            socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
-            detector_manager.update_detectors()
-        if isinstance(obj, CCTV) and 'status' in obj.__dict__:
-            socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
-            detector_manager.update_detectors()
-    for obj in _thread_local.deleted:
-        if isinstance(obj, Detector):
-            socketio.emit('status_update', {'detector_id': obj.id, 'running': False})
-            detector_manager.update_detectors()
-        if isinstance(obj, CCTV):
-            socketio.emit('status_update', {'cctv_id': obj.id, 'status': False})
-            detector_manager.update_detectors()
+#     # Clear thread-local storage after commit
+#     _thread_local.new = []
+#     _thread_local.dirty = []
+#     _thread_local.deleted = []
 
-    # Clear thread-local storage after commit
-    _thread_local.new = []
-    _thread_local.dirty = []
-    _thread_local.deleted = []
-            
 
 class DetectorType(db.Model):
     id = db.Column(db.Integer, primary_key=True)

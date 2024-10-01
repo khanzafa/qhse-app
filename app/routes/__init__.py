@@ -1,3 +1,4 @@
+import os
 from app.routes.cctv import cctv_bp
 from app.routes.contact import contact_bp
 from app.routes.detector import detector_bp
@@ -160,6 +161,22 @@ def set_session():
         session['permission_id'] = permission_id
         return jsonify({'status': 'success'}), 200
     return jsonify({'status': 'error', 'message': 'No ID provided'}), 400
+
+@main.route('/uploads/<filename>')
+def uploaded_file(filename):
+    try:
+        from app import UPLOAD_FOLDER
+        return send_from_directory(UPLOAD_FOLDER, filename)
+    except FileNotFoundError:
+        abort(404)
+
+@main.route('/weights/<filename>')
+def weights(filename):
+    try:
+        UPLOAD_FOLDER = os.path.join(os.getcwd(), 'weights')
+        return send_from_directory(UPLOAD_FOLDER, filename)
+    except FileNotFoundError:
+        abort(404)
 
 @main.app_context_processor
 def inject_session_permission():

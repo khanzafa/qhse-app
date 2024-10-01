@@ -190,6 +190,7 @@
   </button>
 
   {% block scripts %}
+{{ super() }}
   <script>
     const sidebar = document.getElementById("sidebar");
     const toggleButton = document.getElementById("sidebarToggle");

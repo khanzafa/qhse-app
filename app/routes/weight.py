@@ -46,22 +46,38 @@ def view(id=None):
         #     })        
         # return jsonify(weights), 200
         weights = Weight.query.filter(Weight.permission_id == session.get('permission_id')).all()
-        return render_template('manage_model.html', models=weights, form=ModelForm())
+        form = ModelForm()
+        form.detector_type_id.choices.insert(0, (0, 'Select Detector Type'))
+        return render_template('manage_model.html', models=weights, form=form)
     
 @weight_bp.route('/', methods=['POST'])
 @login_required
 def create():
     form = ModelForm()
-    if form.validate_on_submit():
-        permission_id_dir = os.path.join('weights', session.get('permission_id'))
+    if form.detector_type_id.data == 0:
+            if form.detector_type_name.data is None or form.detector_type_name.data == "":
+                flash("Please select a detector type!", "danger")
+                return redirect(url_for("weight.view"))            
+            else:
+                detector_type = DetectorType(name=form.detector_type_name.data)
+                db.session.add(detector_type)
+                db.session.commit()
+                detector_type_id = detector_type.id
+    else:
+        detector_type_id = form.detector_type_id.data
+
+    if form.is_submitted():
+        permission_id_dir = os.path.join('weights', session.get('permission_name'))
+        print("permission_id_dir:", permission_id_dir)
         if not os.path.exists(permission_id_dir):
             os.makedirs(permission_id_dir)
-        form.file.data.save(os.path.join(permission_id_dir, form.file.data.filename))
+        file_path = os.path.join(permission_id_dir, form.file.data.filename)
+        form.file.data.save(file_path)
         new_model = Weight(
             name=form.name.data,
-            detector_type_id=form.detector_type.data,
+            detector_type_id=detector_type_id,
             file=form.file.data.read(),
-            path=os.path.join(permission_id_dir, form.file.data.filename),
+            path=file_path,
             created_at=datetime.now(),
             permission_id=session.get('permission_id')
         )
@@ -79,12 +95,36 @@ def create():
 def edit(id):
     model = Weight.query.get_or_404(id)
     form = ModelForm(obj=model)
-    if form.validate_on_submit():
+    if form.file.data:
+        WEIGHTS_FOLDER = os.path.join(os.getcwd(), 'weights')
+        permission_id_dir = os.path.join(WEIGHTS_FOLDER, session.get('permission_name'))
+        print("permission_id_dir:", permission_id_dir)
+        if not os.path.exists(permission_id_dir):
+            os.makedirs(permission_id_dir)
+        file_path = os.path.join(permission_id_dir, form.file.data.filename)        
+        form.file.data.save(file_path)
+        model_file = form.file.data.read()
+    else:
+        model_file = model.file
+        file_path = model.path
+
+    if form.detector_type_id.data == 0:
+        if form.detector_type_name.data is None or form.detector_type_name.data == "":
+            flash("Please select a detector type!", "danger")
+            return redirect(url_for("weight.view"))            
+        else:
+            detector_type = DetectorType(name=form.detector_type_name.data)
+            db.session.add(detector_type)
+            db.session.commit()
+            detector_type_id = detector_type.id
+    else:
+        detector_type_id = form.detector_type_id.data
+
+    if form.is_submitted():
         model.name = form.name.data
-        model.detector_type_id = form.detector_type.data
-        model.file = form.file.data.read()
-        model.path = os.path.join('weights', session.get('permission_id'), form.file.data.filename)
-        model.created_at = datetime.now()
+        model.detector_type_id = detector_type_id
+        model.file = model_file
+        model.path = file_path
         model.permission_id = session.get('permission_id')
         db.session.commit()
         flash('Model updated successfully!', 'success')

@@ -8,12 +8,12 @@
 
   <!-- Search -->
   <form id="searchForm" action="{{ url_for('report.detected_object') }}" method="GET" class="flex items-center mb-6">
-    <input type="text" name="search_query" placeholder="Search documents..."
+    <input type="text" name="search_query" placeholder="Search detected object..."
       value="{{ request.args.get('search_query', '') }}"
       class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
     <button type="submit"
       class="ml-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">
-      🔍
+      <i class="fas fa-search"></i>
     </button>
   </form>
 
@@ -86,4 +86,5 @@
 
 </div>
 {% endblock %}
-{% block scripts %} {% endblock %}
+{% block scripts %}
+{{ super() }} {% endblock %}

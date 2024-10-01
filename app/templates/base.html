@@ -174,7 +174,7 @@
                     :class="open ? 'rotate-90' : 'rotate-0'"
                     class="inline-block transform transition-transform duration-200 ml-auto"
                   >
-                    >
+                    <i class="fas fa-angle-right"></i>
                   </span>
                 </a>
 
@@ -258,62 +258,29 @@
 
     <!-- Main Content -->
     <main class="flex-1 p-10 ml-64">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, mesg in messages %}
-          <div
-            id="flash-container"
-            class="
-              {% if category == 'success' %}
-                bg-green-200 text-green-800 border-green-500
-              {% elif category == 'info' %}
-                bg-blue-200 text-blue-800 border-blue-500
-              {% elif category == 'danger' %}
-                bg-red-200 text-red-800 border-red-500
-              {% elif category == 'error' %}
-                bg-red-200 text-red-800 border-red-500
-              {% else %}
-                bg-gray-200 text-gray-800 border-gray-500
-              {% endif %}
-              border-l-4 p-4 mt-4 rounded-md
-            "
-          >
-            <p>{{ mesg }}</p>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-      
-      {% block content %}{% endblock %}
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, mesg in messages %}
+      <div
+        id="flash-container"
+        class="{% if category == 'success' %} bg-green-200 text-green-800 border-green-500 {% elif category == 'info' %} bg-blue-200 text-blue-800 border-blue-500 {% elif category == 'danger' %} bg-red-200 text-red-800 border-red-500 {% elif category == 'error' %} bg-red-200 text-red-800 border-red-500 {% else %} bg-gray-200 text-gray-800 border-gray-500 {% endif %} border-l-4 p-4 mt-4 mb-4 rounded-md"
+      >
+        <p>{{ mesg }}</p>
+      </div>
+      {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
     </main>
 
     <!-- Block Modal -->
     {% block modals %}{% endblock %}
 
-    <!-- Toggle Button for Sidebar -->
-    <button
-      id="sidebarToggle"
-      class="fixed top-16 left-0 z-50 m-4 p-2 bg-gray-800 text-white rounded-md md:hidden"
-    >
-      >
-    </button>
-
+    <!-- Block Scripts -->
     {% block scripts %}
     <script>
-      const sidebar = document.getElementById("sidebar");
-      const toggleButton = document.getElementById("sidebarToggle");
+      // Close Flash Message
+      setTimeout(closeFlash, 5000);
 
-      toggleButton.addEventListener("click", () => {
-        sidebar.classList.toggle("-translate-x-full");
-      });
-
-      // Auto-hide flash messages after 3 seconds
-      setTimeout(() => {
-        const flashContainer = document.getElementById("flash-container");
-        if (flashContainer) {
-          flashContainer.style.display = "none";
-        }
-      }, 3000);
+      function closeFlash() {
+        document.getElementById('flash-container').remove();
+      }
     </script>
     {% endblock %}
   </body>

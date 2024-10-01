@@ -68,9 +68,10 @@ def edit(id):
     detector = Detector.query.get_or_404(id)
     form = DetectorForm(obj=detector)
     if form.validate_on_submit():
+        logging.debug(f"Form data: {form.running.data}")
         detector.cctv_id = form.cctv_id.data or detector.cctv_id
         detector.weight_id = form.weight_id.data or detector.weight_id
-        detector.running = form.running.data
+        detector.running = bool(int(form.running.data))
         db.session.commit()
         flash('Detector updated successfully!', 'success')
         # return Response(status=200)

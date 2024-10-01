@@ -49,13 +49,14 @@ class DetectorForm(FlaskForm):
 
 class ModelForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
-    detector_type = SelectField('Detector Type', coerce=int, validators=[DataRequired()])
-    file = FileField('File', validators=[DataRequired()])
+    detector_type_id = SelectField('Detector Type', coerce=int, validators=[DataRequired()])
+    detector_type_name = StringField('Detector Type Name', default=None)
+    file = FileField('File')
     submit = SubmitField('Save')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.detector_type.choices = [(detector_type.id, detector_type.name) for detector_type in DetectorType.query.all()]
+        self.detector_type_id.choices = [(detector_type.id, detector_type.name) for detector_type in DetectorType.query.all()]
 
 class ContactForm(FlaskForm):
     phone_number = StringField('Phone', validators=[Length(max=64)])
