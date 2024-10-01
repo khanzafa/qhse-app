@@ -87,21 +87,6 @@
           </h3>
         </div>
 
-<<<<<<< HEAD
-      <!-- Back Side of the Card -->
-      <div 
-      class="bg-white p-6 rounded-lg shadow-lg flip-card-back"
-      onclick="handleCardClick('{{ menu.url }}', '{{ menu.permission_id }}')"
-      >
-        <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ menu.title }}</h3>
-        <p class="text-gray-600 mt-4">
-          {% if menu.permission.description %}
-          <span class="font-medium">{{ menu.permission.description }}</span>
-          {% else %}
-          No description available.
-          {% endif %}
-        </p>
-=======
         <!-- Back Side of the Card -->
         <div
           class="bg-white p-6 rounded-lg shadow-lg flip-card-back"
@@ -115,7 +100,6 @@
             <span class="font-medium">{{ menu.permission.description }}</span>
             {% else %} No description available. {% endif %}
           </p>
->>>>>>> 300f209 (update: flash notif)
 
           <p class="text-gray-600 mt-4">
             Allowed Permission:
@@ -157,39 +141,39 @@
 
         <div class="form-group">
           {{ form.title.label(class="block text-sm font-medium text-gray-700")
-          }} {{ form.title(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+          }} {{ form.title(class="block w-full px-4 py-2 border border-gray-300
+          rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
         </div>
 
         <div class="form-group">
           {{ form.url.label(class="block text-sm font-medium text-gray-700") }}
-          {{ form.url(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+          {{ form.url(class="block w-full px-4 py-2 border border-gray-300
+          rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
         </div>
 
         <div id="exist-permission" class="flex-group">
-          {{ form.permission_id.label(class="block text-sm font-medium text-gray-700 inline-block") }}
+          {{ form.permission_id.label(class="block text-sm font-medium
+          text-gray-700 inline-block") }}
           <span
             id="open-p"
             class="text-sm text-blue-500 cursor-pointer ml-2"
             onclick="openPermission()"
             >New Permission</span
           >
-          {{ form.permission_id(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+          {{ form.permission_id(class="block w-full px-4 py-2 border
+          border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
+          focus:border-blue-500") }}
         </div>
 
         <div id="new-permission" class="flex-group hidden">
-          {{ form.permission_name.label(class="block text-sm font-medium text-gray-700 inline-block") }}
+          {{ form.permission_name.label(class="block text-sm font-medium
+          text-gray-700 inline-block") }}
           <span
             id="close-p"
             class="text-sm text-blue-500 cursor-pointer ml-2 hidden"
             onclick="closePermission()"
             >Existing Permission
           </span>
-<<<<<<< HEAD
-          {{ form.permission_name(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500")}}
-        
-          {{ form.permission_description.label(class="block text-sm font-medium text-gray-700 inline-block") }}
-          {{ form.permission_description(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500")}}
-=======
           {{ form.permission_name(class="block w-full px-4 py-2 border
           border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
           focus:border-blue-500")}} {{
@@ -198,12 +182,12 @@
           form.permission_description(class="block w-full px-4 py-2 border
           border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
           focus:border-blue-500")}}
->>>>>>> 300f209 (update: flash notif)
         </div>
 
         <div class="form-group">
           {{ form.file.label(class="block text-sm font-medium text-gray-700") }}
-          {{ form.file(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+          {{ form.file(class="block w-full px-4 py-2 border border-gray-300
+          rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
         </div>
         <!-- Modal Footer Buttons -->
         <div class="flex justify-end space-x-4">
@@ -225,10 +209,7 @@
     </div>
   </div>
 </div>
-{% endblock %} 
-
-{% block scripts %}
-{{ super() }}
+{% endblock %} {% block scripts %}
 <script>
   function openModal() {
     document.getElementById("modal").classList.remove("hidden");
@@ -267,13 +248,12 @@
   }
 
   function handleCardClick(url, permissionId) {
-    if (url && url !== 'None') {
+    if (url) {
       window.location.href = url;
     } else {
       setSession(permissionId);
     }
   }
-
 
   function setSession(permissionId) {
     // Prepare the form data
