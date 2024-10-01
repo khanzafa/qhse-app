@@ -188,8 +188,8 @@ class Detector(db.Model):
         db.session.commit()
         print(f"Detector {self.id} stopped.")
     
-    def process_frame(self, frame, detected_objects_tracker, frame_number):
-        detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
+    def process_frame(self, frame, detected_objects_tracker):
+        # detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
         frame_number = 0
         
         detector = db.session.query(Detector).filter(Detector.id == self.id).first()
@@ -306,7 +306,7 @@ class Detector(db.Model):
                 db.session.add(detected_object)
             db.session.commit()
             
-        return detected_objects, annotated_frame, detected_objects_tracker, frame_number
+        return detected_objects, annotated_frame, detected_objects_tracker
  
 
 # # EVENT LISTENERS

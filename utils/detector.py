@@ -111,9 +111,8 @@ class DetectorThread(threading.Thread):
                     try:
                         self.detected_objects_tracker['last_time'] = time.time()
                         detected_objects_tracker = self.detected_objects_tracker
-                        frame_number = self.frame_number
                         with self.lock:
-                            detected_objects, annotated_frame, self.detected_objects_tracker, self.frame_number = detector.process_frame(frame, detected_objects_tracker, frame_number)
+                            detected_objects, annotated_frame, self.detected_objects_tracker = detector.process_frame(frame, detected_objects_tracker)
                             print(Back.YELLOW)
                             print(f"detected objects tracker: {self.detected_objects_tracker}")
                             print(Style.RESET_ALL)
