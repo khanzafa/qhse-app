@@ -25,6 +25,11 @@ Steps to install the project:
 
    # Secret key for Flask, Generated from `sk.py`
    SECRET_KEY=YOUR_SECRET
+
+   # Mail setup
+   # Tutorial link https://mailtrap.io/blog/flask-send-email-gmail/
+   MAIL_USERNAME='mail@gmail.com'
+   MAIL_PASSWORD='password'
    ```
 
 4. Prepare the database
