@@ -27,7 +27,7 @@ Steps to install the project:
    SECRET_KEY=YOUR_SECRET
 
    # Mail setup
-   # Tutorial link https://mailtrap.io/blog/flask-send-email-gmail/
+   # [Tutorial link](https://mailtrap.io/blog/flask-send-email-gmail/)
    MAIL_USERNAME='mail@gmail.com'
    MAIL_PASSWORD='password'
    ```
