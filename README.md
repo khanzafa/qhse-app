@@ -18,7 +18,7 @@ Steps to install the project:
 
 3. Set the environment variable. Make a new file `.env` and fill it with the following code:
 
-   [Mail Setup Tutorial link](https://mailtrap.io/blog/flask-send-email-gmail/)
+   <a href="https://mailtrap.io/blog/flask-send-email-gmail/" target="_blank">Tutorial link</a>
    ```env
    # PostgreSQL database configuration for development
    DATABASE_URL=postgresql://postgres:YOUR_POSTGRES_PASSWORD@localhost/
