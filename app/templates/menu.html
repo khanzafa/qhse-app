@@ -5,7 +5,8 @@
     background-color: transparent;
     width: 300px;
     height: 200px;
-    perspective: 1000px; /* Creates the 3D effect */
+    perspective: 1000px;
+    /* Creates the 3D effect */
   }
 
   /* Container for the inner flip card */
@@ -29,7 +30,8 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    backface-visibility: hidden; /* Ensures that only one side is visible at a time */
+    backface-visibility: hidden;
+    /* Ensures that only one side is visible at a time */
   }
 
   /* Front side */
@@ -50,13 +52,9 @@
   <!-- Search bar -->
   <div class="flex items-center justify-between mb-8">
     <h1 class="text-2xl font-bold">Manage Menu</h1>
-    <input
-      type="text"
-      name="search"
-      placeholder="Search"
+    <input type="text" name="search" placeholder="Search"
       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      oninput="filterMenus()"
-    />
+      oninput="filterMenus()" />
   </div>
 
   <!-- Display Menu Items -->
@@ -66,20 +64,12 @@
       <div class="flip-card-inner">
         <!-- Front Side of the Card -->
         <div
-          class="bg-white p-6 rounded-lg shadow-lg flip-card-front cursor-pointer flex flex-col items-center justify-center mb-4"
-        >
+          class="bg-white p-6 rounded-lg shadow-lg flip-card-front cursor-pointer flex flex-col items-center justify-center mb-4">
           {% if menu.file %}
-          <img
-            src="data:image/png;base64,{{ menu.file | b64encode }}"
-            alt="{{ menu.title }}"
-            class="w-full h-36 rounded-lg"
-          />
+          <img src="data:image/png;base64,{{ menu.file | b64encode }}" alt="{{ menu.title }}"
+            class="w-full h-36 rounded-lg" />
           {% else %}
-          <img
-            src="/static/img/spil_logo.svg"
-            alt="{{ menu.title }}"
-            class="w-full h-36 rounded-lg"
-          />
+          <img src="/static/img/spil_logo.svg" alt="{{ menu.title }}" class="w-full h-36 rounded-lg" />
           {% endif %}
 
           <h3 class="text-xl font-semibold text-gray-800 mb-2">
@@ -88,10 +78,8 @@
         </div>
 
         <!-- Back Side of the Card -->
-        <div
-          class="bg-white p-6 rounded-lg shadow-lg flip-card-back"
-          onclick="handleCardClick('{{ menu.url }}', {{ menu.permission_id }})"
-        >
+        <div class="bg-white p-6 rounded-lg shadow-lg flip-card-back"
+          onclick="handleCardClick('{{ menu.url }}', {{ menu.permission_id }})">
           <h3 class="text-xl font-semibold text-gray-800 mb-2">
             {{ menu.title }}
           </h3>
@@ -115,28 +103,20 @@
   <div class="fixed bottom-8 right-8">
     <button
       class="bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      onclick="openModal()"
-    >
+      onclick="openModal()">
       + Add Menu
     </button>
   </div>
 
   <!-- Modal Add Menu -->
-  <div
-    id="modal"
-    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
-  >
+  <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
       <!-- Modal Header -->
       <h2 class="text-2xl font-bold mb-4">Add New Menu</h2>
 
       <!-- Modal Content (Form) -->
-      <form
-        id="add-menu-form"
-        method="POST"
-        enctype="multipart/form-data"
-        class="space-y-6 bg-gray-100 p-6 rounded-lg shadow-lg"
-      >
+      <form id="add-menu-form" method="POST" enctype="multipart/form-data"
+        class="space-y-6 bg-gray-100 p-6 rounded-lg shadow-lg">
         {{ form.hidden_tag() }}
 
         <div class="form-group">
@@ -154,12 +134,8 @@
         <div id="exist-permission" class="flex-group">
           {{ form.permission_id.label(class="block text-sm font-medium
           text-gray-700 inline-block") }}
-          <span
-            id="open-p"
-            class="text-sm text-blue-500 cursor-pointer ml-2"
-            onclick="openPermission()"
-            >New Permission</span
-          >
+          <span id="open-p" class="text-sm text-blue-500 cursor-pointer ml-2" onclick="openPermission()">New
+            Permission</span>
           {{ form.permission_id(class="block w-full px-4 py-2 border
           border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
           focus:border-blue-500") }}
@@ -168,11 +144,8 @@
         <div id="new-permission" class="flex-group hidden">
           {{ form.permission_name.label(class="block text-sm font-medium
           text-gray-700 inline-block") }}
-          <span
-            id="close-p"
-            class="text-sm text-blue-500 cursor-pointer ml-2 hidden"
-            onclick="closePermission()"
-            >Existing Permission
+          <span id="close-p" class="text-sm text-blue-500 cursor-pointer ml-2 hidden"
+            onclick="closePermission()">Existing Permission
           </span>
           {{ form.permission_name(class="block w-full px-4 py-2 border
           border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
@@ -191,17 +164,10 @@
         </div>
         <!-- Modal Footer Buttons -->
         <div class="flex justify-end space-x-4">
-          <button
-            type="button"
-            class="bg-gray-500 text-white px-4 py-2 rounded-lg"
-            onclick="closeModal()"
-          >
+          <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg" onclick="closeModal()">
             Cancel
           </button>
-          <button
-            type="submit"
-            class="bg-blue-500 text-white px-4 py-2 rounded-lg"
-          >
+          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg">
             Save
           </button>
         </div>
@@ -248,7 +214,7 @@
   }
 
   function handleCardClick(url, permissionId) {
-    if (url) {
+    if (url && url !== 'None') {
       window.location.href = url;
     } else {
       setSession(permissionId);

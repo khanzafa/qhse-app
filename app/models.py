@@ -275,23 +275,30 @@ class Detector(db.Model):
                 if track_id is not None:
                     tracker = detected_objects_tracker.get(track_id, {"count": 0, "last_time": current_time})
                     print(Back.RED)
-                    print(f"Track id: {track_id}, count: {tracker['count']}")
+                    print(f"Track id: {track_id}, count: {tracker['last_time']}, current time: {current_time}")
+                    print(f"Current time - last time: {current_time - tracker['last_time']}")
                     print(Style.RESET_ALL)
 
-                    # First detection or reset due to time gap
-                    if tracker["count"] == 0:
-                        detected_objects.append(detected_object_info)
-                        tracker["count"] = 1  # Reset count if a time gap occurs
-                        print(Back.YELLOW)
-                        print(f"Detected: {detected_objects_tracker}")
-                        print(Style.RESET_ALL)
-                    else:
-                        tracker["count"] += 1
+                    # Frame gap logic
+                    # # First detection or reset due to time gap
+                    # if tracker["count"] == 0:
+                    #     detected_objects.append(detected_object_info)
+                    #     tracker["count"] = 1  # Reset count if a time gap occurs
+                    #     print(Back.YELLOW)
+                    #     print(f"Detected: {detected_objects_tracker}")
+                    #     print(Style.RESET_ALL)
+                    # else:
+                    #     tracker["count"] += 1
 
-                    # Detect object consistently over 30 frames
-                    if tracker["count"] >= 30:
+                    # # Detect object consistently over 30 frames
+                    # if tracker["count"] >= 30:
+                    #     detected_objects.append(detected_object_info)
+                    #     tracker["count"] = 0  # Reset after detection
+                        
+                    # Time gap logic
+                    if current_time - tracker['last_time'] >= 5:
                         detected_objects.append(detected_object_info)
-                        tracker["count"] = 0  # Reset after detection
+                        tracker['last_time'] = current_time
 
                     # Update tracker info
                     detected_objects_tracker[track_id] = tracker
