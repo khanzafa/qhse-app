@@ -239,9 +239,18 @@ class Detector(db.Model):
             detected_objects = []
             current_time = time.time()
             
+            current_ids = [int(c.id.item()) for c in results[0].boxes if hasattr(c, 'id') and c.id is not None]
+            # Check for each track_id in detected_objects_tracker if it still exists in results[0].boxes
+            for track_id in list(detected_objects_tracker.keys()):
+                if track_id not in current_ids:
+                    # Handle track_id that no longer exists
+                    print(f"Track ID {track_id} no longer exists in the current detection.")
+                    detected_objects_tracker[track_id]["count"] = 0
+                    detected_objects_tracker[track_id]["last_time"] = current_time
+            
             for c in results[0].boxes:
                 track_id = c.id if hasattr(c, 'id') else None
-                track_id = int(track_id.item()) 
+                track_id = int(track_id.item())
                 class_id = c.cls
                 name = model.names[int(class_id)]
                 
@@ -275,7 +284,7 @@ class Detector(db.Model):
                 if track_id is not None:
                     tracker = detected_objects_tracker.get(track_id, {"count": 0, "last_time": current_time})
                     print(Back.RED)
-                    print(f"Track id: {track_id}, count: {tracker['last_time']}, current time: {current_time}")
+                    print(f"Track id: {track_id}, count: {tracker['count']}, current time: {current_time}")
                     print(f"Current time - last time: {current_time - tracker['last_time']}")
                     print(Style.RESET_ALL)
 
@@ -296,71 +305,78 @@ class Detector(db.Model):
                     #     tracker["count"] = 0  # Reset after detection
                         
                     # Time gap logic
-                    if current_time - tracker['last_time'] >= 5:
+                    if tracker['count'] == 0:
+                        detected_objects.append(detected_object_info)
+                        tracker['count'] = 1
+                        
+                        detected_object = DetectedObject(
+                            detector_id=self.id,
+                            name=name,
+                            frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                            timestamp=datetime.now(),
+                            permission_id=self.permission_id                
+                        )
+                        
+                        db.session.add(detected_object)
+                    if current_time - tracker['last_time'] >= 30:
                         detected_objects.append(detected_object_info)
                         tracker['last_time'] = current_time
+                        print(Back.YELLOW)
+                        print(f"Detected After 3 seconds")
+                        print(Style.RESET_ALL)
 
                     # Update tracker info
                     detected_objects_tracker[track_id] = tracker
                 
-                detected_object = DetectedObject(
-                    detector_id=self.id,
-                    name=name,
-                    frame=cv2.imencode('.jpg', frame)[1].tobytes(),
-                    timestamp=datetime.now(),
-                    permission_id=self.permission_id                
-                )
-                    
-                db.session.add(detected_object)
             db.session.commit()
             
         return detected_objects, annotated_frame, detected_objects_tracker
  
 
-# # EVENT LISTENERS
-# # Thread-local storage for session data
-# from threading import local
-# _thread_local = local()
+# EVENT LISTENERS
+# Thread-local storage for session data
+from threading import local
+_thread_local = local()
 
-# @event.listens_for(Session, 'before_commit')
-# def before_commit_detector(session):
-#     _thread_local.new = list(session.new)
-#     _thread_local.dirty = list(session.dirty)
-#     _thread_local.deleted = list(session.deleted)
+@event.listens_for(Session, 'before_commit')
+def before_commit_detector(session):
+    _thread_local.new = list(session.new)
+    _thread_local.dirty = list(session.dirty)
+    _thread_local.deleted = list(session.deleted)
 
-# @event.listens_for(Session, 'after_commit')
-# def after_commit_detector(session):
-#     # logging.info("After commit event for Detector")
-#     # logging.info(f"Session new: {_thread_local.new}")
-#     # logging.info(f"Session dirty: {_thread_local.dirty}")
-#     # logging.info(f"Session deleted: {_thread_local.deleted}")
-#     from app import detector_manager, socketio
-#     for obj in _thread_local.new:
-#         if isinstance(obj, Detector) and 'running' in obj.__dict__:
-#             socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
-#             detector_manager.update_detectors()
-#         if isinstance(obj, CCTV) and 'status' in obj.__dict__:
-#             socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
-#             detector_manager.update_detectors()
-#     for obj in _thread_local.dirty:
-#         if isinstance(obj, Detector) and 'running' in obj.__dict__:
-#             socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
-#             detector_manager.update_detectors()
-#         if isinstance(obj, CCTV) and 'status' in obj.__dict__:
-#             socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
-#             detector_manager.update_detectors()
-#     for obj in _thread_local.deleted:
-#         if isinstance(obj, Detector):
-#             socketio.emit('status_update', {'detector_id': obj.id, 'running': False})
-#             detector_manager.update_detectors()
-#         if isinstance(obj, CCTV):
-#             socketio.emit('status_update', {'cctv_id': obj.id, 'status': False})
-#             detector_manager.update_detectors()
+@event.listens_for(Session, 'after_commit')
+def after_commit_detector(session):
+    # logging.info("After commit event for Detector")
+    # logging.info(f"Session new: {_thread_local.new}")
+    # logging.info(f"Session dirty: {_thread_local.dirty}")
+    # logging.info(f"Session deleted: {_thread_local.deleted}")
+    from app import detector_manager, socketio
+    for obj in _thread_local.new:
+        if isinstance(obj, Detector) and 'running' in obj.__dict__:
+            socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
+            detector_manager.update_detectors()
+        if isinstance(obj, CCTV) and 'status' in obj.__dict__:
+            socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
+            detector_manager.update_detectors()
+    for obj in _thread_local.dirty:
+        if isinstance(obj, Detector) and 'running' in obj.__dict__:
+            socketio.emit('status_update', {'detector_id': obj.id, 'running': obj.running})
+            detector_manager.update_detectors()
+        if isinstance(obj, CCTV) and 'status' in obj.__dict__:
+            socketio.emit('status_update', {'cctv_id': obj.id, 'status': obj.status})
+            detector_manager.update_detectors()
+    for obj in _thread_local.deleted:
+        if isinstance(obj, Detector):
+            socketio.emit('status_update', {'detector_id': obj.id, 'running': False})
+            detector_manager.update_detectors()
+        if isinstance(obj, CCTV):
+            socketio.emit('status_update', {'cctv_id': obj.id, 'status': False})
+            detector_manager.update_detectors()
 
-#     # Clear thread-local storage after commit
-#     _thread_local.new = []
-#     _thread_local.dirty = []
-#     _thread_local.deleted = []
+    # Clear thread-local storage after commit
+    _thread_local.new = []
+    _thread_local.dirty = []
+    _thread_local.deleted = []
 
 
 class DetectorType(db.Model):

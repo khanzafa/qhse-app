@@ -109,7 +109,7 @@ class DetectorThread(threading.Thread):
                 with self.app.app_context():
                     detector = Detector.query.get(self.detector_id)
                     try:
-                        self.detected_objects_tracker['last_time'] = time.time()
+                        # self.detected_objects_tracker['last_time'] = time.time()
                         detected_objects_tracker = self.detected_objects_tracker
                         with self.lock:
                             detected_objects, annotated_frame, self.detected_objects_tracker = detector.process_frame(frame, detected_objects_tracker)
