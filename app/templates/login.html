@@ -121,16 +121,13 @@
       const eyeIcon = document.getElementById("eyeIcon");
 
       togglePassword.addEventListener("click", function () {
-        const isPassword = passwordInput.getAttribute("type") === "password"; // Cek tipe input
-        passwordInput.setAttribute("type", isPassword ? "text" : "password"); // Toggle tipe input
-
-        // Mengubah ikon berdasarkan tipe input
+        const isPassword = passwordInput.getAttribute("type") === "password";
+        passwordInput.setAttribute("type", isPassword ? "text" : "password");
         if (isPassword) {
-          eyeIcon.classList.remove("fa-eye-slash"); // Hapus ikon mata tertutup
-          eyeIcon.classList.add("fa-eye"); // Tambah ikon mata terbuka
-        } else {
-          eyeIcon.classList.remove("fa-eye"); // Hapus ikon mata terbuka
-          eyeIcon.classList.add("fa-eye-slash"); // Tambah ikon mata tertutup
+          eyeIcon.classList.remove("fa-eye-slash");
+          eyeIcon.classList.add("fa-eye");
+          eyeIcon.classList.remove("fa-eye");
+          eyeIcon.classList.add("fa-eye-slash");
         }
       });
     </script>

@@ -13,6 +13,20 @@
   <body class="bg-gray-100 flex items-center justify-center h-screen">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
       <h2 class="text-2xl font-bold mb-6">Register</h2>
+      <!-- Flash Messages Section -->
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div id="flash-container" class="mb-4">
+        {% for category, message in messages %}
+        <div
+          class="p-3 mb-2 text-sm text-white rounded-md {% if category == 'success' %} bg-green-500 {% elif category == 'danger' %} bg-red-500 {% endif %}"
+        >
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
+
       <form
         method="POST"
         action="{{ url_for('auth.register') }}"
@@ -92,6 +106,14 @@
       </p>
     </div>
     <script>
+      // Auto-hide flash messages after 3 seconds
+      setTimeout(function () {
+        var flashContainer = document.getElementById("flash-container");
+        if (flashContainer) {
+          flashContainer.style.display = "none";
+        }
+      }, 5000); // 3 seconds
+
       const togglePassword = document.getElementById("togglePassword");
       const passwordInput = document.getElementById("password");
       const eyeIcon = document.getElementById("eyeIcon");

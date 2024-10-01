@@ -24,7 +24,8 @@
   }
 
   /* Position the front and back side */
-  .flip-card-front, .flip-card-back {
+  .flip-card-front,
+  .flip-card-back {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -44,8 +45,7 @@
     transform: rotateY(180deg);
   }
 </style>
-{% endblock %}
- {% block content %}
+{% endblock %} {% block content %}
 <div class="container mx-auto px-4 py-8">
   <!-- Search bar -->
   <div class="flex items-center justify-between mb-8">
@@ -59,16 +59,15 @@
     />
   </div>
 
-<!-- Display Menu Items -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  {% for menu in menus %}
-  <div class="flip-card">
-    <div class="flip-card-inner">
-      <!-- Front Side of the Card -->
-      <div        
-        class="bg-white p-6 rounded-lg shadow-lg flip-card-front cursor-pointer flex flex-col items-center justify-center mb-4"
-      >
-        
+  <!-- Display Menu Items -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for menu in menus %}
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <!-- Front Side of the Card -->
+        <div
+          class="bg-white p-6 rounded-lg shadow-lg flip-card-front cursor-pointer flex flex-col items-center justify-center mb-4"
+        >
           {% if menu.file %}
           <img
             src="data:image/png;base64,{{ menu.file | b64encode }}"
@@ -82,11 +81,13 @@
             class="w-full h-36 rounded-lg"
           />
           {% endif %}
-        
 
-        <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ menu.title }}</h3>
-      </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">
+            {{ menu.title }}
+          </h3>
+        </div>
 
+<<<<<<< HEAD
       <!-- Back Side of the Card -->
       <div 
       class="bg-white p-6 rounded-lg shadow-lg flip-card-back"
@@ -100,16 +101,31 @@
           No description available.
           {% endif %}
         </p>
+=======
+        <!-- Back Side of the Card -->
+        <div
+          class="bg-white p-6 rounded-lg shadow-lg flip-card-back"
+          onclick="handleCardClick('{{ menu.url }}', {{ menu.permission_id }})"
+        >
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">
+            {{ menu.title }}
+          </h3>
+          <p class="text-gray-600 mt-4">
+            {% if menu.permission.description %}
+            <span class="font-medium">{{ menu.permission.description }}</span>
+            {% else %} No description available. {% endif %}
+          </p>
+>>>>>>> 300f209 (update: flash notif)
 
-        <p class="text-gray-600 mt-4">
-          Allowed Permission: <span class="font-medium">{{ menu.permission.name }}</span>
-        </p>
+          <p class="text-gray-600 mt-4">
+            Allowed Permission:
+            <span class="font-medium">{{ menu.permission.name }}</span>
+          </p>
+        </div>
       </div>
     </div>
+    {% endfor %}
   </div>
-  {% endfor %}
-</div>
-
 
   <!-- Floating Add Button -->
   <div class="fixed bottom-8 right-8">
@@ -168,10 +184,21 @@
             onclick="closePermission()"
             >Existing Permission
           </span>
+<<<<<<< HEAD
           {{ form.permission_name(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500")}}
         
           {{ form.permission_description.label(class="block text-sm font-medium text-gray-700 inline-block") }}
           {{ form.permission_description(class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500")}}
+=======
+          {{ form.permission_name(class="block w-full px-4 py-2 border
+          border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
+          focus:border-blue-500")}} {{
+          form.permission_description.label(class="block text-sm font-medium
+          text-gray-700 inline-block") }} {{
+          form.permission_description(class="block w-full px-4 py-2 border
+          border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
+          focus:border-blue-500")}}
+>>>>>>> 300f209 (update: flash notif)
         </div>
 
         <div class="form-group">

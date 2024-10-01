@@ -110,8 +110,8 @@ class LoginForm(FlaskForm):
 class RegistrationForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=64)])
     email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128)])
-    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128, message="Password must be at least 8 characters long.")])
+    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password', message="Passwords must match.")])
     role = SelectField('Role', choices=[            
         ('user', 'user'),
         ('guest', 'guest'),      
@@ -122,7 +122,13 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('Email already registered.')
-             
+
+    def validate_name(self, name):
+        user = User.query.filter_by(name=name.data).first()
+        if user:
+            raise ValidationError('Username already taken.')
+
+        
 class AccessForm(FlaskForm):
     # This will create checkboxes for all permissions dynamically
     permissions = SelectMultipleField(

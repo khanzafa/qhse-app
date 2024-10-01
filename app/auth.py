@@ -41,14 +41,24 @@ def login():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+
     form = RegistrationForm()
+
+    # Check if the form validates
     if form.validate_on_submit():
+        # If validation passes, create and commit the new user
         user = User(name=form.name.data, email=form.email.data, role=form.role.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
         flash('Registration successful', 'success')
         return redirect(url_for('auth.login'))
+    
+    # If validation fails, check for specific error messages and flash them
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{error}", 'danger')
+
     return render_template('register.html', form=form)
 
 @auth.route('/logout')
