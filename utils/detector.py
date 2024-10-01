@@ -113,9 +113,9 @@ class DetectorThread(threading.Thread):
                         detected_objects_tracker = self.detected_objects_tracker
                         with self.lock:
                             detected_objects, annotated_frame, self.detected_objects_tracker = detector.process_frame(frame, detected_objects_tracker)
-                            print(Back.YELLOW)
-                            print(f"detected objects tracker: {self.detected_objects_tracker}")
-                            print(Style.RESET_ALL)
+                            # print(Back.YELLOW)
+                            # print(f"detected objects tracker: {self.detected_objects_tracker}")
+                            # print(Style.RESET_ALL)
                             self.annotated_frames[self.detector_id] = annotated_frame
                             logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
                             # Add the message to the shared queue
