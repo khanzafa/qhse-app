@@ -120,7 +120,8 @@ def menu():
         else:
             flash("Form validation failed!", "danger")
         return redirect(url_for("admin.menu"))
-    menus = suMenu.query.all()
+    permission_ids = get_allowed_permission_ids()
+    menus = suMenu.query.filter(suMenu.permission_id.in_(permission_ids)).all()
     form.permission_id.choices.insert(0, (0, "Select Permission"))
     form.permission_name.data = None
     return render_template("menu.html", form=form, menus=menus)
