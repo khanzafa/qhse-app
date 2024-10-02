@@ -148,7 +148,7 @@
     </div>
     <script>
       function handleCardClick(url, permissionId) {
-        if (url) {
+        if (url && url !== 'None') {
           window.location.href = url;
         } else {
           setSession(permissionId);
