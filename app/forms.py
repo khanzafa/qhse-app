@@ -4,9 +4,8 @@ from flask_wtf import FlaskForm
 from flask import session
 from wtforms import BooleanField, IntegerField, SelectMultipleField, StringField, SubmitField, SelectField, TextAreaField, PasswordField, FileField, widgets
 from wtforms.validators import DataRequired, IPAddress, Length, URL, EqualTo, ValidationError
-from app.models import CCTV, Contact, Detector, MessageTemplate, Permission, User
+from app.models import CCTV, Contact, Detector, MessageTemplate, Permission, User, DetectorType, Weight, CCTVLocation
 from app.extensions import db
-from app.models import DetectorType, Weight
 from utils.auth import get_allowed_permission_ids
 
 class AddCCTVForm(FlaskForm):
@@ -24,11 +23,16 @@ class EditCCTVForm(FlaskForm):
     submit = SubmitField('Edit CCTV')
 
 class CCTVForm(FlaskForm):
-    location = StringField('Location', validators=[DataRequired()])    
+    location_id = SelectField('Location', coerce=int, validators=[DataRequired()])
+    location_name = StringField('Location Name', default=None)
     type = StringField('Type')
     ip_address = StringField('IP Address', validators=[DataRequired()])    
     status = SelectField('Status', choices=[('0', 'Inactive'), ('1', 'Active')], coerce=int, default=1)
     submit = SubmitField('Save')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.location_id.choices = [(location.id, location.name) for location in CCTVLocation.query.all()]
 
 class SelectCCTVForm(FlaskForm):
     cctv = SelectField('Select CCTV', coerce=int, validators=[DataRequired()])
@@ -43,7 +47,7 @@ class DetectorForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cctv_id.choices = [(cctv.id, cctv.location) for cctv in CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).all()]
+        self.cctv_id.choices = [(cctv.id, f"{cctv.cctv_location.name} - {cctv.type}") for cctv in CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).all()]
         self.weight_id.choices = [(weight.id, weight.name) for weight in Weight.query.filter(Weight.permission_id == session.get('permission_id')).all()]
         
 

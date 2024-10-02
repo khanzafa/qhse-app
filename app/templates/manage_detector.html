@@ -26,7 +26,7 @@ block content %}
       {% for detector in detectors %}
       <tr>
         <td class="border px-4 py-2">{{ detector.id }}</td>
-        <td class="border px-4 py-2">{{ detector.cctv.location }}</td>
+        <td class="border px-4 py-2">{{ detector.cctv.cctv_location.name }} - {{detector.cctv.type}}</td>
         <td class="border px-4 py-2">{{ detector.weight.name }}</td>
         <td class="border px-4 py-2">{{ "Running" if detector.running else "Stopped" }}</td>
         <td class="border px-4 py-2 space-x-2 text-center">
@@ -125,6 +125,7 @@ block content %}
         {{ form.cctv_id(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500") }}
       </div>
       
+      
       <!-- Model Weights -->
       <div class="mb-4">
         {{ form.weight_id.label(class="block text-gray-700 font-medium mb-2") }}
@@ -149,7 +150,7 @@ block content %}
 {% block scripts %}
 {{ super() }}
 <script>
-const modalTriggers = document.querySelectorAll('[data-modal-target]');
+    const modalTriggers = document.querySelectorAll('[data-modal-target]');
     const modalCloses = document.querySelectorAll('[data-modal-close]');
     const modalOverlay = document.querySelector('.modal-overlay');
 
@@ -176,5 +177,21 @@ const modalTriggers = document.querySelectorAll('[data-modal-target]');
             modal.classList.remove('flex');
         });
     });
+
+    function filterOptions() {
+      const input = document.getElementById('cctv_id_input');
+      const hiddenInput = document.getElementById('cctv_id');
+      const options = document.querySelectorAll('#cctvList option');
+
+      // Find the selected option in the datalist
+      const selectedOption = Array.from(options).find(option => option.value === input.value);
+      
+      // If a matching option is found, set the hidden input value to the option's data-id
+      if (selectedOption) {
+        hiddenInput.value = selectedOption.getAttribute('data-id');
+      } else {
+        hiddenInput.value = ''; // Clear the hidden input if no match
+      }
+    }
 </script>
 {% endblock %}

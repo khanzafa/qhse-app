@@ -72,8 +72,7 @@ content %}
       </div>
     </div>
   </div>
-  {% endblock %} {% block scripts %}
-{{ super() }}
+  {% endblock %} {% block scripts %} {{ super() }}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <script
@@ -82,143 +81,143 @@ content %}
   ></script>
 
   <script>
-                function updateDateTime() {
-                    const now = new Date();
-                    const optionsTime = { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true };
-                    const datetimeString = `${String(now.getDate()).padStart(2, '0')} ${now.toLocaleString('default', { month: 'short' })} ${now.getFullYear()}, ${now.toLocaleTimeString('en-US', optionsTime)}`;
-                    document.getElementById('currentDatetime').innerText = datetimeString;
+    function updateDateTime() {
+        const now = new Date();
+        const optionsTime = { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true };
+        const datetimeString = `${String(now.getDate()).padStart(2, '0')} ${now.toLocaleString('default', { month: 'short' })} ${now.getFullYear()}, ${now.toLocaleTimeString('en-US', optionsTime)}`;
+        document.getElementById('currentDatetime').innerText = datetimeString;
+    }
+
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    function getRandomColor(alpha = 1) {
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return `${date.getDate()} ${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+    }
+
+    const labels = {{ last_7_days|tojson }};
+    const formattedLabels = labels.map(formatDate).reverse();
+    const numDetectedObjectPerDay = {{ daily_detected_object_counts|tojson }}.reverse();
+
+    const ppeBarChartCtx = document.getElementById('ppeBarChart').getContext('2d');
+    const dataset = [{
+        type: 'bar',
+        label: 'Detected Objects',
+        data: numDetectedObjectPerDay,
+        backgroundColor: getRandomColor(),
+        borderColor: 'rgba(255, 255, 255, 1)',
+        borderWidth: 2,
+        stack: 'Stack 0'
+    }];
+
+    new Chart(ppeBarChartCtx, {
+        type: 'bar',
+        data: { labels: formattedLabels, datasets: dataset },
+        options: {
+            plugins: {
+                legend: {
+                    labels: { color: 'black', font: { size: 15, weight: 'bold' } }
+                },
+                title: {
+                    display: true,
+                    text: 'Detected Objects per Day',
+                    color: '#333',
+                    font: { size: 20, weight: 'bold' }
+                },
+                datalabels: {
+                    color: 'black',
+                    font: { weight: 'bold', size: 12 },
+                    anchor: 'end',
+                    align: 'end',
+                    formatter: value => value,
+                    offset: 4,
+                    borderRadius: 4,
+                    padding: 6,
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderColor: 'rgba(0, 0, 0, 0.3)',
+                    borderWidth: 1
                 }
-
-                setInterval(updateDateTime, 1000);
-                updateDateTime();
-
-                function getRandomColor(alpha = 1) {
-                    const r = Math.floor(Math.random() * 256);
-                    const g = Math.floor(Math.random() * 256);
-                    const b = Math.floor(Math.random() * 256);
-                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        color: '#555',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    stacked: true,
+                    ticks: { color: 'rgba(32, 33, 33, 0.8)', font: { size: 12, weight: 'bold' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grace: '10%',
+                    title: {
+                        display: true,
+                        text: 'Detected Objects',
+                        color: '#555',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    stacked: true,
+                    ticks: { color: 'rgba(32, 33, 33, 0.8)', font: { size: 12, weight: 'bold' } }
                 }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
 
-                function formatDate(dateString) {
-                    const date = new Date(dateString);
-                    return `${date.getDate()} ${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+    const detectedObjectsLocationPieChartCtx = document.getElementById('ppePieChart').getContext('2d');
+    const locations = {{ locations|tojson }};
+    const counts = {{ counts|tojson }};
+    const pieColors = counts.map(() => getRandomColor());
+
+    new Chart(detectedObjectsLocationPieChartCtx, {
+        type: 'pie',
+        data: {
+            labels: locations,
+            datasets: [{
+                data: counts,
+                backgroundColor: pieColors,
+                borderColor: 'rgba(255, 255, 255, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: 'black', font: { size: 15, weight: 'bold' } }
+                },
+                title: {
+                    display: true,
+                    text: 'Detected Objects by Camera Location',
+                    color: '#333',
+                    font: { size: 20, weight: 'bold' }
+                },
+                datalabels: {
+                    formatter: (value, context) => {
+                        const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        return (value / total * 100).toFixed(2) + '%';
+                    },
+                    color: 'black',
+                    font: { size: 15, weight: 'bold' },
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: 3,
+                    padding: 4
                 }
-
-                const labels = {{ last_7_days|tojson }};
-                const formattedLabels = labels.map(formatDate).reverse();
-                const numDetectedObjectPerDay = {{ daily_detected_object_counts|tojson }}.reverse();
-
-                const ppeBarChartCtx = document.getElementById('ppeBarChart').getContext('2d');
-                const dataset = [{
-                    type: 'bar',
-                    label: 'Detected Objects',
-                    data: numDetectedObjectPerDay,
-                    backgroundColor: getRandomColor(),
-                    borderColor: 'rgba(255, 255, 255, 1)',
-                    borderWidth: 2,
-                    stack: 'Stack 0'
-                }];
-
-                new Chart(ppeBarChartCtx, {
-                    type: 'bar',
-                    data: { labels: formattedLabels, datasets: dataset },
-                    options: {
-                        plugins: {
-                            legend: {
-                                labels: { color: 'black', font: { size: 15, weight: 'bold' } }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Detected Objects per Day',
-                                color: '#333',
-                                font: { size: 20, weight: 'bold' }
-                            },
-                            datalabels: {
-                                color: 'black',
-                                font: { weight: 'bold', size: 12 },
-                                anchor: 'end',
-                                align: 'end',
-                                formatter: value => value,
-                                offset: 4,
-                                borderRadius: 4,
-                                padding: 6,
-                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                borderColor: 'rgba(0, 0, 0, 0.3)',
-                                borderWidth: 1
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Date',
-                                    color: '#555',
-                                    font: { size: 16, weight: 'bold' }
-                                },
-                                stacked: true,
-                                ticks: { color: 'rgba(32, 33, 33, 0.8)', font: { size: 12, weight: 'bold' } }
-                            },
-                            y: {
-                                beginAtZero: true,
-                                grace: '10%',
-                                title: {
-                                    display: true,
-                                    text: 'Detected Objects',
-                                    color: '#555',
-                                    font: { size: 16, weight: 'bold' }
-                                },
-                                stacked: true,
-                                ticks: { color: 'rgba(32, 33, 33, 0.8)', font: { size: 12, weight: 'bold' } }
-                            }
-                        }
-                    },
-                    plugins: [ChartDataLabels]
-                });
-
-                const detectedObjectsLocationPieChartCtx = document.getElementById('ppePieChart').getContext('2d');
-                const locations = {{ locations|tojson }};
-                const counts = {{ counts|tojson }};
-                const pieColors = counts.map(() => getRandomColor());
-
-                new Chart(detectedObjectsLocationPieChartCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: locations,
-                        datasets: [{
-                            data: counts,
-                            backgroundColor: pieColors,
-                            borderColor: 'rgba(255, 255, 255, 1)',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        maintainAspectRatio: false,
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                labels: { color: 'black', font: { size: 15, weight: 'bold' } }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Detected Objects by Camera Location',
-                                color: '#333',
-                                font: { size: 20, weight: 'bold' }
-                            },
-                            datalabels: {
-                                formatter: (value, context) => {
-                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    return (value / total * 100).toFixed(2) + '%';
-                                },
-                                color: 'black',
-                                font: { size: 15, weight: 'bold' },
-                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                borderRadius: 3,
-                                padding: 4
-                            }
-                        }
-                    },
-                    plugins: [ChartDataLabels]
-                });
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
 
     const objectTypeLabels = {{ object_types|tojson }};
     const objectTypeCounts = {{ object_counts|tojson }};

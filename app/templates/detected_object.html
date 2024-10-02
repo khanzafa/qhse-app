@@ -11,7 +11,9 @@
     <input type="text" name="search_query" placeholder="Search detected object..."
       value="{{ request.args.get('search_query', '') }}"
       class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-    <button type="submit"
+    <button 
+    title="Search"
+    type="submit"
       class="ml-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300">
       <i class="fas fa-search"></i>
     </button>
@@ -34,7 +36,9 @@
       <tr>
         <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.id }}</td>
         <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.detector.weight.detector_type.name }}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.detector.cctv.location }}</td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          {{ obj.detector.cctv.cctv_location.name }} - {{ obj.detector.cctv.type }}
+        </td>
         <td class="border border-gray-300 px-4 py-2 text-center">{{ obj.name }}</td>
         <td class="border border-gray-300 px-4 py-2 text-center">
           {{ obj.timestamp.strftime('%d %B %Y, %H:%M:%S') }}

@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, session, Response, Blueprint, jsonify, abort
 from flask_login import login_required
-from app.models import CCTV, Detector
+from app.models import CCTV, CCTVLocation, Detector
 from app import db
 from app.forms import AddCCTVForm, CCTVForm, EditCCTVForm
 import cv2
@@ -152,28 +152,30 @@ cctv_bp = Blueprint('cctv', __name__, url_prefix='/cctv')
 def view(id=None):
     logging.debug(f"Permission ID: {session.get('permission_id')}")
     form = CCTVForm()    
+    form.location_id.choices.insert(0, (0, "Select Location"))
     if id:
         cctv = CCTV.query.get_or_404(id)
-        cctv = {
-            'id': cctv.id,
-            'location': cctv.location,
-            'type': cctv.type,
-            'ip_address': cctv.ip_address,
-            'status': cctv.status
-        }
+        # cctv = {
+        #     'id': cctv.id,
+        #     'location': cctv.location,
+        #     'type': cctv.type,
+        #     'ip_address': cctv.ip_address,
+        #     'status': cctv.status
+        # }
         return jsonify(cctv), 200             
     else:
-        cctvs = []
-        for cctv in CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).all():
-            detectors = Detector.query.filter(Detector.cctv_id == cctv.id).all()
-            cctvs.append({
-                'id': cctv.id, 
-                'location': cctv.location, 
-                'type': cctv.type, 
-                'ip_address': cctv.ip_address, 
-                'status': cctv.status,
-                'is_used': len(detectors) > 0
-            })        
+        # cctvs = []
+        # for cctv in CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).all():
+        #     detectors = Detector.query.filter(Detector.cctv_id == cctv.id).all()
+        #     cctvs.append({
+        #         'id': cctv.id, 
+        #         'location': cctv.location, 
+        #         'type': cctv.type, 
+        #         'ip_address': cctv.ip_address, 
+        #         'status': cctv.status,
+        #         'is_used': len(detectors) > 0
+        #     })        
+        cctvs = CCTV.query.filter(CCTV.permission_id == session.get('permission_id')).all()
         # return jsonify(cctvs), 200
         return render_template('manage_cctv.html', cameras=cctvs, form=form)
 
@@ -181,15 +183,21 @@ def view(id=None):
 @login_required
 def create():
     form = CCTVForm()    
-    if form.validate_on_submit():
-        # Check if the location already exists in the database
-        existing_cctv = CCTV.query.filter_by(location=form.location.data).first()
-        if existing_cctv:
-            # Location already exists, flash a message and redirect
-            flash('Location already exists. Please use a different one.', 'error')
-            return redirect(url_for('cctv.view'))
+    if form.location_id.data == 0:
+        if form.location_name.data is None or form.location_name.data == "":
+            flash("Please select a location!", "danger")
+            return redirect(url_for("admin.menu"))            
+        else:
+            location = CCTVLocation(name=form.location_name.data)
+            db.session.add(location)
+            db.session.commit()
+            location_id = location.id
+    else:
+        location_id = form.location_id.data
+
+    if form.is_submitted():
         cctv = CCTV(
-            location=form.location.data,
+            cctv_location_id=location_id,
             type=form.type.data, 
             ip_address=form.ip_address.data, 
             status=0, 
@@ -210,15 +218,22 @@ def edit(id):
     cctv = CCTV.query.get_or_404(id)
     form = CCTVForm(obj=cctv)
     logging.debug(f"Form data: {form.data}")
-    if form.validate_on_submit():
-        # # Check if the location already exists in the database
-        existing_cctv = CCTV.query.filter_by(location=form.location.data).first()
-        if existing_cctv.id != id:
-            # Location already exists, flash a message and redirect
-            flash('Location already exists. Please use a different one.', 'error')
-            return redirect(url_for('cctv.view'))
+
+    if form.location_id.data == 0:
+        if form.location_name.data is None or form.location_name.data == "":
+            flash("Please select a location!", "danger")
+            return redirect(url_for("admin.menu"))            
+        else:
+            location = CCTVLocation(name=form.location_name.data)
+            db.session.add(location)
+            db.session.commit()
+            location_id = location.id
+    else:
+        location_id = form.location_id.data
+
+    if form.is_submitted():
         logging.debug(f"Form validated: {form.data}")
-        cctv.location = form.location.data
+        cctv.cctv_location_id = location_id
         cctv.type = form.type.data
         cctv.ip_address = form.ip_address.data
         cctv.status = form.status.data

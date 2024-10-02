@@ -23,7 +23,7 @@ GRAPHICS_DIR = 'app/static/graphics'
 @main.route('/')
 def index():
     # return render_template('index.html', title='Home', current_user=current_user)
-    return redirect(url_for('main.dashboard'))
+    return redirect(url_for('report.dashboard'))
 
 @main.route('/report/dashboard')
 @login_required

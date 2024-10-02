@@ -261,7 +261,7 @@
       .then((data) => {
         if (data.status === "success") {
           // Handle success response
-          window.location.href = "{{ url_for('main.dashboard') }}";
+          window.location.href = "{{ url_for('report.dashboard') }}";
         } else {
           // Handle error response
           alert("Error: " + data.message);

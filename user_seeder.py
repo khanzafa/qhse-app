@@ -11,16 +11,16 @@ db = SQLAlchemy()
 db.init_app(app)
 
 def seed_users(n):
-    admin = User(
-            name="Admin",
-            email="admin@spil.id",
-            role=UserRole.admin,
-            approved=True
-        )
+    # admin = User(
+    #         name="Admin",
+    #         email="admin@spil.id",
+    #         role=UserRole.admin,
+    #         approved=True
+    #     )
     
-    user.set_password("12345678")
+    # admin.set_password("12345678")
 
-    db.session.add(user)
+    # db.session.add(admin)
     
     for _ in range(n):
         name = fake.name()
