@@ -95,9 +95,9 @@ class Permission(db.Model):
 
 class UserPermission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE', onupdate='CASCADE'))
     user = db.relationship('User', backref=db.backref('user_permissions', lazy=True))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     permission = db.relationship('Permission', backref=db.backref('user_permissions', lazy=True))
     
     def to_dict(self):
@@ -117,7 +117,7 @@ class CCTV(db.Model):
     ip_address = db.Column(db.String(120))
     status = db.Column(db.Boolean, default=False)
     permission = db.relationship('Permission', backref=db.backref('cctvs', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -145,24 +145,24 @@ class Weight(db.Model):
     file = db.Column(db.LargeBinary)    
     path = db.Column(db.String(120), index=True)
     detector_type = db.relationship('DetectorType', backref=db.backref('weights', lazy=True))
-    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
+    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True)
     permission = db.relationship('Permission', backref=db.backref('weights', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
 class Detector(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    cctv_id = db.Column(db.Integer, db.ForeignKey('cctv.id'))
+    cctv_id = db.Column(db.Integer, db.ForeignKey('cctv.id', ondelete='CASCADE', onupdate='CASCADE'))
     cctv = db.relationship('CCTV', backref=db.backref('detectors', uselist=False, lazy=True))
     detector_type = db.relationship('DetectorType', backref=db.backref('detectors', uselist=False))
-    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id'))
+    detector_type_id = db.Column(db.Integer, db.ForeignKey('detector_type.id', ondelete='CASCADE', onupdate='CASCADE'))
     weight = db.relationship('Weight', backref=db.backref('detectors', uselist=False))
-    weight_id = db.Column(db.Integer, db.ForeignKey('weight.id'))
+    weight_id = db.Column(db.Integer, db.ForeignKey('weight.id', ondelete='CASCADE', onupdate='CASCADE'))
     running = db.Column(db.Boolean, default=False)
     permission = db.relationship('Permission', backref=db.backref('detectors', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     
@@ -434,12 +434,12 @@ class DetectorType(db.Model):
 class DetectedObject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     detector = db.relationship('Detector', backref=db.backref('detected_objects', lazy=True))
-    detector_id = db.Column(db.Integer, db.ForeignKey('detector.id'))
+    detector_id = db.Column(db.Integer, db.ForeignKey('detector.id', ondelete='CASCADE', onupdate='CASCADE'))
     name = db.Column(db.String(120), index=True)
     frame = db.Column(db.LargeBinary)
     timestamp = db.Column(db.DateTime, index=True)
     permission = db.relationship('Permission', backref=db.backref('detected_objects', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -463,7 +463,7 @@ class MessageTemplate(db.Model):
     name = db.Column(db.String(120), index=True, unique=True)
     template = db.Column(db.String(480))
     permission = db.relationship('Permission', backref=db.backref('message_templates', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -482,14 +482,14 @@ class MessageTemplate(db.Model):
 
 class NotificationRule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    detector_id = db.Column(db.Integer, db.ForeignKey('detector.id'))
+    detector_id = db.Column(db.Integer, db.ForeignKey('detector.id', ondelete='CASCADE', onupdate='CASCADE'))
     detector = db.relationship('Detector', backref=db.backref('notification_rules', lazy=True))
-    message_template_id = db.Column(db.Integer, db.ForeignKey('message_template.id'))
+    message_template_id = db.Column(db.Integer, db.ForeignKey('message_template.id', ondelete='CASCADE', onupdate='CASCADE'))
     message_template = db.relationship('MessageTemplate', backref=db.backref('notification_rules', lazy=True))
-    contact_id = db.Column(db.Integer, db.ForeignKey('contact.id'))
+    contact_id = db.Column(db.Integer, db.ForeignKey('contact.id', ondelete='CASCADE', onupdate='CASCADE'))
     contact = db.relationship('Contact', backref=db.backref('notification_rules', lazy=True))
     permission = db.relationship('Permission', backref=db.backref('notification_rules', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -514,7 +514,7 @@ class Contact(db.Model):
     description = db.Column(db.String(100))
     is_group = db.Column(db.Boolean, default=False)
     permission = db.relationship('Permission', backref=db.backref('contacts', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -539,7 +539,7 @@ class Document(db.Model):
     dir = db.Column(db.String(120), index=True)
     file = db.Column(db.LargeBinary)
     permission = db.relationship('Permission', backref=db.backref('documents', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -563,7 +563,7 @@ class suMenu(db.Model):
     url = db.Column(db.String(100), default="", nullable=True)
     file = db.Column(db.LargeBinary, default=None, nullable=True) # image
     permission = db.relationship('Permission', backref=db.backref('sumenus', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     
     def __repr__(self):
         return f'<Menu {self.title}>'
