@@ -17,3 +17,6 @@ notes
 weights/*
 barcode.png
 yolov8n-pose.pt
+open_vino.ipynb
+new.py
+obj_detection_vino.py
