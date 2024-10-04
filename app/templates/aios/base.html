@@ -34,7 +34,7 @@
         <!-- Running Text -->
         <div class="marquee text-blue-600 font-semibold text-lg">
             <marquee direction="left" scrollamount="12">
-                Quality, Health, Safety, and Environment - Salam Pacific Indonesia
+                Salam Pacific Indonesia
                 Lines
             </marquee>
         </div>
@@ -51,9 +51,9 @@
             <div class="flex items-center space-x-2">
                 <img src="/static/img/corporate-user-icon.png" alt="User Avatar" class="w-8 h-8 rounded-full" />
                 <!-- <span class="text-gray-700 font-medium">John Doe</span> -->
-                <span class="text-gray-700 font-medium">{{ session.get('otp_email') }}</span>
+                <span class="text-gray-700 font-medium">{{ current_user.name }}</span>
                 <!-- Logout Button -->
-                <a href="{{ url_for('auth.guidebot_logout') }}" class="logout-button">Logout</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout-button">Logout</a>
             </div>
         </div>
     </header>
@@ -63,34 +63,6 @@
         <aside id="sidebar"
             class="fixed top-16 left-0 h-full bg-green-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0">
             <nav class="mt-4">
-                <!-- Dashboard (Back to HRMS) -->
-                <a href="{{ url_for('main.index') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                    <i class="fa-regular fa-angles-left mr-3"></i>
-                    Back to HRMS
-                </a>
-
-                <!-- My Activity -->
-                <div x-data="{ myactivityOpen: false }">
-                    <a href="#" @click.prevent="myactivityOpen  = !myactivityOpen"
-                        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                        <i class="fas fa-crosshairs mr-3"></i>
-                        My Activity
-                        <span :class="myactivityOpen ? 'rotate-90' : 'rotate-0'"
-                            class="inline-block transform transition-transform duration-200 ml-auto">
-                            >
-                    </a>
-
-                    <div x-show="myactivityOpen" class="pl-10">
-                        <!-- Procedure -->
-                        <a href="{{ url_for('guide_bot.chat') }}"
-                            class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center">
-                            <i class="fas fa-crosshairs mr-3"></i>
-                            Procedure
-                        </a>
-                    </div>
-                </div>
-
 
             </nav>
         </aside>

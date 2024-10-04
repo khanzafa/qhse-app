@@ -100,7 +100,7 @@ def otp_verify(user_id):
 
     return render_template('otp_verify.html', form=form, user_id=user.id)
 
-@auth.route('forgot', methods=['GET', 'POST'])
+@auth.route('/forgot', methods=['GET', 'POST'])
 def forgot():    
     form = ForgotForm()
     if form.validate_on_submit():

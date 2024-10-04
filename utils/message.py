@@ -40,15 +40,19 @@ class SeleniumManager:
         # Chrome Linux
         # option = webdriver.ChromeOptions()  
         # self.driver = webdriver.Chrome(options=option)
+        
+        # Chrome Windows
+        chrome_options = Options()
+        # Profile Leo
+        chrome_options.add_argument("--user-data-dir=C:/Users/hp/AppData/Local/Google/Chrome/User Data")
+        chrome_options.add_argument('--profile-directory=Profile 1')
+        
+        # Profile lain
+        self.driver = webdriver.Chrome(options=chrome_options)
         # self.driver.get("https://web.whatsapp.com/")
         # self.wait = WebDriverWait(self.driver, 100)        
         # self.actions = ActionChains(self.driver)
         
-        # Chrome Windows
-        chrome_options = Options()
-        chrome_options.add_argument("--user-data-dir=C:\\Users\\khanza\\AppData\\Local\\Google\\Chrome\\User Data")
-        chrome_options.add_argument("--profile-directory=Profile 1")
-        self.driver = webdriver.Chrome(options=chrome_options)
         if self.url:
             self.driver.get(self.url)
         self.wait = WebDriverWait(self.driver, 100)

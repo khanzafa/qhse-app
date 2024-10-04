@@ -392,7 +392,7 @@ past = []
 
 @guide_bot.route('/guide-bot/chat', methods=['GET', 'POST'])
 @guide_bot.route('/aios/guide-bot/chat', methods=['GET', 'POST'])
-@otp_required
+@login_required
 def chat():
     global history, generated, past
 
