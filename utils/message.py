@@ -16,10 +16,11 @@ from colorama import Back, Style
 import flask_mail
 
 class SeleniumManager:
-    def __init__(self):
+    def __init__(self, url=None):
         self.driver = None
         self.wait = None
         self.actions = None
+        self.url = url
 
     def initialize_driver(self):
         # Firefox Linux
@@ -48,7 +49,8 @@ class SeleniumManager:
         chrome_options.add_argument("--user-data-dir=C:\\Users\\khanza\\AppData\\Local\\Google\\Chrome\\User Data")
         chrome_options.add_argument("--profile-directory=Profile 1")
         self.driver = webdriver.Chrome(options=chrome_options)
-        self.driver.get("https://web.whatsapp.com/")
+        if self.url:
+            self.driver.get(self.url)
         self.wait = WebDriverWait(self.driver, 100)
         self.actions = ActionChains(self.driver)
 
@@ -83,9 +85,10 @@ class SeleniumManager:
             self.wait = None  
             self.actions = None  
 
-selenium_manager = SeleniumManager()
+report_selenium_manager = SeleniumManager(url="https://web.whatsapp.com/")
+otp_selenium_manager = SeleniumManager()
 
-class MailManager():
+class MailManager:
     def __init__(self):
         self.barcode_path = '//canvas[@aria-label="Scan this QR code to link a device!"]'
         self.previous_data_ref = None
@@ -100,7 +103,7 @@ class MailManager():
         
     def send_barcode(self):
         try:
-            barcode = selenium_manager.wait.until(EC.presence_of_element_located((By.XPATH, self.barcode_path)))  # Update this line
+            barcode = report_selenium_manager.wait.until(EC.presence_of_element_located((By.XPATH, self.barcode_path)))  # Update this line
             barcode_img = barcode.screenshot_as_png
             with open('barcode.png', 'wb') as f:
                 f.write(barcode_img)
@@ -134,11 +137,11 @@ class MailManager():
         
         while True:
             if time.time() - last_refresh > 50:
-                selenium_manager.driver.refresh()
+                report_selenium_manager.driver.refresh()
                 last_refresh = time.time()
             time.sleep(1)
             try:
-                barcode_element = selenium_manager.driver.find_element("xpath", '//div[@class="_akau"]')
+                barcode_element = report_selenium_manager.driver.find_element("xpath", '//div[@class="_akau"]')
                 current_data_ref = barcode_element.get_attribute("data-ref")
                 if current_data_ref != self.previous_data_ref:
                     self.send_barcode()
@@ -173,9 +176,9 @@ class Message:
     
     @staticmethod
     def send_whatsapp_message(target_name, message, image_path):
-        driver = selenium_manager.get_driver()
-        wait = selenium_manager.get_wait()
-        actions = selenium_manager.get_actions()
+        driver = report_selenium_manager.get_driver()
+        wait = report_selenium_manager.get_wait()
+        actions = report_selenium_manager.get_actions()
 
         try:
             # contact_path = f'//span[contains(@title, "eh")]'
@@ -213,4 +216,24 @@ class Message:
                 
         except Exception as e:
             logging.error(f"Error while sending WhatsApp message: {e}")
+            # Tambahkan penanganan kesalahan di sini jika diperlukan
+
+class OTPMessage:
+    def __init__(self, phone_number, message):
+        self.phone_number = phone_number
+        self.message = message
+
+    def send(self):
+        driver = otp_selenium_manager.get_driver()
+        wait = otp_selenium_manager.get_wait()
+        actions = otp_selenium_manager.get_actions()
+
+        try:
+            driver.get("https://web.whatsapp.com/send?phone=" + self.phone_number + "&text=" + self.message)
+            time.sleep(5)
+            text_box_xpath = '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div[1]/div/div'
+            text_box = wait.until(EC.presence_of_element_located((By.XPATH, text_box_xpath)))
+            actions.move_to_element(text_box).send_keys(Keys.RETURN).perform()
+        except Exception as e:
+            logging.error(f"Error while sending OTP: {e}")
             # Tambahkan penanganan kesalahan di sini jika diperlukan

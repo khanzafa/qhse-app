@@ -52,7 +52,7 @@ def user_approval():
         return redirect(url_for("admin.user_approval"))
 
 @admin_bp.route("/user-permission", methods=["GET", "POST"])
-@admin_bp.route("/user-permission/<int:user_id>", methods=["GET"])
+@admin_bp.route("/user-permission/<user_id>", methods=["GET"])
 @login_required
 @admin_required
 def user_permission(user_id=None):

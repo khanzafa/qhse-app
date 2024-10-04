@@ -43,12 +43,14 @@ class UserRole(enum.Enum):
     guest = 'guest'
 
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(64), primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(64), index=True, unique=True)
-    password_hash = db.Column(db.String(256))
+    phone_number = db.Column(db.String(20), index=True, unique=True)
     role = db.Column(db.Enum(UserRole), default=UserRole.user)
     approved = db.Column(db.Boolean(), default=None)
+    otp_code = db.Column(db.String(6), nullable=True)
+    otp_expiration = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -66,6 +68,7 @@ class User(db.Model, UserMixin):
             'id': self.id,
             'name': self.name,
             'email': self.email,
+            'phone_number': self.phone_number,
             'role': self.role,
             'created_at': self.created_at,
             'updated_at': self.updated_at
@@ -94,7 +97,7 @@ class Permission(db.Model):
 
 class UserPermission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE', onupdate='CASCADE'))
+    user_id = db.Column(db.String(64), db.ForeignKey('user.id', ondelete='CASCADE', onupdate='CASCADE'))
     user = db.relationship('User', backref=db.backref('user_permissions', lazy=True))
     permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     permission = db.relationship('Permission', backref=db.backref('user_permissions', lazy=True))

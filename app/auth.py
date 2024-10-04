@@ -7,34 +7,39 @@ from flask_login import current_user, login_user, logout_user, login_required
 import pytz
 from app import db
 from app.models import User, Guest
-from app.forms import ForgotPasswordForm, LoginForm, RegistrationForm, OTPForm, ResetPasswordForm
+from app.forms import ForgotForm, LoginForm, RegistrationForm, OTPForm, ResetPasswordForm
 from flask_mail import Message
 from colorama import Fore, Back, Style
+from utils.message import OTPMessage
 
 auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
+@auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.menu'))
+    
     form = LoginForm()
+
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        if form.phone.data.startswith('0'):
+            form.phone.data = '62' + form.phone.data[1:]
+        user = User.query.filter_by(phone_number=form.phone.data).first()
         
-        if user is None or not user.check_password(form.password.data):
-            # if user.password_hash != form.password.data:
-            flash('Invalid email or password', 'danger')
+        if user is None:
+            flash('Invalid phone number', 'danger')
             return redirect(url_for('auth.login'))
-            
+
         if not user.approved:
-            print('Not Approved')
             flash('Your account is not approved. Please contact the administrator.', 'danger')
             return redirect(url_for('auth.login'))
-        
-        login_user(user)
-        if user.is_admin():
-            return redirect(url_for('admin.menu'))    
-        return redirect(url_for('main.index'))        
+
+        # Generate and send OTP
+        send_otp(user)
+        flash('An OTP has been sent to your phone number.', 'info')
+        return redirect(url_for('auth.otp_verify', user_id=user.id))  # Redirect to OTP verification page
+    
     return render_template('login.html', form=form)
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -43,11 +48,18 @@ def register():
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(name=form.name.data, email=form.email.data, role=form.role.data)
-        user.set_password(form.password.data)
+        if form.phone.data.startswith('0'):
+            form.phone.data = '62' + form.phone.data[1:]
+        user = User(
+            id=form.nik.data,
+            name=form.name.data,
+            email=form.email.data,
+            phone_number=form.phone.data,
+            role=form.role.data,
+        )
         db.session.add(user)
         db.session.commit()
-        flash('Registration successful', 'success')
+        flash('Registration successful. Please wait for approval.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('register.html', form=form)
 
@@ -58,6 +70,58 @@ def logout():
     session.pop('role', None)
     return redirect(url_for('auth.login'))
 
+@auth.route('/otp_verify/<user_id>', methods=['GET', 'POST'])
+def otp_verify(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash('Invalid user', 'danger')
+        return redirect(url_for('auth.login'))
+
+    form = OTPForm()  # Assume form has otp_code field
+
+    if form.validate_on_submit():
+        if verify_otp(user, form.otp_code.data):
+            login_user(user)
+            if user.is_admin():
+                return redirect(url_for('admin.menu'))
+            return redirect(url_for('main.index'))
+        else:
+            flash('Invalid or expired OTP', 'danger')
+            return redirect(url_for('auth.otp_verify', user_id=user.id))
+
+    return render_template('otp_verify.html', form=form, user_id=user.id)
+
+@auth.route('forgot', methods=['GET', 'POST'])
+def forgot():    
+    form = ForgotForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(id=form.nik.data).first()
+        if user:
+            send_otp(user)
+            censored_phone_number = user.phone_number[:3] + '****' + user.phone_number[-3:]
+            flash(f'An OTP has been sent to your phone number {censored_phone_number}.', 'info')
+            return redirect(url_for('auth.otp_verify', user_id=user.id))  # Redirect to OTP verification page
+        else:
+            flash('Email not found. Please register first.', 'danger')
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+def send_otp(user):
+    otp_code = generate_otp()
+    user.otp_code = otp_code
+    user.otp_expiration = datetime.utcnow() + timedelta(minutes=5)
+    db.session.commit()
+
+    # Send OTP via email
+    message = f"Your OTP is {otp_code}. It will expire in 5 minutes."
+    msg = OTPMessage(phone_number=user.phone_number, message=message)    
+    msg.send()
+
+def verify_otp(user, otp_code):
+    if user.otp_code == otp_code and user.otp_expiration > datetime.utcnow():
+        return True
+    return False
 
 def otp_required(func):
     @wraps(func)
@@ -148,9 +212,6 @@ def guidebot_login():
         
     return render_template('guide_bot/guidebot_login.html', form=form)
 
-def generate_otp():
-    return str(random.randint(100000, 999999))  # 6-digit OTP
-
 OTP_EXPIRY_TIME = 3  # minutes
 
 @auth.route("/guidebot_logout", methods=['GET', 'POST'])
@@ -163,7 +224,7 @@ def guidebot_logout():
     
 @auth.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
-    form = ForgotPasswordForm()
+    form = ForgotForm()
     if form.validate_on_submit():
         # user = User.query.filter_by(email=form.email.data).first()
         session['otp_email'] = form.email.data
@@ -194,8 +255,7 @@ def send_password_reset_email():
         print(f"Error sending email: {e}")
         flash('Failed to send OTP to email. Please try again later.', 'danger')
     print("REQ OTP")
-    
-    
+     
 @auth.route('/reset_password', methods=['GET', 'POST'])
 def reset_password():
     form = ResetPasswordForm()

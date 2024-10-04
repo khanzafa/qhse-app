@@ -102,20 +102,18 @@ class MenuForm(FlaskForm):
         return super().validate_on_submit(extra_validators)
 
 class OTPForm(FlaskForm):
-    email = StringField('Email Address', validators=[DataRequired()])
-    otp = PasswordField('Password')
-    submit = SubmitField('Login')
+    otp_code = PasswordField('OTP Code', validators=[DataRequired()])
+    submit = SubmitField('Verify')
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Login')
+    phone = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=64)])
+    submit = SubmitField('Send OTP')
 
 class RegistrationForm(FlaskForm):
+    nik = StringField('NIK', validators=[DataRequired(), Length(min=16, max=16)])
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=64)])
     email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=128)])
-    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    phone = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=64)])    
     role = SelectField('Role', choices=[            
         ('user', 'user'),
         ('guest', 'guest'),      
@@ -126,6 +124,11 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('Email already registered.')
+    
+    def validate_phone(self, phone):
+        user = User.query.filter_by(phone_number=phone.data).first()
+        if user:
+            raise ValidationError('Phone number already registered.')
              
 class AccessForm(FlaskForm):
     # This will create checkboxes for all permissions dynamically
@@ -143,7 +146,7 @@ class AccessForm(FlaskForm):
         self.permissions.choices = [(perm.id, perm.name) for perm in Permission.query.all()]
 
 class UserApprovalForm(FlaskForm):
-    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    user_id = SelectField('User', coerce=str, validators=[DataRequired()])
     approved = BooleanField('Approved', default=None)
     approve = SubmitField('Approve') 
     reject = SubmitField('Reject')
@@ -153,7 +156,7 @@ class UserApprovalForm(FlaskForm):
         self.user_id.choices = [(user.id, user.name) for user in User.query.filter_by(approved=None).all()]
 
 class UserPermissionForm(FlaskForm):
-    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    user_id = SelectField('User', coerce=str, validators=[DataRequired()])
     permission_id = SelectMultipleField('Permissions', coerce=int, option_widget=widgets.CheckboxInput(), widget=widgets.ListWidget(prefix_label=False))
     submit = SubmitField('Save')
 
@@ -162,8 +165,8 @@ class UserPermissionForm(FlaskForm):
         self.user_id.choices = [(user.id, user.name) for user in User.query.all()]
         self.permission_id.choices = [(perm.id, perm.name) for perm in Permission.query.all()]
         
-class ForgotPasswordForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
+class ForgotForm(FlaskForm):
+    nik = StringField('NIK', validators=[DataRequired(), Length(min=16, max=16)])
     submit = SubmitField('Submit')
     
 class ResetPasswordForm(FlaskForm):

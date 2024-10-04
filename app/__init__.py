@@ -21,7 +21,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import os
 
 from utils.detector import DetectorManager
-from utils.message import selenium_manager, mail_manager
+from utils.message import report_selenium_manager, mail_manager, otp_selenium_manager
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -102,7 +102,7 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return User.query.get(user_id)
 
     from app.auth import auth as auth_blueprint
     app.register_blueprint(main)
@@ -122,7 +122,8 @@ def create_app():
     mail_manager.init_app(app)
     
     # Selenium
-    selenium_manager.initialize_driver()  
+    # report_selenium_manager.initialize_driver`()  
+    otp_selenium_manager.initialize_driver()
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
