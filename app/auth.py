@@ -182,7 +182,7 @@ def guidebot_login():
 
             print("LOGIN")
             # Redirect to the chat page after successful login
-            return redirect(url_for('aios.index'))
+            return redirect(url_for('guide_bot.chat'))
         
         elif action == 'request_otp':
             # Handle OTP request action

@@ -6,7 +6,7 @@ from flask import Blueprint, abort, render_template, redirect, send_file, send_f
 from langchain_chroma import Chroma
 import markdown
 from app.auth import otp_required
-from guide_bot.models import Document
+from app.models import Document
 from guide_bot.forms import DocumentFileForm, DocumentFolderForm, NewFolderForm, EditFileForm
 from app import db
 
