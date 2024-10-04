@@ -189,8 +189,21 @@ class Message:
             text_box_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[1]/div/div[1]/p'
             text_box = wait.until(EC.presence_of_element_located((By.XPATH, text_box_xpath)))
             
-            # Loop through the message but send it all at once
-            actions.move_to_element(text_box).click().send_keys(message).perform()
+            # Split the message into lines
+            lines = message.split('\n')
+            
+            # Move to the text box and type each line followed by pressing Enter
+            actions.move_to_element(text_box).click()  # Click on the text box to focus
+            
+            for i, line in enumerate(lines):
+                actions.send_keys(line)  # Type the current line
+                
+                # If it's not the last line, press Shift + Enter
+                if i < len(lines) - 1:
+                    actions.key_down(Keys.SHIFT).send_keys(Keys.ENTER).key_up(Keys.SHIFT)
+                    
+            # After typing all lines
+            actions.perform()  # Execute all actions
 
             if image_path:
                 attachment_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]/div[2]/div/div/div/span'

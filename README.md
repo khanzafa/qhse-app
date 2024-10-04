@@ -18,6 +18,7 @@ Steps to install the project:
 
 3. Set the environment variable. Make a new file `.env` and fill it with the following code:
 
+   [Mail Setup Tutorial link](https://mailtrap.io/blog/flask-send-email-gmail/)
    ```env
    # PostgreSQL database configuration for development
    DATABASE_URL=postgresql://postgres:YOUR_POSTGRES_PASSWORD@localhost/
@@ -25,9 +26,13 @@ Steps to install the project:
 
    # Secret key for Flask, Generated from `sk.py`
    SECRET_KEY=YOUR_SECRET
+
+   # Mail setup
+   MAIL_USERNAME='mail@gmail.com'
+   MAIL_PASSWORD='password'
    ```
 
-4. Prepare the database
+5. Prepare the database
 
    ```bash
    python flask db init
@@ -35,8 +40,9 @@ Steps to install the project:
    python flask upgrade
    ```
 
-5. Run the project
+6. Run the project
 
    ```bash
     flask run
    ```
+ 

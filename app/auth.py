@@ -46,7 +46,10 @@ def login():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+
     form = RegistrationForm()
+
+    # Check if the form validates
     if form.validate_on_submit():
         if form.phone.data.startswith('0'):
             form.phone.data = '62' + form.phone.data[1:]
@@ -61,6 +64,12 @@ def register():
         db.session.commit()
         flash('Registration successful. Please wait for approval.', 'success')
         return redirect(url_for('auth.login'))
+    
+    # If validation fails, check for specific error messages and flash them
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{error}", 'danger')
+
     return render_template('register.html', form=form)
 
 @auth.route('/logout')

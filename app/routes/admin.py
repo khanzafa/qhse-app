@@ -83,7 +83,7 @@ def user_permission(user_id=None):
         return redirect(url_for("admin.user_permission"))
 
     # For GET requests
-    users = User.query.all()
+    users = User.query.filter(User.approved == True).all()
     users.sort(key=lambda x: x.name)
     return render_template("user_permission.html", users=users, form=form)
 
@@ -120,7 +120,8 @@ def menu():
         else:
             flash("Form validation failed!", "danger")
         return redirect(url_for("admin.menu"))
-    menus = suMenu.query.all()
+    permission_ids = get_allowed_permission_ids()
+    menus = suMenu.query.filter(suMenu.permission_id.in_(permission_ids)).order_by(suMenu.title.asc()).all()
     form.permission_id.choices.insert(0, (0, "Select Permission"))
     form.permission_name.data = None
     return render_template("menu.html", form=form, menus=menus)

@@ -130,6 +130,13 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError('Phone number already registered.')
              
+
+    def validate_name(self, name):
+        user = User.query.filter_by(name=name.data).first()
+        if user:
+            raise ValidationError('Username already taken.')
+
+        
 class AccessForm(FlaskForm):
     # This will create checkboxes for all permissions dynamically
     permissions = SelectMultipleField(

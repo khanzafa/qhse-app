@@ -210,8 +210,8 @@ class Detector(db.Model):
         db.session.commit()
         print(f"Detector {self.id} stopped.")
     
-    def process_frame(self, frame, detected_objects_tracker, frame_number):
-        detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
+    def process_frame(self, frame, detected_objects_tracker):
+        # detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
         frame_number = 0
         
         detector = db.session.query(Detector).filter(Detector.id == self.id).first()
@@ -261,9 +261,18 @@ class Detector(db.Model):
             detected_objects = []
             current_time = time.time()
             
+            current_ids = [int(c.id.item()) for c in results[0].boxes if hasattr(c, 'id') and c.id is not None]
+            # Check for each track_id in detected_objects_tracker if it still exists in results[0].boxes
+            for track_id in list(detected_objects_tracker.keys()):
+                if track_id not in current_ids:
+                    # Handle track_id that no longer exists
+                    print(f"Track ID {track_id} no longer exists in the current detection.")
+                    detected_objects_tracker[track_id]["count"] = 0
+                    detected_objects_tracker[track_id]["last_time"] = current_time
+            
             for c in results[0].boxes:
                 track_id = c.id if hasattr(c, 'id') else None
-                track_id = int(track_id.item()) 
+                track_id = int(track_id.item())
                 class_id = c.cls
                 name = model.names[int(class_id)]
                 
@@ -294,42 +303,87 @@ class Detector(db.Model):
                 }
                 
                 
-                frame_number += 1
-                
                 # Object tracking logic
                 if track_id is not None:
                     tracker = detected_objects_tracker.get(track_id, {"count": 0, "last_time": current_time})
-
-                    # First detection or reset due to time gap
-                    if tracker["count"] == 0 or current_time - tracker["last_time"] >= 5:
-                        detected_objects.append(detected_object_info)
-                        tracker["count"] = 1  # Reset count if a time gap occurs
+                    print(Back.RED)
+                    print(f"Track id: {track_id}, count: {tracker['count']}, current time: {current_time}")
+                    print(f"Current time - last time: {current_time - tracker['last_time']}")
+                    print(Style.RESET_ALL)
+                    
+                    # If Fire
+                    if name.lower() == 'fire':
+                        # Time gap logic
+                        if tracker['count'] == 0:
+                            detected_objects.append(detected_object_info)
+                            tracker['count'] = 1
+                            
+                            detected_object = DetectedObject(
+                                detector_id=self.id,
+                                name=name,
+                                frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                                timestamp=datetime.now(),
+                                permission_id=self.permission_id                
+                            )
+                            
+                            db.session.add(detected_object)
+                        if current_time - tracker['last_time'] >= 3600:
+                            detected_objects.append(detected_object_info)
+                            tracker['last_time'] = current_time
+                            print(Back.YELLOW)
+                            print(f"Detected After {current_time - tracker['last_time']} seconds")
+                            print(Style.RESET_ALL)
                     else:
-                        tracker["count"] += 1
 
-                    # Detect object consistently over 15 frames
-                    if tracker["count"] >= 15:
-                        detected_objects.append(detected_object_info)
-                        tracker["count"] = 0  # Reset after detection
+                        # Frame gap logic
+                        # # First detection or reset due to time gap
+                        # if tracker["count"] == 0:
+                        #     detected_objects.append(detected_object_info)
+                        #     detected_object = DetectedObject(
+                        #         detector_id=self.id,
+                        #         name=name,
+                        #         frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                        #         timestamp=datetime.now(),
+                        #         permission_id=self.permission_id                
+                        #     )
+                            
+                        #     db.session.add(detected_object)
+                        #     tracker["count"] = 1  # Reset count if a time gap occurs
+                        # else:
+                        #     tracker["count"] += 1
+                        # # Detect object consistently over 30 frames
+                        # if tracker["count"] >= 30:
+                        #     detected_objects.append(detected_object_info)
+                        #     tracker["count"] = 0  # Reset after detection
+                            
+                            
+                        # Time gap logic
+                        if tracker['count'] == 0:
+                            detected_objects.append(detected_object_info)
+                            tracker['count'] = 1
+                            
+                            detected_object = DetectedObject(
+                                detector_id=self.id,
+                                name=name,
+                                frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                                timestamp=datetime.now(),
+                                permission_id=self.permission_id                
+                            )
+                            
+                            db.session.add(detected_object)
+                        if current_time - tracker['last_time'] >= 30:
+                            detected_objects.append(detected_object_info)
+                            tracker['last_time'] = current_time
+                            print(Back.YELLOW)
+                            print(f"Detected After 3 seconds")
+                            print(Style.RESET_ALL)
 
-                    # Update tracker info
+                        # Update tracker info
                     detected_objects_tracker[track_id] = tracker
                 
-                # logging.info(f"Track id: {track_id}")
-                # logging.info(f"Frame number: {frame_number}")
-                
-                detected_object = DetectedObject(
-                    detector_id=self.id,
-                    name=name,
-                    frame=cv2.imencode('.jpg', frame)[1].tobytes(),
-                    timestamp=datetime.now(),
-                    permission_id=self.permission_id                
-                )
-                    
-                db.session.add(detected_object)
             db.session.commit()
             
-        return detected_objects, annotated_frame, detected_objects_tracker, frame_number
+        return detected_objects, annotated_frame, detected_objects_tracker
 
 class DetectorType(db.Model):
     id = db.Column(db.Integer, primary_key=True)

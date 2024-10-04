@@ -109,16 +109,13 @@ class DetectorThread(threading.Thread):
                 with self.app.app_context():
                     detector = Detector.query.get(self.detector_id)
                     try:
-                        self.detected_objects_tracker['last_time'] = time.time()
+                        # self.detected_objects_tracker['last_time'] = time.time()
                         detected_objects_tracker = self.detected_objects_tracker
-                        frame_number = self.frame_number
                         with self.lock:
-                            # detected_objects, annotated_frame, self.detected_objects_tracker, self.frame_number = detector.process_frame(frame, detected_objects_tracker, frame_number)
-                            # dummy 
-                            detected_objects, annotated_frame, self.detected_objects_tracker, self.frame_number = [], frame, self.detected_objects_tracker, self.frame_number + 1
-                            print(Back.YELLOW)
-                            print(f"detected objects tracker: {self.detected_objects_tracker}")
-                            print(Style.RESET_ALL)
+                            detected_objects, annotated_frame, self.detected_objects_tracker = detector.process_frame(frame, detected_objects_tracker)
+                            # print(Back.YELLOW)
+                            # print(f"detected objects tracker: {self.detected_objects_tracker}")
+                            # print(Style.RESET_ALL)
                             self.annotated_frames[self.detector_id] = annotated_frame
                             logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
                             # Add the message to the shared queue
