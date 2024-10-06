@@ -9,7 +9,7 @@ from app.auth import otp_required
 aios = Blueprint('aios', __name__)
 
 @aios.route('/aios')
-@otp_required
+# @otp_required
 def index():
     return render_template('aios/base.html')
 

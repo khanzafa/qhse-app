@@ -11,7 +11,7 @@ from guide_bot.routes import guide_bot
 from app.auth import auth as auth_blueprint
 from api.routes import api_routes
 from app.routes import app_routes
-from flask_login import LoginManager
+from flask_login import LoginManager, login_user
 from app.models import User
 from app.routes import main
 # from aios.routes import aios
@@ -117,6 +117,7 @@ def create_app():
         origins= ["*"],
         supports_credentials=True,     
     )
+    
 
     mail_manager.init_app(app)
     
@@ -126,7 +127,7 @@ def create_app():
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
-    detector_thread.start()
+    # detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)

@@ -390,6 +390,8 @@ def initialize_session():
         session['generated'] = ["Selamat datang di GuideBot!"]
 
 @guide_bot.route('/guide-bot/chat', methods=['GET', 'POST'])
+@guide_bot.route('/aios/guide-bot/chat', methods=['GET', 'POST'])
+@login_required
 def chat():
     # Jika GET, kembalikan halaman dengan riwayat pertanyaan
     if request.method == 'GET':
