@@ -1,9 +1,6 @@
 # whatsapp_sender.py
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-# from selenium.webdriver.firefox.options import Options
-# from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -12,56 +9,22 @@ from selenium.webdriver.common.action_chains import ActionChains
 import os
 import re
 import logging
-from colorama import Back, Style
+from colorama import Back, Style, init
+from termcolor import colored
 import flask_mail
+import platform
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class SeleniumManager:
-    def __init__(self, url=None):
+    def __init__(self):
         self.driver = None
         self.wait = None
         self.actions = None
-        self.url = url
 
     def initialize_driver(self):
-        # Firefox Linux
-        # profile_path = '/home/khanza/.mozilla/firefox/vivmnzdj.khanza'  # Ganti dengan path profil yang sesuai
-        # firefox_options = Options()
-        # firefox_profile = FirefoxProfile(
-        #     profile_directory=profile_path
-        # )
-        # firefox_options.add_argument('--headless')
-        # firefox_profile.set_preference("javascript.enabled", False)
-        # firefox_options.profile = firefox_profile
-        # self.driver = webdriver.Firefox(options=firefox_options)
-        # self.driver.get("https://web.whatsapp.com/")
-        # self.wait = WebDriverWait(self.driver, 150)
-        # self.actions = ActionChains(self.driver)
-
-        # Chrome Linux
-        # option = webdriver.ChromeOptions()  
-        # self.driver = webdriver.Chrome(options=option)
-        # self.driver.get("https://web.whatsapp.com/")
-        # self.wait = WebDriverWait(self.driver, 100)        
-        # self.actions = ActionChains(self.driver)
-        
-        # Chrome Windows
-        chrome_options = Options()
-        chrome_options.add_argument("--user-data-dir=C:\\Users\\khanza\\AppData\\Local\\Google\\Chrome\\User Data")
-        chrome_options.add_argument("--profile-directory=Profile 1")
-        self.driver = webdriver.Chrome(options=chrome_options)
-        if self.url:
-            self.driver.get(self.url)
-        self.wait = WebDriverWait(self.driver, 100)
-        self.actions = ActionChains(self.driver)
-
-        logging.info('Selenium driver initialized')
-        
-        print(Back.BLUE+"Selenium driver initialized")        
-        print(Style.RESET_ALL)
-        mail_manager.refresh_and_send()
-        print(Back.RED)
-        logging.info('sdh selesai scan')
-        print(Style.RESET_ALL)
+        pass
 
     def get_driver(self):
         if self.driver is None:
@@ -85,12 +48,44 @@ class SeleniumManager:
             self.wait = None  
             self.actions = None  
 
-report_selenium_manager = SeleniumManager(url="https://web.whatsapp.com/")
-otp_selenium_manager = SeleniumManager()
+class ReportManager(SeleniumManager):
+    def __init__(self):
+        super().__init__()
+
+    def initialize_driver(self):        
+        from selenium.webdriver.firefox.options import Options
+        from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+        firefox_options = Options()
+        firefox_options.add_argument("-profile")
+        firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
+        self.driver = webdriver.Firefox(options=firefox_options)
+        self.driver.get("https://web.whatsapp.com/")
+        self.wait = WebDriverWait(self.driver, 150)
+        self.actions = ActionChains(self.driver)        
+        mail_manager.refresh_and_send()       
+
+    
+class OTPManager(SeleniumManager):
+    def __init__(self):
+        super().__init__()
+
+    def initialize_driver(self):
+        from selenium.webdriver.chrome.options import Options
+        chrome_options = Options()
+        chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
+        chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
+        self.driver = webdriver.Chrome(options=chrome_options)
+        self.driver.get("https://web.whatsapp.com/")        
+        self.wait = WebDriverWait(self.driver, 100)
+        self.actions = ActionChains(self.driver)           
+        mail_manager.refresh_and_send()     
+
+report_selenium_manager = ReportManager()
+otp_selenium_manager = OTPManager()
 
 class MailManager:
     def __init__(self):
-        self.barcode_path = '//canvas[@aria-label="Scan this QR code to link a device!"]'
+        self.barcode_path = '/html/body/div[1]/div/div/div[2]/div[3]/div[1]/div/div/div[2]/div'
         self.previous_data_ref = None
         
     def init_app(self, app):
@@ -107,6 +102,7 @@ class MailManager:
             barcode_img = barcode.screenshot_as_png
             with open('barcode.png', 'wb') as f:
                 f.write(barcode_img)
+                print(colored("Barcode image saved.", "white", "on_blue"))
             
             # Send the barcode image via email
             subject = "Your Whatsapp Barcode"
@@ -117,10 +113,13 @@ class MailManager:
                 msg = flask_mail.Message(subject, sender=os.getenv('MAIL_USERNAME'), recipients=[recipient])
                 msg.body = body
                 msg.attach('barcode.png', 'image/png', f.read())
+                print(colored("Barcode image attached to email.", "white", "on_blue"))
             
             with self.app.app_context():
+                print(colored("Sending barcode...", "white", "on_blue"))
                 from app import mail
                 mail.send(msg)
+                print(colored("Barcode sent successfully.", "white", "on_blue"))
             
             print(Back.GREEN)
             print("Barcode sent successfully!")
@@ -128,7 +127,8 @@ class MailManager:
             return "Barcode sent successfully!"
         
         except Exception as e:
-            return "Failed to send barcode."
+            print(colored(f"Failed to send barcode: {e}", "white", "on_red"))
+            return f"Failed to send barcode: {e}"
 
     def refresh_and_send(self):
         last_refresh = time.time()

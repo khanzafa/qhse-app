@@ -106,11 +106,11 @@ class OTPForm(FlaskForm):
     submit = SubmitField('Verify')
 
 class LoginForm(FlaskForm):
-    phone = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=64)])
+    nik = StringField('NIK', validators=[DataRequired(), Length(min=10, max=10)])
     submit = SubmitField('Send OTP')
 
 class RegistrationForm(FlaskForm):
-    nik = StringField('NIK', validators=[DataRequired(), Length(min=16, max=16)])
+    nik = StringField('NIK', validators=[DataRequired(), Length(min=10, max=10)])
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=64)])
     email = StringField('Email', validators=[DataRequired(), Length(min=8, max=64)])
     phone = StringField('Phone Number', validators=[DataRequired(), Length(min=8, max=64)])    

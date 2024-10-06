@@ -2,12 +2,13 @@
 import io
 import re
 from uuid import uuid4
+import uuid
 from flask import Blueprint, abort, render_template, redirect, send_file, send_from_directory, url_for, flash, request, session
 from langchain_chroma import Chroma
 import markdown
 from app.auth import otp_required
-from guide_bot.models import Document
-from guide_bot.forms import DocumentFileForm, DocumentFolderForm, NewFolderForm, EditFileForm
+from app.models import Document
+from guide_bot.forms import DocumentFileForm, DocumentFolderForm, DocumentForm, NewFolderForm, EditFileForm
 from app import db
 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -24,8 +25,6 @@ GOOGLE_API_KEY=os.getenv('GOOGLE_API_KEY')
 def sanitize_filename(filename):
     return re.sub(r'[<>:"/\\|?*\t\n]', '_', filename)
 
-
-
 # Don't forget to update the manage_documents route to save documents with their ids
 # @guide_bot.route('/guide-bot/documents', methods=['GET', 'POST'])
 # @login_required
@@ -41,7 +40,7 @@ def sanitize_filename(filename):
 #     search_query = request.args.get('search_query', '', type=str)
 
 #     # Get the current user's role
-#     user_role = session_role
+#     user_role = permission_id
     
 #     # Filter dokumen berdasarkan search query jika ada
 #     if search_query:
@@ -103,7 +102,7 @@ def sanitize_filename(filename):
 
 UPLOAD_FOLDER = 'uploads'
 
-def save_file(current_dir, file, allowed_roles=None):
+def save_file(current_dir, file, permission_id=None):
     """Menyimpan file ke subdirektori yang sesuai"""
     subdir = '/'.join(file.filename.split('/')[:-1])
     filename = file.filename.split('/')[-1]
@@ -121,7 +120,7 @@ def save_file(current_dir, file, allowed_roles=None):
         title=filename, 
         file=file.read(),
         dir=filepath, 
-        allowed_roles=allowed_roles)
+        permission_id=permission_id)
     db.session.add(new_document)
     db.session.commit()
 
@@ -209,13 +208,14 @@ def manage_documents(subdir=''):
     file_form = DocumentFileForm()
     folder_form = DocumentFolderForm()
     new_folder_form = NewFolderForm()
+    document_form = DocumentForm()
     
     # Ambil query pencarian dari parameter query
     search_query = request.args.get('search_query', '', type=str)
 
     # Get the current user's role
-    session_role = session.get('role')
-    user_role = session_role
+    permission_id = session.get('permission_id')
+    permission_name = session.get('permission_name')
     
     # Filter dokumen berdasarkan search query jika ada
     if search_query:
@@ -223,21 +223,17 @@ def manage_documents(subdir=''):
         return render_template('guide_bot/manage_documents.html',                                
                                documents=documents,     
                                search_query=search_query,
-                               user_role=user_role,
+                               user_role=permission_name,
                                subdir=subdir)
     else:
         documents = Document.query.all()
     
     # Proses penambahan dokumen
-    if file_form.validate_on_submit() or folder_form.validate_on_submit():
-        if file_form.validate_on_submit():
-            form = file_form
-        elif folder_form.validate_on_submit():
-            form = folder_form
+    if document_form.validate_on_submit():
         files = request.files.getlist('files')
-        allowed_roles = ','.join(form.allowed_roles.data)
+        permission_id = document_form.permission_id.data
         for file in files:            
-            save_file(current_dir, file, allowed_roles)
+            save_file(current_dir, file, permission_id)
         
         flash('Document added successfully!')
         return redirect(url_for('guide_bot.manage_documents', subdir=subdir, search_query=search_query))    
@@ -264,7 +260,7 @@ def manage_documents(subdir=''):
                            documents=documents, 
                            folders=folders,
                            search_query=search_query,
-                           user_role=user_role,
+                           user_role=session.get('permission_name'),
                            subdir=subdir,
                            active_dir=active_dir)
 
@@ -385,117 +381,123 @@ def download_document(id):
 def index():
     return render_template('aios/base.html')
 
-# Initialize variables
-history = []
-generated = ["Selamat datang di GuideBot! Tanyakan sesuatu pada saya 😊️"]
-past = []
+@guide_bot.before_request
+def initialize_session():
+    """Inisialisasi sesi jika belum ada, menggunakan before_request untuk efisiensi."""
+    if 'history' not in session:
+        session['history'] = []
+        session['past_questions'] = []
+        session['generated'] = ["Selamat datang di GuideBot!"]
 
 @guide_bot.route('/guide-bot/chat', methods=['GET', 'POST'])
-@guide_bot.route('/aios/guide-bot/chat', methods=['GET', 'POST'])
-@otp_required
 def chat():
-    global history, generated, past
+    # Jika GET, kembalikan halaman dengan riwayat pertanyaan
+    if request.method == 'GET':
+        return render_template(
+            'guide_bot/index.html', 
+            past=session.get('past_questions'), 
+            generated=session.get('generated')
+        )
 
-    if request.method == 'POST':
-        user_input = request.form['user_input']        
-        vector_store = load_vector_store(embeddings)
-        print("Vector store loaded")
-        if vector_store:
-            print("Vector store is not empty")
-            chain = create_conversational_chain(vector_store)
-            print("Conversational chain created")
-            print("History:", history)
-            output, source_documents = conversation_chat(user_input, chain, history)
-            print("Output:", output)
-            print("Source documents:", source_documents)
-            print("Conversation completed"  )
-            past.append(user_input)
-            generated.append({
-                "message": markdown.markdown(output),
-                "source_documents": source_documents
-            })
-        else:
-            flash('⚠️ No documents uploaded by admin yet.', 'warning')
+    # Jika POST, proses input pengguna
+    user_input = request.form.get('user_input')
+    if not user_input:
+        return {"error": "User input is required."}, 400
 
-    return render_template('guide_bot/index.html', past=past, generated=generated)
+    # Tambahkan pertanyaan ke riwayat
+    session['past_questions'].append(user_input)
+
+    # Load vector store hanya jika belum ada (bisa di-cache)
+    vector_store = load_vector_store(embeddings)
+    if not vector_store:
+        return {"message": "No information available yet."}, 500
+
+    # Buat conversational chain berdasarkan vector store
+    chain = create_conversational_chain(vector_store)
+    if not chain:
+        return {"error": "Chain initialization failed."}, 500
+
+    # Set sesi sebagai permanen (menggunakan timeout jika diperlukan)
+    session.permanent = True
+
+    # Proses chat dan update history, past questions, dan generated responses
+    try:
+        session['history'], output, source_documents = conversation_chat(user_input, chain, session['history'])
+    except Exception as e:
+        return {"error": f"An error occurred during chat processing: {str(e)}"}, 500
+
+    # Konversi output ke format HTML menggunakan Markdown
+    output = markdown.markdown(output)
+    session['generated'].append(output)
+
+    # Kembalikan halaman dengan riwayat pertanyaan dan jawaban yang dihasilkan
+    return render_template(
+        'guide_bot/index.html', 
+        past=session.get('past_questions'), 
+        generated=session.get('generated')
+    )
 
 @guide_bot.route('/guide-bot/reload-vector-db', methods=['GET'])    
 def reload_vector_db():
-    session_role = session.get('role')
-    vector_store = Chroma(
-        collection_name=f"SPIL-{session_role}",
-        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
-        persist_directory=f"vector_store/{session_role}"
-    )
+    global embeddings
+    
+    vector_store = load_vector_store(embeddings)
     # Load all documents from the SQL database
-    documents = Document.query.filter(Document.allowed_roles.ilike(f'%{session_role}%')).all()
-    document_ids = [str(document.id) for document in documents]    
-    vector_store_ids = vector_store.get()['ids']    
-    vector_metadatas = vector_store.get()['metadatas']
-    print("Documents:", document_ids)    
-    print("Vector store IDs:", vector_store_ids)
-
-    # Prepare documents for vector store
+    documents = Document.query.all()
+    document_ids = [document.id for document in documents]      
+    metadatas = vector_store.get()['metadatas']
+    metadatas_document_id = [metadata["document_id"] for metadata in metadatas]
+    
     for document in documents:
-        vector_store_ids = vector_store.get()['ids']
-        print("Vector store IDs:", vector_store_ids)
         # Check if document already exists in the vector store
-        if str(document.id) in vector_store_ids:
-            continue  
+        if document.id in metadatas_document_id:
+            print(f"Document {document.id} already exists in the vector store.")
+            continue
 
         # Check if document.file is not None
         if document.file is None:
             print(f"Document {document.id} has no file.")
-            flash(f"Document {document.id} has no file.")
             continue
 
-        #  Save         
+        #  Save the document to a temporary file         
         file_path = os.path.join('data', secure_filename(document.title))
-        with open(document.dir, 'wb') as f:
+        with open(file_path, 'wb') as f:
             f.write(document.file)
         
         # Extract text based on file type
         all_text = extract_text_from_file(file_path)
-
+        
         if not all_text.strip():
-            print("Failed to extract text from the document.")
-            flash("Failed to extract text from the document.")
+            print(f"Failed to extract text from document {document.title}")
             continue
 
         splitted_text = split_documents(all_text)
-        for text in splitted_text:
-
+        
+        for text in splitted_text:            
             document_obj = ChatDocument(
                 page_content= text,
                 metadata = {
-                        "id": str(uuid4()),
+                        "id": str(uuid.uuid4()),
                         "title": document.title,
-                        "file_path": file_path,
                         "document_id": document.id,                        
                     }
             )
-            
-            if len(vector_store_ids) == 0:
-                print("Vector store is empty")
-                vector_store = Chroma.from_documents(
-                    embedding=embeddings,
-                    collection_name=f"SPIL-{session_role}",
-                    documents=[document_obj], 
-                    persist_directory=f"vector_store/{session_role}",
-                    ids=[document_obj.metadata['id']])
-                print("Vector store created")
-            else:
-                print("Vector store is not empty")
-                vector_store.add_documents(
-                    documents=[document_obj], 
-                    ids=[document_obj.metadata['id']]
-                )
-                print("Document with ID", document.id, "added to vector store")
+                        
+            vector_store.add_documents(
+                documents=[document_obj], 
+                ids=[document_obj.metadata['id']]
+            )
+            print(f"Menambahkan dokumen dengan judul {document.title} dan id vector {document_obj.metadata['id']}")
 
-    for metadata in vector_metadatas:
+        os.remove(file_path)
+
+    metadatas = vector_store.get()['metadatas']
+
+    # Delete vector which document_id not in document_ids
+    for metadata in metadatas:
         if metadata['document_id'] not in document_ids:
-            vector_store.delete(ids=[metadata['id']])
-            print(f"Deleted vector with id {metadata['id']}")
+            vector_store.delete([metadata['id']])
+            print(f"Menghapus dokumen dengan judul {metadata['title']} dan id {metadata['id']}")
 
-    flash('Vector database reloaded successfully!')
-    return redirect(url_for('guide_bot.manage_documents'))
+    # return {"message": "Vector store reloaded."}
+    return redirect(url_for('guide_bot.manage_documents'))  

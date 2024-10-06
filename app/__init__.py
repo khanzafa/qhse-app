@@ -7,7 +7,8 @@ import threading
 from flask import Flask, current_app, request, session
 from base64 import b64encode
 from app.extensions import db, migrate, swagger
-# from guide_bot.routes import guide_bot
+from guide_bot.routes import guide_bot
+from app.auth import auth as auth_blueprint
 from api.routes import api_routes
 from app.routes import app_routes
 from flask_login import LoginManager
@@ -103,13 +104,11 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(user_id)
-
-    from app.auth import auth as auth_blueprint
+    
     app.register_blueprint(main)
-    print("Main blueprint registered.")
     app.register_blueprint(auth_blueprint)
-    print("Auth blueprint registered.")
-    # ganti sesuai kebutuhan
+    app.register_blueprint(guide_bot)
+
     for route in app_routes:
         app.register_blueprint(route)
     CORS(
@@ -122,7 +121,7 @@ def create_app():
     mail_manager.init_app(app)
     
     # Selenium
-    # report_selenium_manager.initialize_driver`()  
+    report_selenium_manager.initialize_driver()  
     otp_selenium_manager.initialize_driver()
 
     # Jalankan thread detektor sebelum memulai Flask

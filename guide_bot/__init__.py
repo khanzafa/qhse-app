@@ -29,9 +29,9 @@ def conversation_chat(query, chain, history):
     history.append((query, answer))
     # Assuming result contains relevant document metadata, such as filenames
     if "source_documents" in result and result["source_documents"]:                    
-        return answer, result["source_documents"]
+        return history, answer, result["source_documents"]
     
-    return answer, []
+    return history, answer, []
 
 # Function to create the conversational chain
 def create_conversational_chain(vector_store):

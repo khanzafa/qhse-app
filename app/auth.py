@@ -22,13 +22,11 @@ def login():
     
     form = LoginForm()
 
-    if form.validate_on_submit():
-        if form.phone.data.startswith('0'):
-            form.phone.data = '62' + form.phone.data[1:]
-        user = User.query.filter_by(phone_number=form.phone.data).first()
+    if form.validate_on_submit():        
+        user = User.query.get(form.nik.data)
         
         if user is None:
-            flash('Invalid phone number', 'danger')
+            flash('Invalid NIK', 'danger')
             return redirect(url_for('auth.login'))
 
         if not user.approved:
@@ -100,7 +98,7 @@ def otp_verify(user_id):
 
     return render_template('otp_verify.html', form=form, user_id=user.id)
 
-@auth.route('forgot', methods=['GET', 'POST'])
+@auth.route('/forgot', methods=['GET', 'POST'])
 def forgot():    
     form = ForgotForm()
     if form.validate_on_submit():

@@ -1,7 +1,18 @@
 # guide_bot/forms.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, FileField, MultipleFileField, SelectMultipleField
+from wtforms import StringField, FileField, MultipleFileField, SelectMultipleField, SubmitField
 from wtforms.validators import DataRequired
+
+from app.models import Permission
+
+class DocumentForm(FlaskForm):
+    files = MultipleFileField('Files', validators=[DataRequired()])
+    permission_id = SelectMultipleField('Permission', coerce=int, validators=[DataRequired()])
+    submit = SubmitField('Upload')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.permission_id.choices = [(permission.id, permission.name) for permission in Permission.query.all()]
 
 class DocumentFileForm(FlaskForm):
     files = MultipleFileField('Files', validators=[DataRequired()], render_kw={'webkitdirectory':False})
