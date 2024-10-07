@@ -12,11 +12,17 @@ Steps to install the project:
 
 2. Install requirements
 
+   For Windows
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Set the environment variable. Make a new file `.env` and fill it with the following code:
+   For Linux
+   ```bash
+   pip install -r linus-requirements.txt
+   ```
+
+4. Set the environment variable. Make a new file `.env` and fill it with the following code:
 
    [Mail Setup Tutorial link](https://mailtrap.io/blog/flask-send-email-gmail/)
    ```env
