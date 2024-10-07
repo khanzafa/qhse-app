@@ -41,7 +41,6 @@ dataclasses-json==0.6.7
 debugpy==1.8.5
 decorator==5.1.1
 deepdiff==8.0.0
-deepsparse==1.8.0
 defusedxml==0.7.1
 Deprecated==1.2.14
 dill==0.3.8
@@ -186,8 +185,6 @@ nvidia-nvjitlink-cu12==12.6.20
 nvidia-nvtx-cu12==12.1.105
 oauthlib==3.2.2
 omegaconf==2.3.0
-onnx==1.16.2
-onnxruntime==1.19.0
 opencv-python==4.10.0.84
 opencv-python-headless==4.10.0.84
 opentelemetry-api==1.26.0
