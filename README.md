@@ -19,7 +19,7 @@ Steps to install the project:
 
    For Linux
    ```bash
-   pip install -r linus-requirements.txt
+   pip install -r linux-requirements.txt
    ```
 
 4. Set the environment variable. Make a new file `.env` and fill it with the following code:
