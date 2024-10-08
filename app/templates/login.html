@@ -5,28 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <style>
-      .flash-message {
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 0.375rem;
-        color: white;
-        font-weight: bold;
-        background-color: black;
-      }
-
-      .flash-success {
-        background-color: #38a169;
-      }
-
-      /* Green for success */
-      .flash-error {
-        background-color: #e53e3e;
-      }
-
-      /* Red for error */
-    </style>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -44,16 +22,11 @@
         padding: 10px 0;
       "
     >
-      <!-- Flash Message Section -->
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div id="flash-container">
-        {% for category, message in messages %}
-        <div class="flash-message flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-      {% endif %} {% endwith %}
+    {% block flash_content %}
+    {% include 'flash_template.html' %}
+    {% endblock %}
     </header>
+    
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
       <h2 class="text-2xl font-bold mb-6">Login</h2>
       <form
@@ -87,15 +60,10 @@
       </p>
     </div>
 
+    {% block flash_scripts %}
+    {% include 'flash_template.html' %}
+    {% endblock %}
     <script>
-      // Auto-hide flash messages after 3 seconds
-      setTimeout(function () {
-        var flashContainer = document.getElementById("flash-container");
-        if (flashContainer) {
-          flashContainer.style.display = "none";
-        }
-      }, 3000); // 3 seconds
-
       const togglePassword = document.getElementById("togglePassword");
       const passwordInput = document.getElementById("password");
       const eyeIcon = document.getElementById("eyeIcon");

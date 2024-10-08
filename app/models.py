@@ -51,6 +51,7 @@ class User(db.Model, UserMixin):
     approved = db.Column(db.Boolean(), default=None)
     otp_code = db.Column(db.String(6), nullable=True)
     otp_expiration = db.Column(db.DateTime, nullable=True)
+    penalty_time = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 

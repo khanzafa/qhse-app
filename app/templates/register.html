@@ -1,122 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-  </head>
-  <body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-6">Register</h2>
-      <!-- Flash Messages Section -->
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div id="flash-container" class="mb-4">
-        {% for category, message in messages %}
-        <div
-          class="p-3 mb-2 text-sm text-white rounded-md {% if category == 'success' %} bg-green-500 {% elif category == 'danger' %} bg-red-500 {% endif %}"
-        >
-          {{ message }}
-        </div>
-        {% endfor %}
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6">Register</h2>
+    {% block flash_content %}
+    {% include 'flash_template.html' %}
+    {% endblock %}
+
+    <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4">
+      {{ form.hidden_tag() }}
+      <!-- NIK -->
+      <div class="flex flex-col">
+        {{ form.nik.label(class="text-sm font-semibold mb-1") }} {{
+        form.nik(class="border border-gray-300 p-2 rounded-md") }}
       </div>
-      {% endif %} {% endwith %}
 
-      <form
-        method="POST"
-        action="{{ url_for('auth.register') }}"
-        class="space-y-4"
-      >
-        {{ form.hidden_tag() }}
-        <!-- NIK -->
-        <div class="flex flex-col">
-          {{ form.nik.label(class="text-sm font-semibold mb-1") }} {{
-          form.nik(class="border border-gray-300 p-2 rounded-md") }}
-        </div>
+      <!-- Name -->
+      <div class="flex flex-col">
+        {{ form.name.label(class="text-sm font-semibold mb-1") }} {{
+        form.name(class="border border-gray-300 p-2 rounded-md") }}
+      </div>
 
-        <!-- Name -->
-        <div class="flex flex-col">
-          {{ form.name.label(class="text-sm font-semibold mb-1") }} {{
-          form.name(class="border border-gray-300 p-2 rounded-md") }}
-        </div>
+      <!-- Email -->
+      <div class="flex flex-col">
+        {{ form.email.label(class="text-sm font-semibold mb-1") }} {{
+        form.email(class="border border-gray-300 p-2 rounded-md") }}
+      </div>
 
-        <!-- Email -->
-        <div class="flex flex-col">
-          {{ form.email.label(class="text-sm font-semibold mb-1") }} {{
-          form.email(class="border border-gray-300 p-2 rounded-md") }}
-        </div>
+      <!-- Phone -->
+      <div class="flex flex-col">
+        {{ form.phone.label(class="text-sm font-semibold mb-1") }} {{
+        form.phone(class="border border-gray-300 p-2 rounded-md") }}
+      </div>
 
-        <!-- Phone -->
-        <div class="flex flex-col">
-          {{ form.phone.label(class="text-sm font-semibold mb-1") }} {{
-          form.phone(class="border border-gray-300 p-2 rounded-md") }}
-        </div>
+      <!-- Role -->
+      <div class="flex flex-col">
+        {{ form.role.label(class="text-sm font-semibold mb-1") }} {{
+        form.role(class="border border-gray-300 p-2 rounded-md") }}
+      </div>
 
-        <!-- Role -->
-        <div class="flex flex-col">
-          {{ form.role.label(class="text-sm font-semibold mb-1") }} {{
-          form.role(class="border border-gray-300 p-2 rounded-md") }}
-        </div>
+      <div>
+        {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md
+        cursor-pointer") }}
+      </div>
+    </form>
+    <p class="mt-4 text-center text-sm">
+      Already have an account?
+      <a href="{{ url_for('auth.login') }}" class="text-blue-500">Login here</a>.
+    </p>
+  </div>
 
-        <div>
-          {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md
-          cursor-pointer") }}
-        </div>
-      </form>
-      <p class="mt-4 text-center text-sm">
-        Already have an account?
-        <a href="{{ url_for('auth.login') }}" class="text-blue-500"
-          >Login here</a
-        >.
-      </p>
-    </div>
-    <script>
-      // Auto-hide flash messages after 3 seconds
-      setTimeout(function () {
-        var flashContainer = document.getElementById("flash-container");
-        if (flashContainer) {
-          flashContainer.style.display = "none";
-        }
-      }, 5000); // 3 seconds
 
-      const togglePassword = document.getElementById("togglePassword");
-      const passwordInput = document.getElementById("password");
-      const eyeIcon = document.getElementById("eyeIcon");
+  <script>
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("password");
+    const eyeIcon = document.getElementById("eyeIcon");
 
-      const togglePassword2 = document.getElementById("togglePassword2");
-      const passwordInput2 = document.getElementById("password2");
-      const eyeIcon2 = document.getElementById("eyeIcon2");
+    const togglePassword2 = document.getElementById("togglePassword2");
+    const passwordInput2 = document.getElementById("password2");
+    const eyeIcon2 = document.getElementById("eyeIcon2");
 
-      togglePassword.addEventListener("click", function () {
-        const isPassword = passwordInput.getAttribute("type") === "password";
-        passwordInput.setAttribute("type", isPassword ? "text" : "password");
+    togglePassword.addEventListener("click", function () {
+      const isPassword = passwordInput.getAttribute("type") === "password";
+      passwordInput.setAttribute("type", isPassword ? "text" : "password");
 
-        if (isPassword) {
-          eyeIcon.classList.remove("fa-eye-slash");
-          eyeIcon.classList.add("fa-eye");
-        } else {
-          eyeIcon.classList.remove("fa-eye");
-          eyeIcon.classList.add("fa-eye-slash");
-        }
-      });
+      if (isPassword) {
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+      } else {
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+      }
+    });
 
-      togglePassword2.addEventListener("click", function () {
-        const isPassword = passwordInput2.getAttribute("type") === "password";
-        passwordInput2.setAttribute("type", isPassword ? "text" : "password");
+    togglePassword2.addEventListener("click", function () {
+      const isPassword = passwordInput2.getAttribute("type") === "password";
+      passwordInput2.setAttribute("type", isPassword ? "text" : "password");
 
-        if (isPassword) {
-          eyeIcon2.classList.remove("fa-eye-slash");
-          eyeIcon2.classList.add("fa-eye");
-        } else {
-          eyeIcon2.classList.remove("fa-eye");
-          eyeIcon2.classList.add("fa-eye-slash");
-        }
-      });
-    </script>
-  </body>
+      if (isPassword) {
+        eyeIcon2.classList.remove("fa-eye-slash");
+        eyeIcon2.classList.add("fa-eye");
+      } else {
+        eyeIcon2.classList.remove("fa-eye");
+        eyeIcon2.classList.add("fa-eye-slash");
+      }
+    });
+  </script>
+  {% block flash_scripts %}
+  {% include 'flash_template.html' %}
+  {% endblock %}
+</body>
+
 </html>

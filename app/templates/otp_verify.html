@@ -8,6 +8,10 @@
 </head>
 <body class="bg-gray-100">
 
+    {% block flash_content %}
+    {% include 'flash_template.html' %}
+    {% endblock %}
+
     <div class="flex justify-center items-center min-h-screen">
         <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">OTP Verification</h2>
@@ -37,5 +41,8 @@
         </div>
     </div>
 
+    {% block flash_scripts %}
+    {% include 'flash_template.html' %}
+    {% endblock %}
 </body>
 </html>

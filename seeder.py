@@ -168,16 +168,16 @@ def seed_contacts(n):
 # Menjalankan seeder
 def run_seeders():
     # print("Seeding Users...")
-    seed_users(5)
+    # seed_users(5)
 
     # print("Seeding Permissions...")
-    seed_permissions(5) 
+    # seed_permissions(5) 
 
     # print("Seeding User Permissions...")
-    seed_user_permissions(30)
+    # seed_user_permissions(30)
 
     # print("Seeding Menus...")
-    seed_menus(10)
+    # seed_menus(10)
 
     # print("Seeding CCTV Locations...")
     seed_cctv_locations(5)
@@ -186,25 +186,25 @@ def run_seeders():
     seed_cctvs(5)
 
     # print("Seeding Detector Types...")
-    seed_detector_types(5)
+    # seed_detector_types(5)
 
     # print("Seeding Weights...")
-    seed_weights(10)
+    # seed_weights(10)
 
-    print("Seeding Detectors...")
+    # print("Seeding Detectors...")
     seed_detectors(10)
 
     print("Seeding Detected Objects...")
-    seed_detected_objects(500)
+    seed_detected_objects(100)
 
     # print("Seeding Message Templates...")
-    seed_message_templates(10)
+    # seed_message_templates(10)
 
     # print("Seeding Contacts...")
-    seed_contacts(5)
+    # seed_contacts(5)
 
     # print("Seeding Notification Rules...")
-    seed_notification_rules(10)
+    # seed_notification_rules(10)
 
 if __name__ == '__main__':
     with app.app_context():   

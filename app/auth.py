@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 import os
 import random
+import secrets
 from flask import Blueprint, render_template, flash, redirect, session, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 import pytz
@@ -33,10 +34,21 @@ def login():
             flash('Your account is not approved. Please contact the administrator.', 'danger')
             return redirect(url_for('auth.login'))
 
-        # Generate and send OTP
-        send_otp(user)
-        flash('An OTP has been sent to your phone number.', 'info')
-        return redirect(url_for('auth.otp_verify', user_id=user.id))  # Redirect to OTP verification page
+        if not user.penalty_time:
+            # Generate and send OTP
+            send_otp(user)
+            flash('An OTP has been sent to your phone number.', 'info')
+            return redirect(url_for('auth.otp_verify', user_id=user.id))  # Redirect to OTP verification page
+        elif user.penalty_time and user.penalty_time < datetime.now():
+            print(f'Penalty time expired for user {user.id}')
+            user.penalty_time = None
+            db.session.commit()
+            session['failed_otp_attempts'] = 0
+            flash('An OTP has been sent to your phone number.', 'info')
+            return redirect(url_for('auth.otp_verify', user_id=user.id))
+        else:
+            remaining_time = user.penalty_time - datetime.now()
+            flash(f'Too many failed attempts. Please try again after {remaining_time.seconds} seconds.', 'danger')
     
     return render_template('login.html', form=form)
 
@@ -80,21 +92,52 @@ def logout():
 @auth.route('/otp_verify/<user_id>', methods=['GET', 'POST'])
 def otp_verify(user_id):
     user = User.query.get(user_id)
+    
     if not user:
         flash('Invalid user', 'danger')
         return redirect(url_for('auth.login'))
-
-    form = OTPForm()  # Assume form has otp_code field
+    
+    # Initialize failed attempts in session
+    if 'failed_otp_attempts' not in session:
+        session['failed_otp_attempts'] = 0
+        
+    # Check if the user is currently in a penalty period
+    if user.penalty_time and user.penalty_time > datetime.now():
+        remaining_time = user.penalty_time - datetime.now()
+        flash(f'Too many failed attempts. Please try again after {remaining_time.seconds} seconds.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    form = OTPForm()
+    
+    # Buat bypass otp (development only)
+    # login_user(user)
+    # if user.is_admin():
+    #     return redirect(url_for('admin.menu'))
+    # return redirect(url_for('main.index'))
 
     if form.validate_on_submit():
         if verify_otp(user, form.otp_code.data):
+            session['failed_otp_attempts'] = 0
+            user.penalty_time = None
             login_user(user)
             if user.is_admin():
                 return redirect(url_for('admin.menu'))
             return redirect(url_for('main.index'))
         else:
-            flash('Invalid or expired OTP', 'danger')
-            return redirect(url_for('auth.otp_verify', user_id=user.id))
+            session['failed_otp_attempts'] += 1
+            if session['failed_otp_attempts'] >= 3 and not user.penalty_time:
+                # Set penalty time to 20 seconds from now
+                user.penalty_time = datetime.now() + timedelta(seconds=20)
+                db.session.commit()  # Save penalty time to the database
+                flash('Too many failed attempts. Please try again after 20 seconds.', 'danger')
+                return redirect(url_for('auth.login'))
+            elif session['failed_otp_attempts'] >= 3 and user.penalty_time:
+                remaining_time = user.penalty_time - datetime.now()
+                flash(f'Too many failed attempts. Please try again after {remaining_time.seconds} seconds.', 'danger')
+                return redirect(url_for('auth.login'))
+            else:    
+                flash('Invalid or expired OTP', 'danger')
+                return redirect(url_for('auth.otp_verify', user_id=user.id))
 
     return render_template('otp_verify.html', form=form, user_id=user.id)
 
@@ -112,10 +155,11 @@ def forgot():
             flash('Email not found. Please register first.', 'danger')
 
 def generate_otp():
-    return str(random.randint(100000, 999999))
+    return str(secrets.randbelow(900000)+ 100000)
 
 def send_otp(user):
     otp_code = generate_otp()
+    print('OTP Code:', otp_code)
     user.otp_code = otp_code
     user.otp_expiration = datetime.utcnow() + timedelta(minutes=5)
     db.session.commit()
@@ -123,10 +167,14 @@ def send_otp(user):
     # Send OTP via email
     message = f"Your OTP is {otp_code}. It will expire in 5 minutes."
     msg = OTPMessage(phone_number=user.phone_number, message=message)    
-    msg.send()
+    # msg.send()
 
 def verify_otp(user, otp_code):
     if user.otp_code == otp_code and user.otp_expiration > datetime.utcnow():
+        # Reset OTP and expiration fields
+        user.otp_code = None
+        user.otp_expiration = None
+        db.session.commit()  # Save changes to the database
         return True
     return False
 

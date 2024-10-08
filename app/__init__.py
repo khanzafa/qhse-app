@@ -68,7 +68,7 @@ def create_app():
     # Konfigurasi direktori upload    
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     
-    app.secret_key='haho'    
+    app.secret_key = os.urandom(24)
 
     # Membuat direktori upload jika belum ada
     if not os.path.exists(UPLOAD_FOLDER):
@@ -122,8 +122,8 @@ def create_app():
     mail_manager.init_app(app)
     
     # Selenium
-    report_selenium_manager.initialize_driver()  
-    otp_selenium_manager.initialize_driver()
+    # report_selenium_manager.initialize_driver()  
+    # otp_selenium_manager.initialize_driver()
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
