@@ -58,7 +58,7 @@
               {% for doc in generated[i+1]['source_documents'] %}
               <div class="flex items-center space-x-2">
                 <span class="material-icons text-blue-600">attach_file</span>
-                <a href="{{ url_for('guide_bot.view_document', id=doc.metadata['id']) }}"
+                <a href="{{ url_for('guide_bot.view_document', id=doc.metadata['document_id']) }}"
                   class="text-blue-600 hover:underline">
                   {{ doc.metadata['title'] }}
                 </a>

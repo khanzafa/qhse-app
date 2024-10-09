@@ -8,7 +8,7 @@ from flask import Blueprint, abort, render_template, redirect, send_file, send_f
 from langchain_chroma import Chroma
 import markdown
 from app.auth import otp_required
-from app.models import Document, Permission
+from app.models import Document, DocumentPermission, Permission, UserPermission
 from guide_bot.forms import DocumentForm, NewFolderForm, EditFileForm
 from app import db
 
@@ -230,8 +230,20 @@ def manage_documents(subdir=''):
                 file.save(file_path)
 
                 # Simpan informasi dokumen di database
-                new_document = Document(title=filename, dir=os.path.normpath(os.path.join(subdir, file.filename)))
+                new_document = Document(
+                    title=filename, 
+                    dir=os.path.normpath(os.path.join(subdir, file.filename)),
+                )
                 db.session.add(new_document)
+
+                document_permissions = document_form.permission_id.data
+                if document_permissions:
+                    for permission_id in document_permissions:
+                        new_document_permission = DocumentPermission(
+                            document_id=new_document.id,
+                            permission_id=permission_id
+                        )
+                        db.session.add(new_document_permission)
 
         db.session.commit()
         flash('Document(s) added successfully!', 'success')
@@ -246,7 +258,18 @@ def manage_documents(subdir=''):
         os.makedirs(folder_path, exist_ok=True)
 
         # Simpan informasi dokumen di database
-        new_document = Document(title='index', dir=os.path.normpath(os.path.join(subdir, folder_name, 'index')))
+        new_document = Document(
+            title='index', 
+            dir=os.path.normpath(os.path.join(subdir, folder_name, 'index')),
+        )
+        document_permissions = new_folder_form.permission_id.data
+        if document_permissions:
+            for permission_id in document_permissions:
+                new_document_permission = DocumentPermission(
+                    document_id=new_document.id,
+                    permission_id=permission_id
+                )
+                db.session.add(new_document_permission)
         db.session.add(new_document)
         db.session.commit()
 
@@ -409,9 +432,8 @@ def view_document(id):
 @guide_bot.route('/guide-bot/document/file/<int:document_id>')
 def get_document_file(document_id):
     document = Document.query.get_or_404(document_id)
-    if document.file:
-        # Set appropriate MIME type based on file type
-        return send_file(io.BytesIO(document.file), mimetype='application/pdf', as_attachment=False)
+    if document.dir:
+        return send_file(document.dir, as_attachment=True, download_name=document.title)
     else:
         abort(404)
 
@@ -454,6 +476,14 @@ def chat():
     session['past_questions'].append(user_input)
 
     # Load vector store hanya jika belum ada (bisa di-cache)
+    # user_permissions = UserPermission.query.filter(UserPermission.user_id == current_user.id).all()
+    # permission_names = [user_permission.permission.name for user_permission in user_permissions]
+    # for permission_name in permission_names:
+    #     vector_store = load_vector_store(embeddings, permission_name)
+    #     if not vector_store:
+    #         return {"message": "No information available yet."}, 500
+
+    #     # Merge soon
     vector_store = load_vector_store(embeddings)
     if not vector_store:
         return {"message": "No information available yet."}, 500
@@ -473,81 +503,88 @@ def chat():
         return {"error": f"An error occurred during chat processing: {str(e)}"}, 500
 
     # Konversi output ke format HTML menggunakan Markdown
+    print("Source documents:", source_documents)
     output = markdown.markdown(output)
-    session['generated'].append(output)
+    print("Output:", output)
+    session['generated'].append({
+        "message": output,
+        "source_documents": source_documents
+    })
+    print("Output session:", session['generated'])
 
     # Kembalikan halaman dengan riwayat pertanyaan dan jawaban yang dihasilkan
     return render_template(
         'guide_bot/index.html', 
-        past=session.get('past_questions'), 
-        generated=session.get('generated')
+        past=session['past_questions'], 
+        generated=session['generated']
     )
 
 @guide_bot.route('/guide-bot/reload-vector-db', methods=['GET'])    
 def reload_vector_db():
     global embeddings
     
-    permissions = Permission.query.all()
-    for permission in permissions:
-        documents = Document.query.filter(Document.permission_id == permission.id).all()
+    # permissions = Permission.query.all()
+    # for permission in permissions:
+    #     documents = Document.query.filter(Document.permission_id == permission.id).all()
         
-        if len(documents) == 0:
+    #     if len(documents) == 0:
+    #         continue
+    
+    documents = Document.query.all()
+    vector_store = load_vector_store(embeddings)
+    document_ids = [document.id for document in documents]      
+    metadatas = vector_store.get()['metadatas']
+    metadatas_document_id = [metadata["document_id"] for metadata in metadatas]        
+
+    for document in documents:
+        # Check if document already exists in the vector store
+        if document.id in metadatas_document_id:
+            print(f"Document {document.id} already exists in the vector store.")
             continue
+
+        # Check if document.file is not None
+        if document.dir is None:
+            print(f"Document {document.id} has no file dir.")
+            continue
+        if document.title == 'index':
+            print(f"Document {document.id} is an index file.")
+            continue
+        file_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, document.dir))
+        if os.path.exists(file_path):
+            all_text = extract_text_from_file(file_path)
+        else:
+            print(f"File {file_path} not found.")
+            continue
+
+        if not all_text.strip():
+            print(f"Failed to extract text from document {document.title}")
+            continue
+
+        splitted_text = split_documents(all_text)
         
-        vector_store = load_vector_store(embeddings, permission.name)
-        document_ids = [document.id for document in documents]      
-        metadatas = vector_store.get()['metadatas']
-        metadatas_document_id = [metadata["document_id"] for metadata in metadatas]        
+        for text in splitted_text:            
+            document_obj = ChatDocument(
+                page_content= text,
+                metadata = {
+                        "id": str(uuid.uuid4()),
+                        "title": document.title,
+                        "document_id": document.id,                        
+                    }
+            )
+                        
+            vector_store.add_documents(
+                documents=[document_obj], 
+                ids=[document_obj.metadata['id']]
+            )
+            print(f"Menambahkan dokumen dengan judul {document.title} dan id vector {document_obj.metadata['id']}")
 
-        for document in documents:
-            # Check if document already exists in the vector store
-            if document.id in metadatas_document_id:
-                print(f"Document {document.id} already exists in the vector store.")
-                continue
+    metadatas = vector_store.get()['metadatas']
 
-            # Check if document.file is not None
-            if document.dir is None:
-                print(f"Document {document.id} has no file dir.")
-                continue
-            if document.title == 'index':
-                print(f"Document {document.id} is an index file.")
-                continue
-            file_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, document.dir))
-            if os.path.exists(file_path):
-                all_text = extract_text_from_file(file_path)
-            else:
-                print(f"File {file_path} not found.")
-                continue
-
-            if not all_text.strip():
-                print(f"Failed to extract text from document {document.title}")
-                continue
-
-            splitted_text = split_documents(all_text)
-            
-            for text in splitted_text:            
-                document_obj = ChatDocument(
-                    page_content= text,
-                    metadata = {
-                            "id": str(uuid.uuid4()),
-                            "title": document.title,
-                            "document_id": document.id,                        
-                        }
-                )
-                            
-                vector_store.add_documents(
-                    documents=[document_obj], 
-                    ids=[document_obj.metadata['id']]
-                )
-                print(f"Menambahkan dokumen dengan judul {document.title} dan id vector {document_obj.metadata['id']}")
-
-        metadatas = vector_store.get()['metadatas']
-
-        # Delete vector which document_id not in document_ids
-        for metadata in metadatas:
-            if metadata['document_id'] not in document_ids:
-                vector_store.delete([metadata['id']])
-                print(f"Menghapus dokumen dengan judul {metadata['title']} dan id {metadata['id']}")
+    # Delete vector which document_id not in document_ids
+    for metadata in metadatas:
+        if metadata['document_id'] not in document_ids:
+            vector_store.delete([metadata['id']])
+            print(f"Menghapus dokumen dengan judul {metadata['title']} dan id {metadata['id']}")
 
     # return {"message": "Vector store reloaded."}
     return redirect(url_for('guide_bot.manage_documents'))  

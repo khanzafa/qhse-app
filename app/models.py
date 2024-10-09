@@ -509,8 +509,6 @@ class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), index=True)
     dir = db.Column(db.String(120), index=True)    
-    permission = db.relationship('Permission', backref=db.backref('documents', uselist=False))
-    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -521,7 +519,6 @@ class Document(db.Model):
             'dir': self.dir,    
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            'permission_id': self.permission_id
         }
     
     def __repr__(self):
@@ -529,20 +526,20 @@ class Document(db.Model):
 
 class DocumentPermission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(64), db.ForeignKey('user.id', ondelete='CASCADE', onupdate='CASCADE'))
-    user = db.relationship('User', backref=db.backref('document_permissions', lazy=True))
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id', ondelete='CASCADE', onupdate='CASCADE'))
+    document = db.relationship('Document', backref=db.backref('document_permissions', lazy=True))
     permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     permission = db.relationship('Permission', backref=db.backref('document_permissions', lazy=True))
 
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id,
+            'document_id': self.document_id,
             'permission_id': self.permission_id
         }
     
     def __repr__(self):
-        return f'<DocumentPermission {self.id}>'
+        return f'<DocumentPermission {self.id}>'    
 
 class suMenu(db.Model):
     id = db.Column(db.Integer, primary_key=True)

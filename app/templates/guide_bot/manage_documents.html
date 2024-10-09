@@ -166,6 +166,11 @@
           {{ document_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
           focus:ring-blue-500") }}
         </div>        
+        <div class="mb-4">
+          {{ document_form.permission_id.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ document_form.permission_id(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
+        </div>        
         <div class="flex justify-end space-x-2">
           <button type="button" onclick="document.getElementById('addDocumentFileModal').style.display='none'"
             class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-300">
@@ -194,6 +199,11 @@
           {{ document_form.files.label(class="block text-gray-700 font-medium mb-2") }}
             {{ document_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500", webkitdirectory=True) }}
         </div>
+        <div class="mb-4">
+          {{ document_form.permission_id.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ document_form.permission_id(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
+        </div>        
         <div class="flex justify-end space-x-2">
           <button type="button" onclick="document.getElementById('addDocumentFolderModal').style.display='none'"
             class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-300">
@@ -221,6 +231,11 @@
           {{ new_folder_form.folder_name.label(class="block text-gray-700 font-medium mb-2") }}
           {{ new_folder_form.folder_name(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none
           focus:ring-2 focus:ring-blue-500") }}
+        </div>
+        <div class="mb-4">
+          {{ new_folder_form.permission_id.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ new_folder_form.permission_id(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          focus:ring-blue-500") }}
         </div>
         <div class="flex justify-end space-x-2">
           <button type="button" onclick="document.getElementById('createFolderModal').style.display='none'"
