@@ -16,6 +16,7 @@ PERMISSION_ID = 2
 # Fungsi untuk membuat data dummy
 def seed_admin():
     admin = User(
+        id='1234567890',
         name="Admin",
         email="admin@spil.co.id",
         phone_number="682199765213",
@@ -28,7 +29,7 @@ def seed_admin():
 def seed_users(n):
     for _ in range(n):
         user = User(
-            id=faker.uuid4(),
+            id=''.join(random.choices('0123456789', k=10)),
             name=faker.name(),
             email=faker.unique.email(),
             phone_number=faker.phone_number(),

@@ -18,6 +18,7 @@ from langchain_core.documents import Document as ChatDocument
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 from guide_bot import conversation_chat, create_conversational_chain, load_vector_store, save_uploaded_file, load_saved_files, split_documents, extract_text_from_file, embeddings
+from utils.auth import get_allowed_permission_ids
 
 guide_bot = Blueprint('guide_bot', __name__)
 
