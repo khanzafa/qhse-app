@@ -22,6 +22,8 @@ def seed_admin():
         role=UserRole.admin,
         approved=True,        
     )
+    db.session.add(admin)
+    db.session.commit()
     
 def seed_users(n):
     for _ in range(n):
