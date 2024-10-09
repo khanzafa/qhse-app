@@ -1,6 +1,6 @@
 import os
 import re
-from telnetlib import EC
+# from telnetlib import EC
 import time
 from colorama import Back, Style
 import cv2

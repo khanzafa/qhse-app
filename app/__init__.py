@@ -68,7 +68,7 @@ def create_app():
     # Konfigurasi direktori upload    
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     
-    app.secret_key='haho'    
+    app.secret_key = os.urandom(24)
 
     # Membuat direktori upload jika belum ada
     if not os.path.exists(UPLOAD_FOLDER):
