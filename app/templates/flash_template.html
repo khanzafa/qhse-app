@@ -8,14 +8,3 @@
     </div>
 {% endfor %} {% endif %} {% endwith %}
 {% endblock %}
-
-{% block flash_scripts %}
-<script>
-    // Close Flash Message
-    setTimeout(closeFlash, 5000);
-
-    function closeFlash() {
-        document.getElementById('flash-container').remove();
-    }
-</script>
-{% endblock %}

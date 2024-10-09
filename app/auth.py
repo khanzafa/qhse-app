@@ -45,6 +45,7 @@ def login():
             db.session.commit()
             session['failed_otp_attempts'] = 0
             flash('An OTP has been sent to your phone number.', 'info')
+            send_otp(user)
             return redirect(url_for('auth.otp_verify', user_id=user.id))
         else:
             remaining_time = user.penalty_time - datetime.now()
