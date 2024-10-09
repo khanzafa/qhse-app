@@ -125,9 +125,9 @@ content %}
 
       // Update data based on selected location
       if (selectedLocation === 'all') {
-          pieChart.data = getPieData(Object.keys(dataByType)[0]);  // You can combine all locations if needed
+          pieChart.data = getPieData(Object.keys(dataByType)[0]);  // You can combine all locations if needed          
       } else {
-          pieChart.data = getPieData(selectedLocation);
+          pieChart.data = getPieData(selectedLocation);          
       }
 
       pieChart.update();

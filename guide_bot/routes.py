@@ -1,4 +1,5 @@
 # guide_bot/routes.py
+from collections import defaultdict
 import io
 import re
 from uuid import uuid4
@@ -8,7 +9,7 @@ from langchain_chroma import Chroma
 import markdown
 from app.auth import otp_required
 from app.models import Document
-from guide_bot.forms import DocumentFileForm, DocumentFolderForm, DocumentForm, NewFolderForm, EditFileForm
+from guide_bot.forms import DocumentForm, NewFolderForm, EditFileForm
 from app import db
 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -28,7 +29,7 @@ def sanitize_filename(filename):
 # Don't forget to update the manage_documents route to save documents with their ids
 # @guide_bot.route('/guide-bot/documents', methods=['GET', 'POST'])
 # @login_required
-# def manage_documents():
+# # def manage_documents():
 #     file_form = DocumentFileForm()
 #     folder_form = DocumentFolderForm()
     
@@ -102,28 +103,6 @@ def sanitize_filename(filename):
 
 UPLOAD_FOLDER = 'uploads'
 
-def save_file(current_dir, file, permission_id=None):
-    """Menyimpan file ke subdirektori yang sesuai"""
-    subdir = '/'.join(file.filename.split('/')[:-1])
-    filename = file.filename.split('/')[-1]
-    dirpath = os.path.join(current_dir, subdir)        
-    
-    # Buat subdirektori jika belum ada
-    if not os.path.exists(dirpath):
-        os.makedirs(dirpath)    
-    
-    # Simpan file ke direktori
-    filepath = os.path.join(dirpath, filename)
-    file.save(filepath)
-    # Simpan ke database
-    new_document = Document(
-        title=filename, 
-        file=file.read(),
-        dir=filepath, 
-        permission_id=permission_id)
-    db.session.add(new_document)
-    db.session.commit()
-
 def get_file_structure_db(current_dir, document_dirs):
     """Membuat struktur file dari document_dirs di dalam current_dir"""
     file_structure = {}
@@ -160,12 +139,17 @@ def get_file_structure(root_dir):
     # print("File structure:", file_structure)
     return file_structure
 
+def save_file(current_dir, file, permission_id=None):
+    """Menyimpan file ke subdirektori yang sesuai"""
+
+
 def get_next_folder(current_dir, document_dirs):
     # Set to hold unique folder names from the paths
     next_folders = set()
     
     # Iterate over all document directories
-    if not document_dirs:
+    print("Document dirs:", document_dirs)  
+    if document_dirs:
         for doc_dir in document_dirs:
             print("Comparing:", doc_dir, current_dir)
             # Check if the path starts with the current directory
@@ -191,78 +175,137 @@ def create_folder(current_dir, folder_name):
         os.makedirs(dirpath)
     
     index_path = os.path.join(dirpath, 'index')
-
+    with open(index_path, 'w') as f:
+        f.write(f"")
     new_document = Document(
         title="index",
-        dir=index_path,
-        file=None,  
-        allowed_roles=None)
+        dir=index_path)
+    
     db.session.add(new_document)
     db.session.commit()
-
+    
 @guide_bot.route('/guide-bot/documents/', methods=['GET', 'POST'])
 @guide_bot.route('/guide-bot/documents/<path:subdir>', methods=['GET', 'POST'])
 @login_required
 def manage_documents(subdir=''):
-    current_dir = os.path.join(UPLOAD_FOLDER, subdir)
-    file_form = DocumentFileForm()
-    folder_form = DocumentFolderForm()
     new_folder_form = NewFolderForm()
     document_form = DocumentForm()
-    
+
     # Ambil query pencarian dari parameter query
     search_query = request.args.get('search_query', '', type=str)
 
-    # Get the current user's role
-    permission_id = session.get('permission_id')
-    permission_name = session.get('permission_name')
-    
-    # Filter dokumen berdasarkan search query jika ada
     if search_query:
-        documents = Document.query.filter(Document.dir.ilike(f'%{search_query}%'))
-        return render_template('guide_bot/manage_documents.html',                                
-                               documents=documents,     
-                               search_query=search_query,
-                               user_role=permission_name,
-                               subdir=subdir)
+        documents = Document.query.filter(Document.dir.ilike(f'%{search_query}%')).all()
+        return render_template(
+            'guide_bot/manage_documents.html', 
+            documents=documents, 
+            subdir=subdir,
+            new_folder_form=new_folder_form,
+            document_form=document_form,            
+            search_query=search_query)
     else:
         documents = Document.query.all()
-    
-    # Proses penambahan dokumen
+
+    # Proses penambahan dokumen                
     if document_form.validate_on_submit():
         files = request.files.getlist('files')
-        permission_id = document_form.permission_id.data
-        for file in files:            
-            save_file(current_dir, file, permission_id)
-        
-        flash('Document added successfully!')
+        for file in files:
+            if file and allowed_file(file.filename):                
+                # Simpan file dengan full path sesuai struktur folder            
+                file_dir = os.path.normpath(os.path.join(UPLOAD_FOLDER, subdir)) if subdir else UPLOAD_FOLDER
+                file_path = os.path.normpath(os.path.join(file_dir, file.filename))
+                filename = os.path.normpath(file.filename.split('/')[-1])
+
+                print("File dir:", file_dir)
+                print("File path:", file_path)
+                print("Filename:", filename)
+
+                # Cek apakah folder subdir ada, jika tidak buat folder
+                os.makedirs(file_dir, exist_ok=True)
+                dir_name = os.path.dirname(file_path)
+                os.makedirs(dir_name, exist_ok=True)
+
+                # Simpan file                
+                file.save(file_path)
+
+                # Simpan informasi dokumen di database
+                new_document = Document(title=filename, dir=os.path.normpath(os.path.join(subdir, file.filename)))
+                db.session.add(new_document)
+
+        db.session.commit()
+        flash('Document(s) added successfully!', 'success')
         return redirect(url_for('guide_bot.manage_documents', subdir=subdir, search_query=search_query))    
-    
+
     # Proses penambahan folder
     if new_folder_form.validate_on_submit():
         folder_name = new_folder_form.folder_name.data
-        create_folder(current_dir, folder_name)
-        flash('Folder created successfully!')
+        folder_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, subdir, folder_name)) if subdir else os.path.normpath(os.path.join(UPLOAD_FOLDER, folder_name))
+
+        # Cek apakah folder subdir ada, jika tidak buat folder
+        os.makedirs(folder_path, exist_ok=True)
+
+        # Simpan informasi dokumen di database
+        new_document = Document(title='index', dir=os.path.normpath(os.path.join(subdir, folder_name, 'index')))
+        db.session.add(new_document)
+        db.session.commit()
+
         return redirect(url_for('guide_bot.manage_documents', subdir=subdir, search_query=search_query))
+
+    # Ambil semua dokumen dari database
+    documents = Document.query.all()
+
+    # Filter dokumen berdasarkan subdir sekarang
+    current_path = os.path.normpath(subdir) if subdir else ''
     
-    # file_structure = get_file_structure(current_dir)
-    # print("File structure:", file_structure)
-    # print("Current dir:", [dir for dir in current_dir.split('/') if dir != ''])
-    folders = get_next_folder(current_dir, [document.dir for document in documents])
-    documents = [document for document in documents if document.dir.split('/')[:-1] == [dir for dir in current_dir.split('/') if dir != '']]        
-    # print("Folders:", folders)
-    # Render halaman dengan form dan dokumen terpaginate
+    # Folder dan file yang ada di direktori ini
+    folders = set()
+    files = []
+
+    # Loop melalui dokumen untuk mencari yang sesuai dengan subdir
+    for doc in documents:
+        doc_path_parts = doc.dir.split(os.sep)
+        if current_path:
+            # Jika ada subdir sekarang, pastikan dokumen ada di dalam subdir
+            if not doc.dir.startswith(current_path):
+                continue
+            # Ambil bagian setelah subdir
+            remaining_path = doc.dir[len(current_path)+1:]
+        else:
+            remaining_path = doc.dir
+        
+        # Cek apakah folder atau file
+        if os.sep in remaining_path:
+            # Tambahkan folder yang belum ada di daftar
+            folder_name = remaining_path.split(os.sep)[0]
+            folders.add(folder_name)
+        else:
+            # Ini adalah file di subdir sekarang
+            files.append(doc)
+
+    # Convert set ke list untuk penampilan
+    folders = list(folders)
+
+    # Render halaman file explorer
     active_dir = enumerate(subdir.split('/'))
     return render_template('guide_bot/manage_documents.html', 
-                           file_form=file_form, 
-                           folder_form=folder_form, 
-                           new_folder_form=new_folder_form,
-                           documents=documents, 
                            folders=folders,
-                           search_query=search_query,
-                           user_role=session.get('permission_name'),
+                            files=files,
+                           current_dir=subdir,
+                           new_folder_form=new_folder_form,
+                           document_form=document_form,
                            subdir=subdir,
                            active_dir=active_dir)
+
+UPLOAD_FOLDER = 'uploads'  # Tempat penyimpanan file yang diunggah
+ALLOWED_EXTENSIONS = {
+    'bmp', 'csv', 'doc', 'docx', 'eml', 'epub', 'heic', 'html', 'jpeg', 'png', 
+    'md', 'msg', 'odt', 'org', 'p7s', 'pdf', 'ppt', 'pptx', 'rst', 'rtf', 
+    'tiff', 'txt', 'tsv', 'xls', 'xlsx', 'xml'
+}
+
+# Fungsi untuk memeriksa ekstensi file yang diperbolehkan
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @guide_bot.route('/uploads/<path:filename>')
 def uploaded_file(filename):
@@ -457,18 +500,19 @@ def reload_vector_db():
             continue
 
         # Check if document.file is not None
-        if document.file is None:
-            print(f"Document {document.id} has no file.")
+        if document.dir is None:
+            print(f"Document {document.id} has no file dir.")
+            continue
+        if document.title == 'index':
+            print(f"Document {document.id} is an index file.")
+            continue
+        file_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, document.dir))
+        if os.path.exists(file_path):
+            all_text = extract_text_from_file(file_path)
+        else:
+            print(f"File {file_path} not found.")
             continue
 
-        #  Save the document to a temporary file         
-        file_path = os.path.join('data', secure_filename(document.title))
-        with open(file_path, 'wb') as f:
-            f.write(document.file)
-        
-        # Extract text based on file type
-        all_text = extract_text_from_file(file_path)
-        
         if not all_text.strip():
             print(f"Failed to extract text from document {document.title}")
             continue
@@ -490,8 +534,6 @@ def reload_vector_db():
                 ids=[document_obj.metadata['id']]
             )
             print(f"Menambahkan dokumen dengan judul {document.title} dan id vector {document_obj.metadata['id']}")
-
-        os.remove(file_path)
 
     metadatas = vector_store.get()['metadatas']
 

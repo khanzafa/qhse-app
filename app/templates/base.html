@@ -251,7 +251,17 @@
             </div>
           </div>
 
-          {% endif %}
+          {% if permission_name == "QHSE" %}
+          <div>
+            <a
+              href="{{ url_for('guide_bot.manage_documents') }}"
+              class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center  {{ 'bg-gray-700' if '/guide-bot' in request.path else '' }}"
+            >
+              <i class="fas fa-comments mr-3"></i>
+              Master Chatbot
+            </a>
+          </div>
+          {% endif %} {% endif %}
         </nav>
       </aside>
     </div>
@@ -279,7 +289,7 @@
       setTimeout(closeFlash, 5000);
 
       function closeFlash() {
-        document.getElementById('flash-container').remove();
+        document.getElementById("flash-container").remove();
       }
     </script>
     {% endblock %}

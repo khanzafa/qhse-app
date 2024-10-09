@@ -107,7 +107,6 @@ def create_app():
     
     app.register_blueprint(main)
     app.register_blueprint(auth_blueprint)
-    app.register_blueprint(guide_bot)
 
     for route in app_routes:
         app.register_blueprint(route)
@@ -119,14 +118,14 @@ def create_app():
     )
     
 
-    mail_manager.init_app(app)
+    # mail_manager.init_app(app)
     
     # Selenium
-    report_selenium_manager.initialize_driver()  
-    otp_selenium_manager.initialize_driver()
+    # report_selenium_manager.initialize_driver()  
+    # otp_selenium_manager.initialize_driver()
 
     # Jalankan thread detektor sebelum memulai Flask
-    detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
+    # detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
     # detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan

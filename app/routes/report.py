@@ -126,9 +126,14 @@ def dashboard():
         detected_objects_by_cctv_type[location]['Other'] = sum(other_types.values())
 
     # Data struktur untuk bar chart berdasarkan hari dalam 7 hari terakhir
-    daily_counts = Counter([detected_object.timestamp.date() for detected_object in detected_objects])
-    last_7_days = [(max(daily_counts) - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
-    daily_detected_object_counts = [daily_counts.get(datetime.strptime(day, '%Y-%m-%d').date(), 0) for day in last_7_days]
+    daily_counts = Counter([detected_object.timestamp.date() for detected_object in detected_objects])    
+    if daily_counts:
+        last_7_days = [(max(daily_counts) - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+        daily_detected_object_counts = [daily_counts.get(datetime.strptime(day, '%Y-%m-%d').date(), 0) for day in last_7_days]
+    else:
+        last_7_days = [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+        daily_detected_object_counts = [0] * 7
+    
     
     # Data Struktur untuk scatter plot berdasarkan lokasi CCTV
     detected_objects_by_location = Counter([detected_object.detector.cctv.cctv_location_id for detected_object in detected_objects])

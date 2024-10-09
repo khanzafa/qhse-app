@@ -512,8 +512,7 @@ class Contact(db.Model):
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), index=True)
-    dir = db.Column(db.String(120), index=True)
-    file = db.Column(db.LargeBinary)
+    dir = db.Column(db.String(120), index=True)    
     permission = db.relationship('Permission', backref=db.backref('documents', uselist=False))
     permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
@@ -523,8 +522,7 @@ class Document(db.Model):
         return {
             'id': self.id,
             'title': self.title,
-            'dir': self.dir,
-            'file': self.file,
+            'dir': self.dir,    
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             'permission_id': self.permission_id

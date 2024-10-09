@@ -32,6 +32,7 @@
 <div class="container mx-auto mt-0 p-6 bg-white shadow-md rounded-md">
   <h2 class="text-3xl font-semibold mb-8 text-gray-800">Manage Documents</h2>
 
+  <!-- Action -->
   <div class="flex space-x-4 mt-4">
     <!-- Button Back -->
     {% if subdir != '' %}
@@ -41,9 +42,7 @@
     </a>
     {% endif %}
 
-    {% if user_role == 'QHSE' and file_form and folder_form and new_folder_form %}
-    <!-- Manager-only content -->
-
+    {% if permission_name == 'QHSE' and document_form and new_folder_form %}
     <!-- Add New File Button -->
     <button onclick="document.getElementById('addDocumentFileModal').style.display='block'"
       class="inline-block px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300">
@@ -67,8 +66,8 @@
       class="inline-block px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-300">
       🔄 Reload Vector DB
     </a>
-  </div>
-  {% endif %}
+    {% endif %}
+  </div>  
 
   <!-- Demo GuideBot -->
   <a href="{{ url_for('guide_bot.chat') }}"
@@ -89,11 +88,13 @@
   </form>
 
 
-  <!-- Documents Table and Actions -->
+  <!-- Navigations -->
   <div class="flex justify-between items-center mt-8 mb-4">
     <div class="flex items-center">
       <!-- Active Path Breadcrumb -->
       <h3 class="text-xl font-semibold">
+        <a href="{{ url_for('guide_bot.manage_documents') }}" class="text-blue-600 hover:underline">Home</a>
+        >
         {% for i, p in active_dir %}
         <a href="{{ url_for('guide_bot.manage_documents', subdir=subdir.split('/')[:i+1]|join('/')) }}"
           class="text-blue-600 hover:underline">{{ p }}</a>
@@ -103,52 +104,44 @@
     </div>
   </div>
 
-  <!-- HTML for Documents Table -->
-  <form action="{{ url_for('guide_bot.manage_documents') }}" method="get" class="mb-6">
-    <table class="w-full table-auto border-collapse border border-gray-200">
-      <!-- Table Head -->
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="border border-gray-300 px-6 py-3 text-left">Name</th>
-          <th class="border border-gray-300 px-6 py-3 text-left">Role</th>
-          <th class="border border-gray-300 px-6 py-3 text-left">Date Created</th>
-          <th class="border border-gray-300 px-6 py-3 text-left">File Size</th>
-        </tr>
-      </thead>
-      <tbody class="bg-white">
-        <!-- Folders Section -->
-        {% for d in folders %}
-        <tr class="folder-row hover:bg-gray-100" data-type="folder" data-name="{{ d }}"
-          oncontextmenu="showContextMenu(event, '{{ d }}', 'folder')">
-          <td class="border border-gray-300 px-6 py-3 text-left">
-            📁 <a href="{{ url_for('guide_bot.manage_documents', subdir=(subdir + '/' + d).strip('/') ) }}"
-              class="text-blue-600 hover:underline">{{ d.replace('/', '') }}/</a>
-          </td>
-          <td class="border border-gray-300 px-6 py-3 text-left"></td>
-          <td class="border border-gray-300 px-6 py-3 text-left"></td>
-          <td class="border border-gray-300 px-6 py-3 text-left"></td>
-        </tr>
-        {% endfor %}
-
-        <!-- Files Section -->
-        {% for f in documents %}
-        {% if f.title != 'index' %}
-        <tr class="file-row hover:bg-gray-100" data-type="file" data-name="{{ f.title }}" data-id="{{ f.id }}"
-          oncontextmenu="showContextMenu(event, '{{ f.title }}', 'file', '{{ f.id }}')">
-          <td class="border border-gray-300 px-6 py-3 text-left">
-            📄 <a href="{{ url_for('guide_bot.view_document', id=f.id) }}" class="text-blue-600 hover:underline">{{
-              f.title }}</a>
-          </td>
-          <td class="border border-gray-300 px-6 py-3 text-left">{{ f.allowed_roles }}</td>
-          <td class="border border-gray-300 px-6 py-3 text-left">{{ f.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-          <td class="border border-gray-300 px-6 py-3 text-left">{{ f.file|length }} bytes</td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
-  </form>
-
+  <!-- Documents Table -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Tampilkan folder dan file -->
+    <div class="p-4 bg-gray-100 rounded-lg shadow-md">  
+      <div class="mb-4">
+          <!-- Daftar folder -->
+          {% if folders %}
+              <ul>
+                  {% for folder in folders %}
+                      <li class="mt-2">
+                          <a href="{{ url_for('guide_bot.manage_documents', subdir=(subdir + '/' + folder if subdir else folder)) }}" class="text-blue-500 hover:underline">
+                              <i class="fas fa-folder mr-2"></i> {{ folder }}
+                          </a>
+                      </li>
+                  {% endfor %}
+              </ul>
+          {% endif %}
+      </div>
+  
+      <div class="mb-4">
+          <!-- Daftar files -->
+          {% if files %}
+              <ul>                  
+                    {% for file in files %}
+                        {% if file.title != 'index' %}
+                        <li class="mt-2">
+                            <a href="#" class="text-blue-500 hover:underline">
+                                <i class="fas fa-file-alt mr-2"></i> {{ file.title }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}                  
+              </ul>          
+          {% endif %}
+      </div>
+    </div>
+  
+  </div>
 
   <!-- Custom Context Menu HTML -->
   <div id="customContextMenu" class="custom-menu">
@@ -159,7 +152,7 @@
     </ul>
   </div>
 
-  {% if file_form %}
+  {% if document_form %}
   <!-- Add Document File Modal -->
   <div id="addDocumentFileModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
     style="display: none;">
@@ -167,17 +160,12 @@
       <h2 class="text-2xl font-semibold mb-4 text-gray-800">Upload Files</h2>
       <form method="POST" action="{{ url_for('guide_bot.manage_documents', subdir=subdir) }}"
         enctype="multipart/form-data">
-        {{ file_form.hidden_tag() }}
+        {{ document_form.hidden_tag() }}
         <div class="mb-4">
-          {{ file_form.files.label(class="block text-gray-700 font-medium mb-2") }}
-          {{ file_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
+          {{ document_form.files.label(class="block text-gray-700 font-medium mb-2") }}
+          {{ document_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
           focus:ring-blue-500") }}
-        </div>
-        <div class="mb-4">
-          {{ file_form.allowed_roles.label(class="block text-gray-700 font-medium mb-2") }}
-          {{ file_form.allowed_roles(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none
-          focus:ring-2 focus:ring-blue-500") }}
-        </div>
+        </div>        
         <div class="flex justify-end space-x-2">
           <button type="button" onclick="document.getElementById('addDocumentFileModal').style.display='none'"
             class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-300">
@@ -193,7 +181,7 @@
   </div>
   {% endif %}
 
-  {% if folder_form %}
+  {% if document_form %}
   <!-- Add Document Folder Modal -->
   <div id="addDocumentFolderModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
     style="display: none;">
@@ -201,16 +189,10 @@
       <h2 class="text-2xl font-semibold mb-4 text-gray-800">Upload Folder</h2>
       <form method="POST" action="{{ url_for('guide_bot.manage_documents', subdir=subdir) }}"
         enctype="multipart/form-data">
-        {{ folder_form.hidden_tag() }}
+        {{ document_form.hidden_tag() }}
         <div class="mb-4">
-          {{ folder_form.files.label(class="block text-gray-700 font-medium mb-2") }}
-          {{ folder_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2
-          focus:ring-blue-500") }}
-        </div>
-        <div class="mb-4">
-          {{ folder_form.allowed_roles.label(class="block text-gray-700 font-medium mb-2") }}
-          {{ folder_form.allowed_roles(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none
-          focus:ring-2 focus:ring-blue-500") }}
+          {{ document_form.files.label(class="block text-gray-700 font-medium mb-2") }}
+            {{ document_form.files(class="block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500", webkitdirectory=True) }}
         </div>
         <div class="flex justify-end space-x-2">
           <button type="button" onclick="document.getElementById('addDocumentFolderModal').style.display='none'"
