@@ -28,6 +28,7 @@ def seed_admin():
 def seed_users(n):
     for _ in range(n):
         user = User(
+            id=faker.uuid4(),
             name=faker.name(),
             email=faker.unique.email(),
             phone_number=faker.phone_number(),
