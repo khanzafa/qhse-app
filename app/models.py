@@ -55,11 +55,6 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
 
     def is_admin(self): 
         return self.role == UserRole.admin
@@ -531,7 +526,24 @@ class Document(db.Model):
     
     def __repr__(self):
         return f'<Document {self.title}>'
+
+class DocumentPermission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(64), db.ForeignKey('user.id', ondelete='CASCADE', onupdate='CASCADE'))
+    user = db.relationship('User', backref=db.backref('document_permissions', lazy=True))
+    permission_id = db.Column(db.Integer, db.ForeignKey('permission.id', ondelete='CASCADE', onupdate='CASCADE'))
+    permission = db.relationship('Permission', backref=db.backref('document_permissions', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'permission_id': self.permission_id
+        }
     
+    def __repr__(self):
+        return f'<DocumentPermission {self.id}>'
+
 class suMenu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), unique=True, nullable=False)

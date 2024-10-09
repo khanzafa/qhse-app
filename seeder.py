@@ -14,19 +14,39 @@ db.init_app(app)
 PERMISSION_ID = 2
 
 # Fungsi untuk membuat data dummy
+def seed_admin():
+    admin = User(
+        name="Admin",
+        email="admin@spil.co.id",
+        phone_number="682199765213",
+        role=UserRole.admin,
+        approved=True,        
+    )
+    
 def seed_users(n):
     for _ in range(n):
         user = User(
             name=faker.name(),
             email=faker.unique.email(),
+            phone_number=faker.phone_number(),
             role=random.choice([UserRole.user, UserRole.admin, UserRole.guest]),
-            approved=random.choice([None, True])
+            approved=False
         )
-        user.set_password("12345678")
         db.session.add(user)
     db.session.commit()
 
 def seed_permissions(n):
+    qhse = Permission(
+        name="QHSE",
+        description="Quality, Health, Safety, and Environment"
+    )
+    paier = Permission(
+        name="PAIER",
+        description="Public Affairs, Industrial, and Employee Relations"
+    )
+    db.session.add(qhse)
+    db.session.add(paier)
+
     for _ in range(n):
         permission = Permission(
             name=faker.word(),
@@ -47,6 +67,18 @@ def seed_user_permissions(n):
     db.session.commit()
 
 def seed_menus(n):
+    chatbot = suMenu(
+        title="Chatbot",
+        url="/guide-bot/chat",
+        permission_id=PERMISSION_ID
+    )
+    shift_bko = suMenu(
+        title="Shift and BKO Reccomendation",
+        url="/shift-bko",
+        permission_id=PERMISSION_ID
+    )
+    db.session.add(chatbot)
+    db.session.add(shift_bko)
     permissions = Permission.query.all()
     for _ in range(n):
         menu = suMenu(
@@ -167,23 +199,26 @@ def seed_contacts(n):
 
 # Menjalankan seeder
 def run_seeders():
-    # print("Seeding Users...")
-    # seed_users(5)
+    print("Seeding Admin...")
+    seed_admin()
 
-    # print("Seeding Permissions...")
-    # seed_permissions(5) 
+    print("Seeding Users...")
+    seed_users(5)
+
+    print("Seeding Permissions...")
+    seed_permissions(5) 
 
     # print("Seeding User Permissions...")
     # seed_user_permissions(30)
 
-    # print("Seeding Menus...")
-    # seed_menus(10)
+    print("Seeding Menus...")
+    seed_menus(10)
 
     # print("Seeding CCTV Locations...")
-    seed_cctv_locations(5)
+    # seed_cctv_locations(5)
 
-    print("Seeding CCTVs...")
-    seed_cctvs(5)
+    # print("Seeding CCTVs...")
+    # seed_cctvs(5)
 
     # print("Seeding Detector Types...")
     # seed_detector_types(5)
@@ -192,10 +227,10 @@ def run_seeders():
     # seed_weights(10)
 
     # print("Seeding Detectors...")
-    seed_detectors(10)
+    # seed_detectors(10)
 
-    print("Seeding Detected Objects...")
-    seed_detected_objects(100)
+    # print("Seeding Detected Objects...")
+    # seed_detected_objects(100)
 
     # print("Seeding Message Templates...")
     # seed_message_templates(10)

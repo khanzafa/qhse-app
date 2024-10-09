@@ -8,7 +8,7 @@ from flask import Blueprint, abort, render_template, redirect, send_file, send_f
 from langchain_chroma import Chroma
 import markdown
 from app.auth import otp_required
-from app.models import Document
+from app.models import Document, Permission
 from guide_bot.forms import DocumentForm, NewFolderForm, EditFileForm
 from app import db
 
@@ -486,62 +486,67 @@ def chat():
 def reload_vector_db():
     global embeddings
     
-    vector_store = load_vector_store(embeddings)
-    # Load all documents from the SQL database
-    documents = Document.query.all()
-    document_ids = [document.id for document in documents]      
-    metadatas = vector_store.get()['metadatas']
-    metadatas_document_id = [metadata["document_id"] for metadata in metadatas]
-    
-    for document in documents:
-        # Check if document already exists in the vector store
-        if document.id in metadatas_document_id:
-            print(f"Document {document.id} already exists in the vector store.")
-            continue
-
-        # Check if document.file is not None
-        if document.dir is None:
-            print(f"Document {document.id} has no file dir.")
-            continue
-        if document.title == 'index':
-            print(f"Document {document.id} is an index file.")
-            continue
-        file_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, document.dir))
-        if os.path.exists(file_path):
-            all_text = extract_text_from_file(file_path)
-        else:
-            print(f"File {file_path} not found.")
-            continue
-
-        if not all_text.strip():
-            print(f"Failed to extract text from document {document.title}")
-            continue
-
-        splitted_text = split_documents(all_text)
+    permissions = Permission.query.all()
+    for permission in permissions:
+        documents = Document.query.filter(Document.permission_id == permission.id).all()
         
-        for text in splitted_text:            
-            document_obj = ChatDocument(
-                page_content= text,
-                metadata = {
-                        "id": str(uuid.uuid4()),
-                        "title": document.title,
-                        "document_id": document.id,                        
-                    }
-            )
-                        
-            vector_store.add_documents(
-                documents=[document_obj], 
-                ids=[document_obj.metadata['id']]
-            )
-            print(f"Menambahkan dokumen dengan judul {document.title} dan id vector {document_obj.metadata['id']}")
+        if len(documents) == 0:
+            continue
+        
+        vector_store = load_vector_store(embeddings, permission.name)
+        document_ids = [document.id for document in documents]      
+        metadatas = vector_store.get()['metadatas']
+        metadatas_document_id = [metadata["document_id"] for metadata in metadatas]        
 
-    metadatas = vector_store.get()['metadatas']
+        for document in documents:
+            # Check if document already exists in the vector store
+            if document.id in metadatas_document_id:
+                print(f"Document {document.id} already exists in the vector store.")
+                continue
 
-    # Delete vector which document_id not in document_ids
-    for metadata in metadatas:
-        if metadata['document_id'] not in document_ids:
-            vector_store.delete([metadata['id']])
-            print(f"Menghapus dokumen dengan judul {metadata['title']} dan id {metadata['id']}")
+            # Check if document.file is not None
+            if document.dir is None:
+                print(f"Document {document.id} has no file dir.")
+                continue
+            if document.title == 'index':
+                print(f"Document {document.id} is an index file.")
+                continue
+            file_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, document.dir))
+            if os.path.exists(file_path):
+                all_text = extract_text_from_file(file_path)
+            else:
+                print(f"File {file_path} not found.")
+                continue
+
+            if not all_text.strip():
+                print(f"Failed to extract text from document {document.title}")
+                continue
+
+            splitted_text = split_documents(all_text)
+            
+            for text in splitted_text:            
+                document_obj = ChatDocument(
+                    page_content= text,
+                    metadata = {
+                            "id": str(uuid.uuid4()),
+                            "title": document.title,
+                            "document_id": document.id,                        
+                        }
+                )
+                            
+                vector_store.add_documents(
+                    documents=[document_obj], 
+                    ids=[document_obj.metadata['id']]
+                )
+                print(f"Menambahkan dokumen dengan judul {document.title} dan id vector {document_obj.metadata['id']}")
+
+        metadatas = vector_store.get()['metadatas']
+
+        # Delete vector which document_id not in document_ids
+        for metadata in metadatas:
+            if metadata['document_id'] not in document_ids:
+                vector_store.delete([metadata['id']])
+                print(f"Menghapus dokumen dengan judul {metadata['title']} dan id {metadata['id']}")
 
     # return {"message": "Vector store reloaded."}
     return redirect(url_for('guide_bot.manage_documents'))  

@@ -107,7 +107,8 @@ def create_app():
     
     app.register_blueprint(main)
     app.register_blueprint(auth_blueprint)
-
+    app.register_blueprint(guide_bot)
+    
     for route in app_routes:
         app.register_blueprint(route)
     CORS(

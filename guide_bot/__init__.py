@@ -120,11 +120,10 @@ def split_documents(text):
     )
     return text_splitter.split_text(text)
 
-def load_vector_store(embeddings):
-    session_role = session.get('role')
+def load_vector_store(embeddings, permission_name):
     vector_store = Chroma(
-        collection_name=f"SPIL-{session_role}",
+        collection_name=f"SPIL-{permission_name}",
         embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
-        persist_directory=f"vector_store/{session_role}"
+        persist_directory=f"vector_store/{permission_name}"
     )
     return vector_store
