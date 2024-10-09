@@ -87,7 +87,8 @@ def register():
 @login_required
 def logout():
     logout_user()
-    session.pop('role', None)
+    session.pop('role', None) 
+    session.clear()
     return redirect(url_for('auth.login'))
 
 @auth.route('/otp_verify/<user_id>', methods=['GET', 'POST'])

@@ -31,7 +31,7 @@ def conversation_chat(query, chain, history):
     if "source_documents" in result and result["source_documents"]:                    
         return history, answer, result["source_documents"]
     
-    return history, answer, []
+    return history, answer, None
 
 # Function to create the conversational chain
 def create_conversational_chain(vector_store):
@@ -39,11 +39,13 @@ def create_conversational_chain(vector_store):
         ("system", "Anda adalah AI Bot yang sangat membantu di lingkungan PT. Salam Pacific Indonesia Lines. Nama Anda adalah GuideBot."),
         ("human", 
          """
-            Tolong jawab pertanyaan berikut dalam bahasa Indonesia.
-            Jika informasi dalam konteks tersedia, gunakan untuk memberikan jawaban yang akurat dan jelas.
+            Jika input bukan pertanyaan atau konteks tidak tersedia, jawab dengan informasi yang relevan berdasarkan pemahaman umum Anda.
+            Jika input adalah pertanyaan, berikan jawaban yang jelas dan akurat dalam bahasa Indonesia.
+            Jika ada informasi dalam konteks, gunakan konteks tersebut untuk memberikan jawaban yang akurat.
             Jika tidak ada konteks atau jawaban yang tepat, katakan 'Maaf, saya tidak tahu jawabannya'.
+            
             Pertanyaan: {question}
-            Konteks: {context}
+            Konteks yang tersedia: {context}
             Jawaban:
          """)
     ])
@@ -82,7 +84,7 @@ def create_conversational_chain(vector_store):
     chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         chain_type='stuff',
-        retriever=vector_store.as_retriever(search_kwargs={"k": 3}),
+        retriever=vector_store.as_retriever(search_type="similarity_score_threshold", search_kwargs={"k": 1, 'score_threshold': 0.5}),
         return_source_documents=True,
         memory=memory,
         combine_docs_chain_kwargs={
@@ -92,6 +94,14 @@ def create_conversational_chain(vector_store):
     )    
     
     return chain
+
+def load_vector_store(embeddings):
+    vector_store = Chroma(
+        collection_name=f"SPIL",
+        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
+        persist_directory=f"vector_store"
+    )
+    return vector_store
 
 # Function to save uploaded file to the server
 def save_uploaded_file(uploaded_file):
@@ -119,11 +129,3 @@ def split_documents(text):
         is_separator_regex=False,
     )
     return text_splitter.split_text(text)
-
-def load_vector_store(embeddings):
-    vector_store = Chroma(
-        collection_name=f"SPIL",
-        embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
-        persist_directory=f"vector_store"
-    )
-    return vector_store

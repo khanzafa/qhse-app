@@ -1,5 +1,6 @@
 # guide_bot/routes.py
 from collections import defaultdict
+from functools import wraps
 import io
 import re
 from uuid import uuid4
@@ -143,7 +144,6 @@ def get_file_structure(root_dir):
 def save_file(current_dir, file, permission_id=None):
     """Menyimpan file ke subdirektori yang sesuai"""
 
-
 def get_next_folder(current_dir, document_dirs):
     # Set to hold unique folder names from the paths
     next_folders = set()
@@ -184,10 +184,24 @@ def create_folder(current_dir, folder_name):
     
     db.session.add(new_document)
     db.session.commit()
-    
+
+# Custom decorator to require qhse privileges
+def qhse_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if the user has QHSE permissions
+        user_permissions = get_allowed_permission_ids()
+        qhse_permission = Permission.query.filter_by(name='QHSE').first()
+        if qhse_permission.id not in user_permissions:
+            flash('You do not have permission to access this page.', 'error')
+            return abort(403)
+        return f(*args, **kwargs)
+    return decorated_function    
+
 @guide_bot.route('/guide-bot/documents/', methods=['GET', 'POST'])
 @guide_bot.route('/guide-bot/documents/<path:subdir>', methods=['GET', 'POST'])
 @login_required
+@qhse_required
 def manage_documents(subdir=''):
     new_folder_form = NewFolderForm()
     document_form = DocumentForm()
@@ -433,7 +447,8 @@ def view_document(id):
 def get_document_file(document_id):
     document = Document.query.get_or_404(document_id)
     if document.dir:
-        return send_file(document.dir, as_attachment=True, download_name=document.title)
+        document_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, document.dir))
+        return send_file(document_path, as_attachment=True, download_name=document.title)
     else:
         abort(404)
 
@@ -503,12 +518,22 @@ def chat():
         return {"error": f"An error occurred during chat processing: {str(e)}"}, 500
 
     # Konversi output ke format HTML menggunakan Markdown
-    print("Source documents:", source_documents)
-    output = markdown.markdown(output)
+    if source_documents:
+        print("Source documents:", source_documents)
+        document_permissions = DocumentPermission.query.filter(DocumentPermission.document_id == source_documents[0].metadata['document_id']).all()
+        print("Document permissions:", document_permissions)
+        user_permissions = get_allowed_permission_ids()
+        print("User permissions:", user_permissions)
+        if not any([document_permission.permission_id in user_permissions for document_permission in document_permissions]):
+            output = "Anda tidak memiliki izin untuk mendapatkan jawaban dari dokumen yang terkait dengan pertanyaan."
+            source_documents = None
+        else:
+            output = markdown.markdown(output)
+    
     print("Output:", output)
     session['generated'].append({
         "message": output,
-        "source_documents": source_documents
+        "source_documents": [doc.metadata for doc in source_documents] if source_documents else None
     })
     print("Output session:", session['generated'])
 

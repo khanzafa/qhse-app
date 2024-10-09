@@ -51,20 +51,28 @@
           </div>
 
           <!-- Related Documents -->
-          {% if generated[i+1]['source_documents']|length > 0 %}
+          {% if generated[i+1]['source_documents'] %}
           <div class="mt-2">
             <h3 class="text-lg font-semibold mb-2">Dokumen Terkait</h3>
             <div class="flex flex-col space-y-1">
-              {% for doc in generated[i+1]['source_documents'] %}
+              {% for metadata in generated[i+1]['source_documents'] %}
               <div class="flex items-center space-x-2">
                 <span class="material-icons text-blue-600">attach_file</span>
-                <a href="{{ url_for('guide_bot.view_document', id=doc.metadata['document_id']) }}"
+                <a href="{{ url_for('guide_bot.get_document_file', document_id=metadata['document_id']) }}"
                   class="text-blue-600 hover:underline">
-                  {{ doc.metadata['title'] }}
+                  {{ metadata['title'] }}
                 </a>
               </div>
               {% endfor %}
             </div>
+          </div>
+          {% else %}
+          <!-- Hati hati terhadap jawaban -->
+          <div class="mt-2">            
+            <p class="text-gray-700">
+              <span class="font-semibold">Perhatian:</span>
+              Jawaban ini mungkin tidak akurat. Silakan cek kembali atau tanyakan ke pengelola.
+            </p>
           </div>
           {% endif %}
         </div>
