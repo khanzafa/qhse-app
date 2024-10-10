@@ -7,7 +7,7 @@ import threading
 from flask import Flask, current_app, request, session
 from base64 import b64encode
 from app.extensions import db, migrate, swagger
-from guide_bot.routes import guide_bot
+# from guide_bot.routes import guide_bot
 from app.auth import auth as auth_blueprint
 from api.routes import api_routes
 from app.routes import app_routes
@@ -107,7 +107,7 @@ def create_app():
     
     app.register_blueprint(main)
     app.register_blueprint(auth_blueprint)
-    app.register_blueprint(guide_bot)
+    # app.register_blueprint(guide_bot)
     
     for route in app_routes:
         app.register_blueprint(route)
@@ -119,15 +119,15 @@ def create_app():
     )
     
 
-    # mail_manager.init_app(app)
+    mail_manager.init_app(app)
     
     # Selenium
-    # report_selenium_manager.initialize_driver()  
-    # otp_selenium_manager.initialize_driver()
+    report_selenium_manager.initialize_driver()  
+    otp_selenium_manager.initialize_driver()
 
     # Jalankan thread detektor sebelum memulai Flask
-    # detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
-    # detector_thread.start()
+    detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
+    detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)

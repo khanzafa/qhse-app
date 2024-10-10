@@ -56,8 +56,9 @@ class ReportManager(SeleniumManager):
         from selenium.webdriver.firefox.options import Options
         from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
         firefox_options = Options()
-        firefox_options.add_argument("-profile")
-        firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
+	firefox_options.headless = True
+        # firefox_options.add_argument("-profile")
+        # firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
         self.driver = webdriver.Firefox(options=firefox_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 150)
@@ -71,8 +72,9 @@ class OTPManager(SeleniumManager):
     def initialize_driver(self):
         from selenium.webdriver.chrome.options import Options
         chrome_options = Options()
-        chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
-        chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
+        chrome_options.headless = True
+        # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
+        # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get("https://web.whatsapp.com/")        
         self.wait = WebDriverWait(self.driver, 100)

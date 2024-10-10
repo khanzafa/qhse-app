@@ -275,7 +275,7 @@ class Detector(db.Model):
                 detected_object_info = {
                     # cctv
                     'cctv_id': cctv.id,
-                    'cctv_location': cctv.location,
+                    'cctv_location': cctv.cctv_location,
                     'cctv_type': cctv.type,
                     'ip_address': cctv.ip_address,
                     'cctv_status': cctv.status,
