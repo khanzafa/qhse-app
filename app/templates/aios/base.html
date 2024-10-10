@@ -58,17 +58,12 @@
         </div>
     </header>
 
-    <!-- Sidebar -->
-    <div class="flex pt-16">
-        <aside id="sidebar"
-            class="fixed top-16 left-0 h-full bg-green-800 text-white w-64 space-y-6 py-7 px-2 transition-transform transform -translate-x-full md:translate-x-0">
-            <nav class="mt-4">
-
-            </nav>
-        </aside>
-
+    <div class="flex pt-16"
+    style="background-image: url('/static/img/black-wotah.jpeg'); background-size: auto; background-repeat: repeat; min-height: 100vh;">
         <!-- Main Content -->
-        <main class="flex-1 p-10 ml-64">{% block content %}{% endblock %}</main>
+        <main class="flex-1 p-10">
+        {% block content %}{% endblock %}
+        </main>
     </div>
 
     <!-- Toggle Button for Sidebar -->

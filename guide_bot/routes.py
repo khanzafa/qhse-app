@@ -211,8 +211,9 @@ def manage_documents(subdir=''):
 
     if search_query:
         documents = Document.query.filter(Document.dir.ilike(f'%{search_query}%')).all()
+        print("Documents:", documents)
         return render_template(
-            'guide_bot/manage_documents.html', 
+            'guide_bot/search_documents.html', 
             documents=documents, 
             subdir=subdir,
             new_folder_form=new_folder_form,
@@ -327,7 +328,7 @@ def manage_documents(subdir=''):
     active_dir = enumerate(subdir.split('/'))
     return render_template('guide_bot/manage_documents.html', 
                            folders=folders,
-                            files=files,
+                           files=files,
                            current_dir=subdir,
                            new_folder_form=new_folder_form,
                            document_form=document_form,

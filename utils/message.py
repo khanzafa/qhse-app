@@ -63,7 +63,6 @@ class ReportManager(SeleniumManager):
         self.wait = WebDriverWait(self.driver, 150)
         self.actions = ActionChains(self.driver)        
         mail_manager.refresh_and_send()       
-
     
 class OTPManager(SeleniumManager):
     def __init__(self):
