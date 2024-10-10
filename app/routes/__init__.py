@@ -54,7 +54,7 @@ app_routes = [
     report_bp,
     weight_bp,
     admin_bp,
-    guide_bot,
+    
 ]
 
 main = Blueprint("main", __name__)
