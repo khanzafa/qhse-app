@@ -16,8 +16,10 @@ import platform
 from dotenv import load_dotenv
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.edge.service import Service as EdgeService
 
 load_dotenv()
 
@@ -60,10 +62,10 @@ class ReportManager(SeleniumManager):
         from selenium.webdriver.firefox.options import Options
         from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
         firefox_options = Options()
-        firefox_options.add_argument('--headless=new')
-        # firefox_options.add_argument("-profile")
-        # firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
-        self.driver = webdriver.Firefox(options=firefox_options)
+        firefox_options.add_argument('--headless')
+        firefox_options.add_argument("-profile")
+        firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
+        self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 150)
         self.actions = ActionChains(self.driver)        
@@ -74,12 +76,14 @@ class OTPManager(SeleniumManager):
         super().__init__()
 
     def initialize_driver(self):
-        from selenium.webdriver.chrome.options import Options
-        chrome_options = Options()
-        chrome_options.add_argument('--headless=new')
+        from selenium.webdriver.edge.options import Options
+        edge_options = Options()
+        edge_options.use_chromium = True
+        edge_options.add_argument('--headless=new')
+        edge_options.add_argument('--disable-gpu')
         # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
         # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
-        self.driver = webdriver.Chrome(options=chrome_options)      
+        self.driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=edge_options)      
         self.driver.get("https://web.whatsapp.com/")        
         self.wait = WebDriverWait(self.driver, 100)
         self.actions = ActionChains(self.driver)           
