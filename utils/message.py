@@ -69,7 +69,7 @@ class ReportManager(SeleniumManager):
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 150)
         self.actions = ActionChains(self.driver)        
-        mail_manager.refresh_and_send()       
+        mail_manager.refresh_and_send("report_manager")       
     
 class OTPManager(SeleniumManager):
     def __init__(self):
@@ -78,7 +78,7 @@ class OTPManager(SeleniumManager):
     def initialize_driver(self):
         from selenium.webdriver.edge.options import Options
         edge_options = Options()
-        edge_options.setBinary = "/usr/bin/microsoft-edge"
+        # edge_options.setBinary = "/usr/bin/microsoft-edge"
         # edge_options.use_chromium = True
         edge_options.add_argument('--remote-debugging-port=0')
         edge_options.add_argument('--no-first-run')
@@ -96,11 +96,11 @@ class OTPManager(SeleniumManager):
         edge_options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
         # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
         # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
-        self.driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install(), options=edge_options))      
+        self.driver = webdriver.Edge(options=edge_options)
         self.driver.get("https://web.whatsapp.com/")        
         self.wait = WebDriverWait(self.driver, 100)
         self.actions = ActionChains(self.driver)           
-        mail_manager.refresh_and_send()     
+        mail_manager.refresh_and_send("otp_manager")     
 
 report_selenium_manager = ReportManager()
 otp_selenium_manager = OTPManager()
@@ -109,6 +109,7 @@ class MailManager:
     def __init__(self):
         self.barcode_path = '/html/body/div[1]/div/div/div[2]/div[3]/div[1]'
         self.previous_data_ref = None
+        self.selenium_manager = None
         
     def init_app(self, app):
         self.app = app
@@ -118,16 +119,16 @@ class MailManager:
         print(f"self app: {self.app}")
         print(f"app: {app}")
         
-    def send_barcode(self):
+    def send_barcode(self, selenium_manager):
         try:
-            barcode = report_selenium_manager.wait.until(EC.presence_of_element_located((By.XPATH, self.barcode_path)))  # Update this line
+            barcode = self.selenium_manager.wait.until(EC.presence_of_element_located((By.XPATH, self.barcode_path)))  # Update this line
             barcode_img = barcode.screenshot_as_png
             with open('barcode.png', 'wb') as f:
                 f.write(barcode_img)
                 print(colored("Barcode image saved.", "white", "on_blue"))
             
             # Send the barcode image via email
-            subject = "Your Whatsapp Barcode"
+            subject = f"Your Whatsapp Barcode from {selenium_manager}"
             recipient = 'aihseintern@gmail.com'  # Get recipient email from environment variable
             body = "Please find the attached barcode image."
             
@@ -152,21 +153,21 @@ class MailManager:
             print(colored(f"Failed to send barcode: {e}", "white", "on_red"))
             return f"Failed to send barcode: {e}"
 
-    def refresh_and_send(self):
+    def refresh_and_send(self, selenium_manager):
         last_refresh = time.time()
-        
+        self.selenium_manager = report_selenium_manager if selenium_manager == "report_manager" else otp_selenium_manager
         print("last_refresh: ", last_refresh)
         
         while True:
             if time.time() - last_refresh > 50:
-                report_selenium_manager.driver.refresh()
+                self.selenium_manager.driver.refresh()
                 last_refresh = time.time()
             time.sleep(1)
             try:
-                barcode_element = report_selenium_manager.driver.find_element("xpath", '//div[@class="_akau"]')
+                barcode_element = self.selenium_manager.driver.find_element("xpath", '//div[@class="_akau"]')
                 current_data_ref = barcode_element.get_attribute("data-ref")
                 if current_data_ref != self.previous_data_ref:
-                    self.send_barcode()
+                    self.send_barcode(selenium_manager)
                     self.previous_data_ref = current_data_ref
             except Exception as e:
                 self.previous_data_ref = None
