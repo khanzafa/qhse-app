@@ -60,7 +60,7 @@ class ReportManager(SeleniumManager):
         from selenium.webdriver.firefox.options import Options
         from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
         firefox_options = Options()
-	    # firefox_options.add_argument('--headless=new')
+        firefox_options.add_argument('--headless=new')
         # firefox_options.add_argument("-profile")
         # firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
         self.driver = webdriver.Firefox(options=firefox_options)
