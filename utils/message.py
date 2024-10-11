@@ -14,6 +14,10 @@ from termcolor import colored
 import flask_mail
 import platform
 from dotenv import load_dotenv
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
 
 load_dotenv()
 
@@ -59,7 +63,7 @@ class ReportManager(SeleniumManager):
         firefox_options.headless = True
         # firefox_options.add_argument("-profile")
         # firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
-        self.driver = webdriver.Firefox(options=firefox_options)
+        self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 150)
         self.actions = ActionChains(self.driver)        
@@ -75,7 +79,7 @@ class OTPManager(SeleniumManager):
         chrome_options.headless = True
         # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
         # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
-        self.driver = webdriver.Chrome(options=chrome_options)
+        self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
         self.driver.get("https://web.whatsapp.com/")        
         self.wait = WebDriverWait(self.driver, 100)
         self.actions = ActionChains(self.driver)           
