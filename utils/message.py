@@ -96,7 +96,7 @@ class OTPManager(SeleniumManager):
         edge_options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
         # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
         # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
-        self.driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install(), options=edge_options))      
+        self.driver = webdriver.Edge(options=edge_options)      
         self.driver.get("https://web.whatsapp.com/")        
         self.wait = WebDriverWait(self.driver, 100)
         self.actions = ActionChains(self.driver)           
