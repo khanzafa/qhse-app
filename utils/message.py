@@ -63,9 +63,9 @@ class ReportManager(SeleniumManager):
         from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
         firefox_options = Options()
         firefox_options.add_argument('--headless')
-        firefox_options.add_argument("-profile")
-        firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
-        self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
+        # firefox_options.add_argument("-profile")
+        # firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
+        self.driver = webdriver.Firefox(options=firefox_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 150)
         self.actions = ActionChains(self.driver)        
@@ -78,12 +78,25 @@ class OTPManager(SeleniumManager):
     def initialize_driver(self):
         from selenium.webdriver.edge.options import Options
         edge_options = Options()
-        edge_options.use_chromium = True
+        edge_options.setBinary = "/usr/bin/microsoft-edge"
+        # edge_options.use_chromium = True
+        edge_options.add_argument('--remote-debugging-port=0')
+        edge_options.add_argument('--no-first-run')
+        edge_options.add_argument('--no-default-browser-check')
+        # edge_options.add_argument('--no-sandbox')
         edge_options.add_argument('--headless=new')
-        edge_options.add_argument('--disable-gpu')
+        # edge_options.add_argument('--ignore-certificate-errors')
+        # edge_options.add_argument('--disable-extensions')
+        # edge_options.add_argument('--disable-dev-shm-usage')
+        # edge_options.add_argument('--disable-gpu')
+        edge_options.add_argument('--log-level=3')
+        edge_options.add_argument('--disable-logging')
+        edge_options.add_argument('--start-maximized')
+        edge_options.add_argument('--disable-infobars')
+        edge_options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
         # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
         # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
-        self.driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=edge_options)      
+        self.driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install(), options=edge_options))      
         self.driver.get("https://web.whatsapp.com/")        
         self.wait = WebDriverWait(self.driver, 100)
         self.actions = ActionChains(self.driver)           
@@ -94,7 +107,7 @@ otp_selenium_manager = OTPManager()
 
 class MailManager:
     def __init__(self):
-        self.barcode_path = '/html/body/div[1]/div/div/div[2]/div[3]/div[1]/div/div/div[2]/div'
+        self.barcode_path = '/html/body/div[1]/div/div/div[2]/div[3]/div[1]'
         self.previous_data_ref = None
         
     def init_app(self, app):
