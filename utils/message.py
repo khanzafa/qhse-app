@@ -63,8 +63,8 @@ class ReportManager(SeleniumManager):
         from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
         firefox_options = Options()
         firefox_options.add_argument('--headless')
-        # firefox_options.add_argument("-profile")
-        # firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
+        firefox_options.add_argument("-profile")
+        firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
         self.driver = webdriver.Firefox(options=firefox_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 150)
@@ -94,6 +94,7 @@ class OTPManager(SeleniumManager):
         edge_options.add_argument('--start-maximized')
         edge_options.add_argument('--disable-infobars')
         edge_options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
+        edge_options.add_argument(f"--user-data-dir={os.getenv('EDGE_DATA_DIR')}")
         # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
         # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
         self.driver = webdriver.Edge(options=edge_options)      
@@ -204,12 +205,14 @@ class Message:
         actions = report_selenium_manager.get_actions()
 
         try:
+            print(driver.page_source)
+
             # contact_path = f'//span[contains(@title, "eh")]'
             contact_path = f'//span[@title="{target_name}"]'       
             contact = wait.until(EC.presence_of_element_located((By.XPATH, contact_path)))
             contact.click()
 
-            text_box_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[1]/div/div[1]/p'
+            text_box_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[1]/div[2]/div[1]/p'
             text_box = wait.until(EC.presence_of_element_located((By.XPATH, text_box_xpath)))
             
             # Split the message into lines
@@ -229,17 +232,15 @@ class Message:
             actions.perform()  # Execute all actions
 
             if image_path:
-                attachment_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]/div[2]/div/div/div/span'
+                attachment_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]'
                 attachment_button = wait.until(EC.presence_of_element_located((By.XPATH, attachment_button_xpath)))
 
                 attachment_button.click()
                 
-                image_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]/div[2]/div/span/div/ul/div/div[2]/li/div/input'
+                image_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]/div/div/span/div/ul/div/div[2]/li/div/input'
                 image_button = wait.until(EC.presence_of_element_located((By.XPATH, image_button_xpath)))
 
                 image_button.send_keys(image_path)
-                
-                # /html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[2]
 
                 send_button_xpath = '/html/body/div[1]/div/div/div[2]/div[2]/div[2]/span/div/div/div/div[2]/div/div[2]/div[2]/div/div'
                 send_button = wait.until(EC.presence_of_element_located((By.XPATH, send_button_xpath)))
