@@ -8,7 +8,7 @@ from app.routes.notification import notification_bp
 from app.routes.report import report_bp
 from app.routes.weight import weight_bp
 from app.routes.admin import admin_bp
-# from guide_bot.routes import guide_bot
+from guide_bot.routes import guide_bot
 from datetime import datetime, timedelta
 from collections import Counter
 from flask import (
@@ -54,7 +54,7 @@ app_routes = [
     report_bp,
     weight_bp,
     admin_bp,
-    
+    guide_bot,
 ]
 
 main = Blueprint("main", __name__)
