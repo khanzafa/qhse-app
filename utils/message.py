@@ -78,22 +78,22 @@ class OTPManager(SeleniumManager):
     def initialize_driver(self):
         from selenium.webdriver.edge.options import Options
         edge_options = Options()
-        edge_options.setBinary = "/usr/bin/microsoft-edge"
-        edge_options.use_chromium = True
-        edge_options.add_argument('--remote-debugging-port=0')
-        edge_options.add_argument('--no-first-run')
-        edge_options.add_argument('--no-default-browser-check')
-        edge_options.add_argument('--no-sandbox')
-        edge_options.add_argument('--headless=new')
-        edge_options.add_argument('--ignore-certificate-errors')
-        edge_options.add_argument('--disable-extensions')
-        edge_options.add_argument('--disable-dev-shm-usage')
-        edge_options.add_argument('--disable-gpu')
-        edge_options.add_argument('--log-level=3')
-        edge_options.add_argument('--disable-logging')
-        edge_options.add_argument('--start-maximized')
-        edge_options.add_argument('--disable-infobars')
-        edge_options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
+        # edge_options.setBinary = "/usr/bin/microsoft-edge"
+        # edge_options.use_chromium = True
+        # edge_options.add_argument('--remote-debugging-port=0')
+        # edge_options.add_argument('--no-first-run')
+        # edge_options.add_argument('--no-default-browser-check')
+        # edge_options.add_argument('--no-sandbox')
+        # edge_options.add_argument('--headless=new')
+        # edge_options.add_argument('--ignore-certificate-errors')
+        # edge_options.add_argument('--disable-extensions')
+        # edge_options.add_argument('--disable-dev-shm-usage')
+        # edge_options.add_argument('--disable-gpu')
+        # edge_options.add_argument('--log-level=3')
+        # edge_options.add_argument('--disable-logging')
+        # edge_options.add_argument('--start-maximized')
+        # edge_options.add_argument('--disable-infobars')
+        # edge_options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
         # chrome_options.add_argument(f"--user-data-dir={os.getenv('CHROME_DATA_DIR')}")
         # chrome_options.add_argument(f"--profile-directory={os.getenv('CHROME_PROFILE_DIR')}")
         self.driver = webdriver.Edge(options=edge_options)      
