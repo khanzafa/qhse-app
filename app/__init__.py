@@ -119,11 +119,11 @@ def create_app():
     )
     
 
-    mail_manager.init_app(app)
+#    mail_manager.init_app(app)
     
     # Selenium
-    report_selenium_manager.initialize_driver()  
-    otp_selenium_manager.initialize_driver()
+#    report_selenium_manager.initialize_driver()  
+#    otp_selenium_manager.initialize_driver()
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
