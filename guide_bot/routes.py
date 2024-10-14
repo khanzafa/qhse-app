@@ -530,7 +530,11 @@ def chat():
             source_documents = None
         else:
             output = markdown.markdown(output)
+    else:
+        print("No source documents")
+        output = "Maaf, saya tidak tahu jawabannya karena tidak ada konteks yang tersedia."
     
+    print()
     print("Output:", output)
     session['generated'].append({
         "message": output,
