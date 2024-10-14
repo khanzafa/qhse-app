@@ -274,8 +274,16 @@ def detected_object():
     search_query = request.args.get('search_query')
 
     if search_query:
-        detected_objects = DetectedObject.query.join(Detector).join(CCTV).join(CCTVLocation) \
-            .filter(db.or_(DetectedObject.name.like(f'%{search_query}%'), CCTVLocation.name.like(f'%{search_query}%'), CCTV.type.like(f'%{search_query}%',)), DetectedObject.permission_id == session.get('permission_id')) \
+        detected_objects = DetectedObject.query.join(Detector).join(CCTV).join(CCTVLocation).join(Weight).join(DetectorType, Weight.detector_type_id == DetectorType.id) \
+            .filter(
+                db.or_(
+                    DetectedObject.name.ilike(f'%{search_query}%'),
+                    CCTVLocation.name.ilike(f'%{search_query}%'),
+                    CCTV.type.ilike(f'%{search_query}%'),  
+                    DetectorType.name.ilike(f'%{search_query}%'),
+                ),
+                DetectedObject.permission_id == session.get('permission_id')
+            ) \
             .order_by(DetectedObject.timestamp.desc()) \
             .paginate(page=page, per_page=per_page)
     else:
