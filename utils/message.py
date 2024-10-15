@@ -62,14 +62,14 @@ class ReportManager(SeleniumManager):
         from selenium.webdriver.firefox.options import Options
         from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
         firefox_options = Options()
-        firefox_options.add_argument('--headless')
+        # firefox_options.add_argument('--headless')
         firefox_options.add_argument("-profile")
         firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
         self.driver = webdriver.Firefox(options=firefox_options)
         self.driver.get("https://web.whatsapp.com/")
         self.wait = WebDriverWait(self.driver, 150)
         self.actions = ActionChains(self.driver)        
-        mail_manager.refresh_and_send("report_manager")       
+        mail_manager.refresh_and_send("report_manager")  
     
 class OTPManager(SeleniumManager):
     def __init__(self):
@@ -84,7 +84,7 @@ class OTPManager(SeleniumManager):
         edge_options.add_argument('--no-first-run')
         edge_options.add_argument('--no-default-browser-check')
         edge_options.add_argument('--no-sandbox')
-        edge_options.add_argument('--headless=new')
+        # edge_options.add_argument('--headless=new')
         edge_options.add_argument('--ignore-certificate-errors')
         edge_options.add_argument('--disable-extensions')
         edge_options.add_argument('--disable-dev-shm-usage')
@@ -212,7 +212,7 @@ class Message:
             contact = wait.until(EC.presence_of_element_located((By.XPATH, contact_path)))
             contact.click()
 
-            text_box_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[1]/div[2]/div[1]/p'
+            text_box_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[2]/div[1]/div/div[1]'
             text_box = wait.until(EC.presence_of_element_located((By.XPATH, text_box_xpath)))
             
             # Split the message into lines
@@ -232,7 +232,7 @@ class Message:
             actions.perform()  # Execute all actions
 
             if image_path:
-                attachment_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]'
+                attachment_button_xpath = '/html/body/div[1]/div/div/div[2]/div[4]/div/footer/div[1]/div/span/div/div[1]/div/div/div'
                 attachment_button = wait.until(EC.presence_of_element_located((By.XPATH, attachment_button_xpath)))
 
                 attachment_button.click()
