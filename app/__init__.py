@@ -116,16 +116,17 @@ def create_app():
         supports_credentials=True,     
     )
     
-
-    # mail_manager.init_app(app)
+    
+    mail_manager.init_app(app)
     
     # Selenium
-    # report_selenium_manager.initialize_driver()  
-    # otp_selenium_manager.initialize_driver()
+    report_selenium_manager.initialize_driver()  
+    otp_selenium_manager.initialize_driver()
+
 
     # Jalankan thread detektor sebelum memulai Flask
     detector_thread = threading.Thread(target=run_detectors, args=(app,), name="DetectorThread")
-    # detector_thread.start()
+    detector_thread.start()
 
     # Tangkap sinyal SIGINT (Ctrl+C) dan SIGTERM untuk menghentikan detektor saat server dihentikan
     signal.signal(signal.SIGINT, handle_shutdown_signal)

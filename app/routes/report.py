@@ -8,6 +8,7 @@ from app import db
 import logging
 from utils.auth import get_allowed_permission_ids
 from sqlalchemy.orm import joinedload
+from dateutil.relativedelta import relativedelta
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -113,11 +114,23 @@ report_bp = Blueprint('report', __name__, url_prefix='/report')
 @report_bp.route("/dashboard")
 @login_required
 def dashboard():
+    ###############################
+    ##### Base Configuration ######
+    ###############################
     session_permission = session.get('permission_id')
     selected_location = request.args.get('location')
-    cctv_locations = [loc.name for loc in db.session.query(CCTVLocation.name).distinct()]
+    subquery = (
+        db.session.query(CCTVLocation.name, CCTVLocation.id)
+        .distinct(CCTVLocation.name)
+        .subquery()
+    )
 
-    # Prepare the base query for DetectedObject
+    cctv_locations = (
+        db.session.query(subquery.c.name)
+        .order_by(subquery.c.id)
+    ).all()
+
+    cctv_locations = [loc.name for loc in cctv_locations]
     detected_objects_query = (
         db.session.query(DetectedObject)
         .join(Detector, DetectedObject.detector_id == Detector.id)
@@ -129,142 +142,230 @@ def dashboard():
         detected_objects_query = detected_objects_query.filter(
             CCTV.cctv_location.has(name=selected_location)
         )
+        
+    current_date = datetime.utcnow()
 
-    # Execute the statistics queries
+    ###########################
+    ##### Dashboard Card ######
+    ###########################
     all_cctv = db.session.query(CCTV).filter_by(permission_id=session_permission).count()
     all_detectors = db.session.query(Detector).filter_by(permission_id=session_permission).count()
     all_weight = db.session.query(Detector).filter(
         Detector.permission_id == session_permission,
         Detector.weight_id.isnot(None)
     ).count()
-    all_detection = detected_objects_query.count()
+    all_detection = db.session.query(DetectedObject).filter_by(permission_id=session_permission).count()
 
-    current_date = datetime.utcnow()
-    seven_days_ago = current_date - timedelta(days=7)
-    last_7_days = [(current_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
-
-    # Weekly detection counts
-    weekly_counts = (
-        detected_objects_query
-        .filter(DetectedObject.timestamp >= seven_days_ago)
-        .group_by(db.func.DATE(DetectedObject.timestamp))
-        .order_by(db.func.DATE(DetectedObject.timestamp))
-        .with_entities(db.func.DATE(DetectedObject.timestamp).label('detection_date'),
-                       db.func.count(DetectedObject.id).label('count'))
-        .all()
-    )
     
-    weekly_counts_dict = {row.detection_date: row.count for row in weekly_counts}
-    weekly_detected_object_counts = [
-        weekly_counts_dict.get((current_date - timedelta(days=i)).date(), 0) for i in range(7)
-    ]
-
-    # Weekly object types
-    weekly_object_types_data = (
-        detected_objects_query
-        .filter(DetectedObject.timestamp >= seven_days_ago)
-        .group_by(DetectedObject.name)
-        .order_by(db.func.count(DetectedObject.id).desc())
-        .limit(10)
-        .with_entities(DetectedObject.name, db.func.count(DetectedObject.id).label('total_count'))
-        .all()
-    )
-    
-    weekly_object_types, weekly_object_counts = zip(*weekly_object_types_data) if weekly_object_types_data else ([], [])
-
-    # Pie chart data (limit top 4 types and group others as 'Other')
-    pie_chart_data = (
-        detected_objects_query
-        .group_by(CCTV.type)
-        .with_entities(CCTV.type.label('type'), db.func.count(DetectedObject.id).label('count'))
-        .order_by(db.func.count(DetectedObject.id).desc())
-        .all()
-    )
-
-    pie_chart_types = [row.type for row in pie_chart_data]
-    pie_chart_counts = [row.count for row in pie_chart_data]
-
-    if len(pie_chart_types) > 4:
-        other_count = sum(pie_chart_counts[4:])
-        pie_chart_types = pie_chart_types[:4] + ['Other']
-        pie_chart_counts = pie_chart_counts[:4] + [other_count]
-
-    # 24-hour detections per hour
+    #################################
+    ##### Daily Data Detected ######
+    ################################
     start_time = current_date - timedelta(hours=24)
-    hourly_counts = (
+
+    daily_detected_results = (
         detected_objects_query
         .filter(DetectedObject.timestamp >= start_time)
-        .group_by(db.func.date_trunc('hour', DetectedObject.timestamp), CCTV.type)
-        .with_entities(db.func.date_trunc('hour', DetectedObject.timestamp).label('detection_hour'),
-                       CCTV.type.label('type'), db.func.count(DetectedObject.id).label('count'))
+        .with_entities(
+            db.func.date_trunc('hour', DetectedObject.timestamp).label('detection_hour'),
+            CCTV.type.label('type'),
+            DetectedObject.name.label('object_name'),
+            db.func.count(DetectedObject.id).label('count')
+        )
+        .group_by(db.func.date_trunc('hour', DetectedObject.timestamp), CCTV.type, DetectedObject.name)
         .order_by(db.func.date_trunc('hour', DetectedObject.timestamp))
         .all()
     )
 
-    hourly_counts_dict = {row.detection_hour: row.count for row in hourly_counts}
-    last_24_hours_labels = [
+    daily_counts_dict = {}
+    daily_object_types_dict = {}
+    daily_pie_chart_types_dict = {}
+
+    for row in daily_detected_results:
+        detection_hour = row.detection_hour
+        cctv_type = row.type
+        object_name = row.object_name
+        count = row.count
+        
+        daily_counts_dict[detection_hour] = daily_counts_dict.get(detection_hour, 0) + count
+
+        daily_object_types_dict[object_name] = daily_object_types_dict.get(object_name, 0) + count
+
+        daily_pie_chart_types_dict[cctv_type] = daily_pie_chart_types_dict.get(cctv_type, 0) + count
+
+    daily_labels = [
         (current_date - timedelta(hours=i)).replace(minute=0, second=0, microsecond=0) for i in range(24)
     ]
-    hourly_detected_object_counts = [
-        hourly_counts_dict.get(label, 0) for label in last_24_hours_labels
+    daily_labels.reverse()
+
+    daily_detected_object_counts = [
+        daily_counts_dict.get(label, 0) for label in daily_labels
     ]
 
-    # Daily object types for the last 24 hours
-    daily_object_types_data = (
+    daily_object_counts = {object_name: 0 for object_name in daily_object_types_dict.keys()}
+
+    for label in daily_labels:
+        for row in daily_detected_results:
+            detection_hour = row.detection_hour
+            object_name = row.object_name
+            count = row.count
+            if detection_hour == label:
+                daily_object_counts[object_name] += count
+
+    daily_object_counts = list(daily_object_counts.values())
+
+    daily_object_types = list(daily_object_types_dict.keys())
+    
+    daily_pie_chart_counts_dict = {cctv_type: 0 for cctv_type in daily_pie_chart_types_dict.keys()}
+
+    for label in daily_labels:
+        for row in daily_detected_results:
+            detection_hour = row.detection_hour
+            cctv_type = row.type
+            count = row.count
+            if detection_hour == label:
+                daily_pie_chart_counts_dict[cctv_type] += count
+
+    daily_pie_chart_types_list = list(daily_pie_chart_counts_dict.keys())
+    daily_pie_chart_counts_list = list(daily_pie_chart_counts_dict.values())
+
+    total_pie_chart_counts = sum(daily_pie_chart_counts_list)
+
+    if len(daily_pie_chart_types_list) > 4:
+        other_count = sum(daily_pie_chart_counts_list[4:])
+        daily_pie_chart_types_list = daily_pie_chart_types_list[:4] + ['Other']
+        daily_pie_chart_counts_list = daily_pie_chart_counts_list[:4] + [other_count]
+
+    total_daily_detections = sum(daily_detected_object_counts)
+
+    # Debug Output 
+    # print(f'Selected Location: {selected_location}')
+    # print('Hourly Detected Counts', daily_detected_object_counts)
+    # print(f"Total detections in the last 24 hours: {total_daily_detections}")
+    # print("Daily Object Types:", daily_object_types)
+    # print("Daily Object Counts:", daily_object_counts) 
+    # print("Total Daily Object Counts (Top 10):", sum(daily_object_counts))
+    # print("Pie Chart Types List:", daily_pie_chart_types_list)
+    # print("Pie Chart Counts List:", daily_pie_chart_counts_list)
+    # print("Total Pie Chart Counts:", total_pie_chart_counts)
+
+    # if total_daily_detections == sum(daily_object_counts) == total_pie_chart_counts:
+    #     print("All totals are consistent.")
+    # else:
+    #     print("Totals are inconsistent.")
+    
+    ################################
+    ##### Weekly Data Detected #####
+    ###############################
+    seven_days_ago = current_date - timedelta(days=7)
+    
+    weekly_detected_results = (
         detected_objects_query
-        .filter(DetectedObject.timestamp >= start_time)
-        .group_by(DetectedObject.name)
-        .with_entities(DetectedObject.name, db.func.count(DetectedObject.id).label('total_count'))
-        .order_by(db.func.count(DetectedObject.id).desc())
-        .limit(10)
+        .filter(DetectedObject.timestamp >= seven_days_ago)
+        .with_entities(
+            db.func.date_trunc('day', DetectedObject.timestamp).label('detection_day'),
+            CCTV.type.label('type'),
+            DetectedObject.name.label('object_name'),
+            db.func.count(DetectedObject.id).label('count')
+        )
+        .group_by(db.func.date_trunc('day', DetectedObject.timestamp), CCTV.type, DetectedObject.name)
+        .order_by(db.func.date_trunc('day', DetectedObject.timestamp))
         .all()
     )
 
-    daily_object_types, daily_object_counts = zip(*daily_object_types_data) if daily_object_types_data else ([], [])
+    weekly_counts_dict = {}
+    weekly_object_types_dict = {}
+    weekly_pie_chart_types_dict = {}
 
-    # Daily pie chart types
-    daily_pie_chart_types = {}
-    for row in hourly_counts:
-        type_name = row.type
+    for row in weekly_detected_results:
+        detection_day = row.detection_day.strftime('%Y-%m-%d')  # Convert to string format YYYY-MM-DD
+        cctv_type = row.type
+        object_name = row.object_name
         count = row.count
-        daily_pie_chart_types[type_name] = daily_pie_chart_types.get(type_name, 0) + count
 
-    pie_chart_types_list = list(daily_pie_chart_types.keys())
-    pie_chart_counts_list = list(daily_pie_chart_types.values())
+        weekly_counts_dict[detection_day] = weekly_counts_dict.get(detection_day, 0) + count
 
-    if len(pie_chart_types_list) > 4:
-        other_count = sum(pie_chart_counts_list[4:])
-        pie_chart_types_list = pie_chart_types_list[:4] + ['Other']
-        pie_chart_counts_list = pie_chart_counts_list[:4] + [other_count]
+        weekly_object_types_dict[object_name] = weekly_object_types_dict.get(object_name, 0) + count
+
+        weekly_pie_chart_types_dict[cctv_type] = weekly_pie_chart_types_dict.get(cctv_type, 0) + count
+
+    weekly_labels = [(current_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+    weekly_labels.reverse()
+
+    weekly_detected_object_counts = [
+        weekly_counts_dict.get(label, 0) for label in weekly_labels
+    ]
+
+    weekly_object_counts_dict = {object_name: 0 for object_name in weekly_object_types_dict.keys()}
+
+    for row in weekly_detected_results:
+        detection_day = row.detection_day.strftime('%Y-%m-%d')
+        object_name = row.object_name
+        count = row.count
+        if detection_day in weekly_labels:
+            weekly_object_counts_dict[object_name] += count
+
+    weekly_object_types = list(weekly_object_types_dict.keys())
+    weekly_object_counts = list(weekly_object_counts_dict.values())
+
+    weekly_pie_chart_counts_dict = {cctv_type: 0 for cctv_type in weekly_pie_chart_types_dict.keys()}
+
+    for row in weekly_detected_results:
+        detection_day = row.detection_day.strftime('%Y-%m-%d')
+        cctv_type = row.type
+        count = row.count
+        if detection_day in weekly_labels:
+            weekly_pie_chart_counts_dict[cctv_type] += count
+
+    weekly_pie_chart_types_list = list(weekly_pie_chart_counts_dict.keys())
+    weekly_pie_chart_counts_list = list(weekly_pie_chart_counts_dict.values())
+
+    if len(weekly_pie_chart_types_list) > 4:
+        other_count = sum(weekly_pie_chart_counts_list[4:])
+        weekly_pie_chart_types_list = weekly_pie_chart_types_list[:4] + ['Other']
+        weekly_pie_chart_counts_list = weekly_pie_chart_counts_list[:4] + [other_count]
+
+    total_weekly_detections = sum(weekly_detected_object_counts)
+    total_weekly_pie_chart_counts = sum(weekly_pie_chart_counts_list)
+
+    # Debug Output 
+    # print(f'Weekly Object Count : {weekly_detected_object_counts}')
+    # print(f'Total Weekly Detection : {total_weekly_detections}')
+    # print(f'Weekly Object Types : {weekly_object_types}')
+    # print(f'Weekly Object Counts : {weekly_object_counts}')
+    # print(f'Total Weekly Object Counts : {sum(weekly_object_counts)}')
+    # print(f'Pie Chart Types : {weekly_pie_chart_types_list}')
+    # print(f'Pie Chart Counts : {weekly_pie_chart_counts_list}')
+    # print(f'Total Pie Chart Counts : {total_weekly_pie_chart_counts}')
+
+    # if total_weekly_detections == sum(weekly_object_counts) == total_weekly_pie_chart_counts:
+    #     print("All totals are consistent.")
+    # else:
+    #     print("Totals are inconsistent.")
+
     
     return render_template(
         'dashboard.html',
+        session_permission=session_permission,
+        selected_location=selected_location,
+        cctv_locations=cctv_locations,
         all_cctv=all_cctv,
         all_weight=all_weight,
         all_detectors=all_detectors,
         all_detection=all_detection,
-        last_7_days=last_7_days,
-        session_permission=session_permission,
-        weekly_detected_object_counts=weekly_detected_object_counts,
-        weekly_object_types=weekly_object_types,
-        weekly_object_counts=weekly_object_counts,
+        daily_labels=daily_labels,
+        daily_counts=daily_detected_object_counts,
         daily_object_types=daily_object_types,
         daily_object_counts=daily_object_counts,
-        selected_location=selected_location,
-        cctv_locations=cctv_locations,
-        pie_chart_types=pie_chart_types,
-        pie_chart_counts=pie_chart_counts,
-        hourly_labels=last_24_hours_labels,
-        hourly_counts=hourly_detected_object_counts,
-        daily_pie_chart_counts=pie_chart_counts_list,
-        daily_pie_chart_types=pie_chart_types_list
+        daily_pie_chart_counts=daily_pie_chart_counts_list,
+        daily_pie_chart_types=daily_pie_chart_types_list,
+        weekly_labels=weekly_labels,
+        weekly_counts=weekly_detected_object_counts,
+        weekly_object_types=weekly_object_types,
+        weekly_object_counts=weekly_object_counts,
+        weekly_pie_chart_types=weekly_pie_chart_types_list,
+        weekly_pie_chart_counts=weekly_pie_chart_counts_list
     )
 
-
-
-
-
-    
 
 @report_bp.route('/detected-object', methods=['GET'])
 @login_required
