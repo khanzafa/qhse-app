@@ -205,6 +205,7 @@ class Message:
         actions = report_selenium_manager.get_actions()
 
         try:
+            #path update 15 oct 10.32
             print(driver.page_source)
 
             # contact_path = f'//span[contains(@title, "eh")]'
