@@ -7,7 +7,6 @@ import threading
 from flask import Flask, current_app, request, session
 from base64 import b64encode
 from app.extensions import db, migrate, swagger
-# from guide_bot.routes import guide_bot
 from app.auth import auth as auth_blueprint
 from api.routes import api_routes
 from app.routes import app_routes
@@ -107,7 +106,6 @@ def create_app():
     
     app.register_blueprint(main)
     app.register_blueprint(auth_blueprint)
-    # app.register_blueprint(guide_bot)
     
     for route in app_routes:
         app.register_blueprint(route)
