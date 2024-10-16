@@ -296,8 +296,7 @@ class Detector(db.Model):
                     'timestamp': datetime.now(),
                     'track_id': track_id,                    
 
-                }
-                
+                }                
                 
                 # Object tracking logic
                 if track_id is not None:

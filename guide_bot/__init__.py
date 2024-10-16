@@ -39,10 +39,19 @@ def create_conversational_chain(vector_store):
         ("system", "Anda adalah AI Bot yang sangat membantu di lingkungan PT. Salam Pacific Indonesia Lines. Nama Anda adalah GuideBot."),
         ("human", 
          """
-            Jika input bukan pertanyaan atau konteks tidak tersedia, jawab dengan informasi yang relevan berdasarkan pemahaman umum Anda.
-            Jika input adalah pertanyaan, berikan jawaban yang jelas dan akurat dalam bahasa Indonesia.
-            Jika ada informasi dalam konteks, gunakan konteks tersebut untuk memberikan jawaban yang akurat.
-            Jika tidak ada konteks atau jawaban yang tepat, katakan 'Maaf, saya tidak tahu jawabannya'.
+            Anda diharapkan untuk memberikan jawaban yang informatif dan relevan. Berikut adalah langkah-langkah yang harus Anda ikuti:
+            
+            1. **Identifikasi Jenis Input**:
+                - Jika input bukan pertanyaan atau konteks tidak tersedia, gunakan pengetahuan umum Anda untuk memberikan informasi relevan.
+                - Jika input adalah pertanyaan, lanjutkan ke langkah berikutnya.
+            
+            2. **Gunakan Konteks**:
+                - Jika terdapat informasi dalam konteks, manfaatkan konteks tersebut untuk merespon pertanyaan.
+                - Jika konteks tidak tersedia atau tidak relevan, Anda akan memberikan jawaban berdasarkan pengetahuan umum.
+            
+            3. **Tanggapan Akhir**:
+                - Jika Anda memiliki jawaban yang tepat, berikan dengan jelas dan akurat dalam bahasa Indonesia.
+                - Jika Anda tidak memiliki jawaban, katakan 'Maaf, saya tidak tahu jawabannya'.
             
             Pertanyaan: {question}
             Konteks yang tersedia: {context}
@@ -56,31 +65,10 @@ def create_conversational_chain(vector_store):
         model_name='llama3-70b-8192'
     )
 
-    # if not os.getenv("HUGGINGFACEHUB_API_TOKEN"):
-    #     os.environ["HUGGINGFACEHUB_API_TOKEN"] = getpass.getpass("Enter your token: ")
-
-    # endpoint = HuggingFaceEndpoint(
-    #     repo_id="bigscience/bloom",
-    #     task="text-generation",
-    #     max_new_tokens=4096,
-    #     do_sample=False,
-    #     repetition_penalty=1.03,
-    # )
-
-    # # LLAMA HUGGING FACE
-    # llm = ChatHuggingFace(llm=endpoint)    
-
-    # GEMINI
-    # llm = ChatGoogleGenerativeAI(
-    #     model="gemini-1.5-flash",
-    #     temperature=0,
-    #     max_tokens=None,
-    #     timeout=None,
-    #     max_retries=2,
-    # )
-
+    # memory to store the conversation history
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, output_key='answer')
 
+    # Create the conversational retrieval chain
     chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         chain_type='stuff',
@@ -94,6 +82,7 @@ def create_conversational_chain(vector_store):
     )    
     
     return chain
+
 
 def load_vector_store(embeddings):
     vector_store = Chroma(
