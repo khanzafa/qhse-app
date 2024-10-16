@@ -1,4 +1,5 @@
 import os
+import logging
 from langchain.chains import ConversationalRetrievalChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.memory import ConversationBufferMemory
@@ -14,23 +15,35 @@ from flask import session, current_app
 import PIL
 import cv2
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 # Embeddings
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
+logging.info("Embeddings initialized.")
 
 # Extracting text from uploaded file
 def extract_text_from_file(file_path):    
+    logging.info(f"Extracting text from file: {file_path}")
     elements = partition(filename=file_path)
-    return "\n\n".join([str(el) for el in elements])
+    text = "\n\n".join([str(el) for el in elements])
+    logging.info("Text extraction complete.")
+    return text
 
 # Function to handle conversation with the chatbot
 def conversation_chat(query, chain, history):
+    logging.info(f"Received query: {query}")
     result = chain.invoke({"question": query, "chat_history": history})
     answer = result["answer"]        
     history.append((query, answer))
+    logging.info(f"Answer generated: {answer}")
+
     # Assuming result contains relevant document metadata, such as filenames
-    if "source_documents" in result and result["source_documents"]:                    
+    if "source_documents" in result and result["source_documents"]:
+        logging.info("Source documents retrieved.")
         return history, answer, result["source_documents"]
     
+    logging.warning("No source documents found.")
     return history, answer, None
 
 # Function to create the conversational chain
@@ -59,13 +72,13 @@ def create_conversational_chain(vector_store):
          """)
     ])
 
+    logging.info("Creating conversational chain.")
     # LLAMA GROQ
     llm = ChatGroq(
         groq_api_key=os.getenv('GROQ_API_KEY'), 
         model_name='llama3-70b-8192'
     )
 
-    # memory to store the conversation history
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, output_key='answer')
 
     # Create the conversational retrieval chain
@@ -79,17 +92,19 @@ def create_conversational_chain(vector_store):
             "prompt": prompt_template,
             "document_variable_name": "context" 
         },        
-    )    
+    )
     
+    logging.info("Conversational chain created successfully.")
     return chain
 
-
 def load_vector_store(embeddings):
+    logging.info("Loading vector store.")
     vector_store = Chroma(
-        collection_name=f"SPIL",
+        collection_name="SPIL",
         embedding_function=embeddings or HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'}), 
-        persist_directory=f"vector_store"
+        persist_directory="vector_store"
     )
+    logging.info("Vector store loaded successfully.")
     return vector_store
 
 # Function to save uploaded file to the server
