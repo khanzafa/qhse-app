@@ -4,7 +4,9 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.memory import ConversationBufferMemory
 from langchain_chroma import Chroma
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEmbeddings, HuggingFaceEndpoint, HuggingFacePipeline
@@ -33,69 +35,83 @@ def extract_text_from_file(file_path):
 # Function to handle conversation with the chatbot
 def conversation_chat(query, chain, history):
     logging.info(f"Received query: {query}")
-    result = chain.invoke({"question": query, "chat_history": history})
-    answer = result["answer"]        
-    history.append((query, answer))
+    result = chain.invoke({"input": query, "chat_history": history})
+    
+    answer = result.get("answer", "Maaf, saya tidak tahu jawabannya.")
+    history.append(("human", query))
+    history.append(("ai", answer))
     logging.info(f"Answer generated: {answer}")
 
     # Assuming result contains relevant document metadata, such as filenames
-    if "source_documents" in result and result["source_documents"]:
+    if "context" in result and result["context"]:
         logging.info("Source documents retrieved.")
-        return history, answer, result["source_documents"]
+        return history, answer, result["context"]
     
     logging.warning("No source documents found.")
     return history, answer, None
 
 # Function to create the conversational chain
 def create_conversational_chain(vector_store):
-    prompt_template = ChatPromptTemplate([
-        ("system", "Anda adalah AI Bot yang sangat membantu di lingkungan PT. Salam Pacific Indonesia Lines. Nama Anda adalah GuideBot."),
-        ("human", 
-         """
-            Anda diharapkan untuk memberikan jawaban yang informatif dan relevan. Berikut adalah langkah-langkah yang harus Anda ikuti:
-            
-            1. **Identifikasi Jenis Input**:
-                - Jika input bukan pertanyaan atau konteks tidak tersedia, gunakan pengetahuan umum Anda untuk memberikan informasi relevan.
-                - Jika input adalah pertanyaan, lanjutkan ke langkah berikutnya.
-            
-            2. **Gunakan Konteks**:
-                - Jika terdapat informasi dalam konteks, manfaatkan konteks tersebut untuk merespon pertanyaan.
-                - Jika konteks tidak tersedia atau tidak relevan, Anda akan memberikan jawaban berdasarkan pengetahuan umum.
-            
-            3. **Tanggapan Akhir**:
-                - Jika Anda memiliki jawaban yang tepat, berikan dengan jelas dan akurat dalam bahasa Indonesia.
-                - Jika Anda tidak memiliki jawaban, katakan 'Maaf, saya tidak tahu jawabannya'.
-            
-            Pertanyaan: {question}
-            Konteks yang tersedia: {context}
-            Jawaban:
-         """)
-    ])
+    retriever = vector_store.as_retriever(
+        search_type="similarity_score_threshold", 
+        search_kwargs={"k": 1, 'score_threshold': 0.1}
+    )
 
-    logging.info("Creating conversational chain.")
-    # LLAMA GROQ
+    # LLAMA GROQ initialization
     llm = ChatGroq(
         groq_api_key=os.getenv('GROQ_API_KEY'), 
         model_name='llama3-70b-8192'
     )
 
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, output_key='answer')
-
-    # Create the conversational retrieval chain
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        chain_type='stuff',
-        retriever=vector_store.as_retriever(search_type="similarity_score_threshold", search_kwargs={"k": 1, 'score_threshold': 0.5}),
-        return_source_documents=True,
-        memory=memory,
-        combine_docs_chain_kwargs={
-            "prompt": prompt_template,
-            "document_variable_name": "context" 
-        },        
+    # Contextualize question prompt (in Bahasa Indonesia)
+    contextualize_q_system_prompt = (
+        "Berdasarkan riwayat percakapan dan pertanyaan terbaru dari pengguna "
+        "yang mungkin merujuk pada konteks dalam riwayat percakapan, "
+        "formulasikan pertanyaan yang dapat dipahami tanpa perlu melihat riwayat percakapan. "
+        "Jangan menjawab pertanyaan tersebut, hanya reformulasikan jika perlu, "
+        "dan jika tidak perlu perubahan, kembalikan seperti semula."
     )
-    
-    logging.info("Conversational chain created successfully.")
-    return chain
+
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}")  # Replace {input} correctly to handle the user's query
+        ]
+    )
+
+    # Create a history-aware retriever to contextualize the query based on chat history
+    history_aware_retriever = create_history_aware_retriever(
+        llm, retriever, contextualize_q_prompt
+    )
+
+    # Question-answering system prompt (GuideBot PT SPIL style)
+    qa_system_prompt = (
+        "Anda adalah GuideBot, asisten AI untuk PT. Salam Pacific Indonesia Lines. "
+        "Gunakan potongan konteks berikut untuk menjawab pertanyaan. Jika Anda tidak tahu jawabannya, "
+        "katakan 'Maaf, saya tidak tahu jawabannya'."
+        "\n\n\"{context}\""
+    )
+
+    qa_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", qa_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}")  # This is where the user's query will be inserted
+        ]
+    )
+
+    # Create a document chain for answering questions using retrieved context
+    question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+
+    # Combine the history-aware retriever with the question-answer chain
+    rag_chain = create_retrieval_chain(
+        history_aware_retriever, question_answer_chain
+    )
+
+    return rag_chain
+
+
 
 def load_vector_store(embeddings):
     logging.info("Loading vector store.")
