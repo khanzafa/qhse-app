@@ -250,7 +250,9 @@ def manage_documents(subdir=''):
                     dir=os.path.normpath(os.path.join(subdir, file.filename)),
                 )
                 db.session.add(new_document)
+                db.session.flush()
 
+                print('Document permissions:', document_form.permission_id.data)
                 document_permissions = document_form.permission_id.data
                 if document_permissions:
                     for permission_id in document_permissions:
@@ -520,6 +522,7 @@ def chat():
 
     # Konversi output ke format HTML menggunakan Markdown
     if source_documents:
+        print()
         print("Source documents:", source_documents)
         document_permissions = DocumentPermission.query.filter(DocumentPermission.document_id == source_documents[0].metadata['document_id']).all()
         print("Document permissions:", document_permissions)

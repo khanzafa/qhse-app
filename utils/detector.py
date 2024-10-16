@@ -53,6 +53,7 @@ class CameraStream(threading.Thread):
         super().__init__(name=f"CameraStream-{ip_address}")
         self.ip_address = ip_address
         self.capture = cv2.VideoCapture(0) if ip_address == 'http://0.0.0.0' else cv2.VideoCapture(ip_address)
+        self.capture.set(cv2.CAP_PROP_FPS, 30)
         # if not self.capture.isOpened():
         #     logging.error(f"Failed to open camera stream for IP: {self.ip_address}")
         #     self.stop()
@@ -61,6 +62,7 @@ class CameraStream(threading.Thread):
             time.sleep(5)
             logging.info(f"Retrying to open camera stream for IP: {self.ip_address}")
             self.capture = cv2.VideoCapture(ip_address)
+            self.capture.set(cv2.CAP_PROP_FPS, 30)
 
         self.frame = None
         self.running = True
