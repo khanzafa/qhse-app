@@ -19,7 +19,7 @@ def seed_admin():
         id='1234567890',
         name="Admin",
         email="admin@spil.co.id",
-        phone_number="682199765213",
+        phone_number="6285784714405",
         role=UserRole.admin,
         approved=True,        
     )
@@ -40,6 +40,10 @@ def seed_users(n):
     db.session.commit()
 
 def seed_permissions(n):
+    default = Permission(
+        name="Default",
+        description="Default permission for all users"
+    )
     qhse = Permission(
         name="QHSE",
         description="Quality, Health, Safety, and Environment"
@@ -48,9 +52,24 @@ def seed_permissions(n):
         name="PAIER",
         description="Public Affairs, Industrial, and Employee Relations"
     )
+    hrbp = Permission(
+        name="HRBP",
+        description="Human Resources Business Partner"
+    )
+    yes = Permission(
+        name="YES",
+        description="Yield Excellence System"
+    )
+    hris = Permission(
+        name="HRIS",
+        description="Human Resources Information System"
+    )
+    db.session.add(default)
     db.session.add(qhse)
     db.session.add(paier)
-
+    db.session.add(hrbp)
+    db.session.add(yes)
+    db.session.add(hris)    
     for _ in range(n):
         permission = Permission(
             name=faker.word(),
@@ -62,6 +81,20 @@ def seed_permissions(n):
 def seed_user_permissions(n):
     users = User.query.all()
     permissions = Permission.query.all()
+    default_permission = Permission.query.filter_by(name="Default").first()
+    admin = User.query.filter_by(role=UserRole.admin).first()
+    for user in users:
+        user_permission = UserPermission(
+            user_id=user.id,
+            permission_id=default_permission.id
+        )
+        db.session.add(user_permission)
+    for permission in permissions:
+        admin_permission = UserPermission(
+            user_id=admin.id,
+            permission_id=permission.id
+        )
+        db.session.add(admin_permission)
     for _ in range(n):
         user_permission = UserPermission(
             user_id=random.choice(users).id,
@@ -71,18 +104,31 @@ def seed_user_permissions(n):
     db.session.commit()
 
 def seed_menus(n):
+    default_permission = Permission.query.filter_by(name="Default").first()
+    paier_permission = Permission.query.filter_by(name="PAIER").first()
+    qhse_permission = Permission.query.filter_by(name="QHSE").first()
     chatbot = suMenu(
         title="Chatbot",
         url="/guide-bot/chat",
-        permission_id=PERMISSION_ID
+        permission_id=default_permission.id
     )
     shift_bko = suMenu(
         title="Shift and BKO Reccomendation",
         url="/shift-bko",
-        permission_id=PERMISSION_ID
+        permission_id=paier_permission.id
+    )
+    qhse = suMenu(
+        title="QHSE AI",
+        permission_id=qhse_permission.id
+    )
+    paier = suMenu(
+        title="PAIER AI",
+        permission_id=paier_permission.id
     )
     db.session.add(chatbot)
     db.session.add(shift_bko)
+    db.session.add(qhse)
+    db.session.add(paier)
     permissions = Permission.query.all()
     for _ in range(n):
         menu = suMenu(
@@ -213,7 +259,7 @@ def run_seeders():
     seed_permissions(5) 
 
     # print("Seeding User Permissions...")
-    # seed_user_permissions(30)
+    seed_user_permissions(30)
 
     print("Seeding Menus...")
     seed_menus(10)
