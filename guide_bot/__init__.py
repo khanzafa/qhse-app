@@ -21,8 +21,7 @@ import cv2
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Embeddings
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
-logging.info("Embeddings initialized.")
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L12-v2", model_kwargs={'device': 'cpu'})
 
 # Extracting text from uploaded file
 def extract_text_from_file(file_path):    
