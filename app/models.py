@@ -254,6 +254,7 @@ class Detector(db.Model):
             model = YOLO(self.weight.path)
             results = model.track(frame, stream=False, persist=True)
             annotated_frame = results[0].plot()
+            cv2.imshow(f"Detector {self.id}", annotated_frame)
             detected_objects = []
             current_time = time.time()
             
