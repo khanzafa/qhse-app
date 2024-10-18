@@ -254,8 +254,6 @@ class Detector(db.Model):
             model = YOLO(self.weight.path)
             results = model.track(frame, stream=False, persist=True)
             annotated_frame = results[0].plot()
-            results[0].show()
-            # cv2.imshow(f"Detector {self.id}", annotated_frame)
             detected_objects = []
             current_time = time.time()
             
@@ -274,7 +272,7 @@ class Detector(db.Model):
                 class_id = c.cls
                 name = model.names[int(class_id)]
                 
-                detected_object_info = {
+                detected_object_info = {# cv2.imshow(f"Detector {self.id}", annotated_frame)
                     # cctv
                     'cctv_id': cctv.id,
                     'cctv_location': cctv.cctv_location_id,

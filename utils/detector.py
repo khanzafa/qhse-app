@@ -25,6 +25,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 message_queue = queue.Queue()
 
+annotated_frames = {}
+
 class CameraStreamManager:
     def __init__(self):
         self.camera_streams = {}
@@ -90,13 +92,14 @@ class CameraStream(threading.Thread):
         logging.info(f"Camera stream stopped and resources released for IP: {self.ip_address}")
 
 class DetectorThread(threading.Thread):
-    def __init__(self, app, detector_id, camera_stream, annotated_frames, notification_rules):
+    global annotated_frames
+
+    def __init__(self, app, detector_id, camera_stream, notification_rules):
         super().__init__(name=f"DetectorThread-{detector_id}")
         self.app = app
         self.detector_id = detector_id
         self.camera_stream = camera_stream
         self.running = True
-        self.annotated_frames = annotated_frames
         self.notification_rules = notification_rules
         self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
         self.frame_number = 0
@@ -115,25 +118,20 @@ class DetectorThread(threading.Thread):
                         detected_objects_tracker = self.detected_objects_tracker
                         with self.lock:
                             detected_objects, annotated_frame, self.detected_objects_tracker = detector.process_frame(frame, detected_objects_tracker)
-                            # print(Back.YELLOW)
-                            # print(f"detected objects tracker: {self.detected_objects_tracker}")
-                            # print(Style.RESET_ALL)
-                            self.annotated_frames[self.detector_id] = annotated_frame
-                            logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
+                            annotated_frames[self.detector_id] = annotated_frame
+                            # logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
                             # Add the message to the shared queue
                             image_filename = f"detected_{detector.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
-                            image_path = os.path.join(os.getcwd(), image_filename)                         
+                            upload_dir = os.path.join(os.getcwd(), 'detected_objects')
+                            image_path = os.path.join(upload_dir, image_filename)                         
                             if detected_objects:    
-                                cv2.imwrite(image_path, frame)
+                                cv2.imwrite(image_path, annotated_frame)
                                 for detected_object in detected_objects:
                                     for rule in self.notification_rules[self.detector_id]:
                                         # Query the NotificationRule instance again within the same session context
                                         rule = NotificationRule.query.get(rule.id)
                                         template = rule.message_template.template
-                                        message = Message(template, detected_object).render()                                
-                                        print("====================================================================================================")
-                                        print("MESSAGE MESSAGE MESSAGE: ", message)
-                                        print("====================================================================================================")   
+                                        message = Message(template, detected_object).render()                                   
                                         message_queue.put((rule.contact.name, message, image_path))  # Add message to the queue
                     except Exception as e:
                         logging.error(f"Error processing frame for detector ID: {self.detector_id}: {e}")
@@ -154,7 +152,6 @@ class DetectorManager:
         self.camera_manager = CameraStreamManager()
         self.lock = threading.Lock()
         self.app = None
-        self.annotated_frames = {} 
         self.notification_rules = {}
         self.message_sender_thread = None
 
@@ -174,7 +171,7 @@ class DetectorManager:
                         camera_stream = self.camera_manager.get_camera_stream(cctv.ip_address)
 
                         # Start a separate thread for each detector processing the frame
-                        detector_thread = DetectorThread(self.app, detector.id, camera_stream, self.annotated_frames, self.notification_rules)
+                        detector_thread = DetectorThread(self.app, detector.id, camera_stream, self.notification_rules)
                         detector_thread.start()
 
                         self.detectors[detector.id] = detector_thread
@@ -205,7 +202,7 @@ class DetectorManager:
                         if cctv.status:
                             self.notification_rules[detector.id] = get_notification_rules(detector.id)
                             camera_stream = self.camera_manager.get_camera_stream(cctv.ip_address)
-                            detector_thread = DetectorThread(self.app, detector.id, camera_stream, self.annotated_frames, self.notification_rules)
+                            detector_thread = DetectorThread(self.app, detector.id, camera_stream, self.notification_rules)
                             detector_thread.start()
                             self.detectors[detector.id] = detector_thread
                             logging.info(f"Started new detector ID: {detector.id} with camera stream {cctv.ip_address}")
