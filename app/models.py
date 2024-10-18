@@ -328,7 +328,7 @@ class Detector(db.Model):
                             print(Back.YELLOW)
                             print(f"Detected After {current_time - tracker['last_time']} seconds")
                             print(Style.RESET_ALL)
-                    else:
+                    elif name != 'Person':
 
                         # Frame gap logic
                         # # First detection or reset due to time gap
