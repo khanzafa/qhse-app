@@ -22,3 +22,4 @@ new.py
 obj_detection_vino.py
 remote.jumpserver.pem
 None/*
+detected_objects/
