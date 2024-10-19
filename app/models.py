@@ -212,6 +212,7 @@ class Detector(db.Model):
         
         detector = db.session.query(Detector).filter(Detector.id == self.id).first()
         cctv = db.session.query(CCTV).join(Detector).filter(Detector.id == self.id).first()
+        cctv_location = db.session.query(CCTVLocation).filter(CCTVLocation.id == cctv.cctv_location_id).first()
         
         if self.weight.detector_type.name == 'Help Gesture':
             from gesture_detection.gesture import Gesture
@@ -230,7 +231,7 @@ class Detector(db.Model):
             detected_object_info = {
                     # cctv
                     'cctv_id': cctv.id,
-                    'cctv_location': cctv.cctv_location,
+                    'cctv_location': cctv_location.name,
                     'cctv_type': cctv.type,
                     'ip_address': cctv.ip_address,
                     'cctv_status': cctv.status,
@@ -275,7 +276,7 @@ class Detector(db.Model):
                 detected_object_info = {# cv2.imshow(f"Detector {self.id}", annotated_frame)
                     # cctv
                     'cctv_id': cctv.id,
-                    'cctv_location': cctv.cctv_location_id,
+                    'cctv_location': cctv_location.name,
                     'cctv_type': cctv.type,
                     'ip_address': cctv.ip_address,
                     'cctv_status': cctv.status,
