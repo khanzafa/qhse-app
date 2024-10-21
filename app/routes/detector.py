@@ -93,16 +93,16 @@ def delete(id):
 @detector_bp.route('/<int:detector_id>/stream')
 @login_required
 def detector_stream(detector_id):
-    from app import detector_manager
+    from utils.detector import annotated_frames
     def generate_frames():
         while True:
-            if detector_id in detector_manager.annotated_frames:
-                frame = detector_manager.annotated_frames[detector_id]
+            if detector_id in annotated_frames:
+                frame = annotated_frames[detector_id]
                 ret, buffer = cv2.imencode('.jpg', frame)
                 frame = buffer.tobytes()
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
             else:
-                time.sleep(0.1)  # Wait for a short time before checking again
+                time.sleep(0.01)  # Wait for a short time before checking again
 
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
