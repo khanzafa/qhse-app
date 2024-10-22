@@ -21,7 +21,7 @@ import logging
 from utils.message import Message
 
 # Setup logging configuration
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='detector.log')
 
 message_queue = queue.Queue()
 
@@ -88,7 +88,8 @@ class CameraStream(threading.Thread):
 
     def stop(self):
         self.running = False
-        self.capture.release()
+        if self.capture:
+            self.capture.release()
         logging.info(f"Camera stream stopped and resources released for IP: {self.ip_address}")
 
 class DetectorThread(threading.Thread):
@@ -102,7 +103,7 @@ class DetectorThread(threading.Thread):
         self.running = True
         self.notification_rules = notification_rules
         self.detected_objects_tracker = defaultdict(lambda: {"count": 0, "last_time": 0})
-        self.frame_number = 0
+        self.boxes_id = []
         self.lock = threading.Lock()
         logging.info(f"Initialized DetectorThread for detector ID: {self.detector_id}")
 
@@ -117,7 +118,7 @@ class DetectorThread(threading.Thread):
                         # self.detected_objects_tracker['last_time'] = time.time()
                         detected_objects_tracker = self.detected_objects_tracker
                         with self.lock:
-                            detected_objects, annotated_frame, self.detected_objects_tracker = detector.process_frame(frame, detected_objects_tracker)
+                            detected_objects, annotated_frame, self.detected_objects_tracker, self.boxes_id = detector.process_frame(frame, detected_objects_tracker, self.boxes_id)
                             annotated_frames[self.detector_id] = annotated_frame
                             # logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
                             # Add the message to the shared queue
@@ -128,6 +129,9 @@ class DetectorThread(threading.Thread):
                                 cv2.imwrite(image_path, annotated_frame)
                                 for detected_object in detected_objects:
                                     for rule in self.notification_rules[self.detector_id]:
+                                        # add new dict var called queue length to the detected object dict
+                                        queue_length = message_queue.qsize()
+                                        detected_object['queue_length'] = queue_length
                                         # Query the NotificationRule instance again within the same session context
                                         rule = NotificationRule.query.get(rule.id)
                                         template = rule.message_template.template
@@ -217,6 +221,7 @@ class DetectorManager:
                 for ip_address in to_stop:
                     logging.info(f"Stopping camera stream for IP: {ip_address}")
                     self.camera_manager.camera_streams[ip_address].stop()
+                    self.camera_manager.camera_streams[ip_address].join()
                     del self.camera_manager.camera_streams[ip_address]
 
     def stop_all(self):
