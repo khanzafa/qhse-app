@@ -104,44 +104,42 @@
     </div>
   </div>
 
-  <!-- Documents Table -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <!-- Tampilkan folder dan file -->
-    <div class="p-4 bg-gray-100 rounded-lg shadow-md">  
-      <div class="mb-4">
-          <!-- Daftar folder -->
-          {% if folders %}
-              <ul>
-                  {% for folder in folders %}
-                      <li class="mt-2">
-                          <a href="{{ url_for('guide_bot.manage_documents', subdir=(subdir + '/' + folder if subdir else folder)) }}" class="text-blue-500 hover:underline">
-                              <i class="fas fa-folder mr-2"></i> {{ folder }}
-                          </a>
-                      </li>
-                  {% endfor %}
-              </ul>
-          {% endif %}
-      </div>
-  
-      <div class="mb-4">
-          <!-- Daftar files -->
-          {% if files %}
-              <ul>                  
-                    {% for file in files %}
-                        {% if file.title != 'index' %}
-                        <li class="mt-2">
-                            <a href="#" class="text-blue-500 hover:underline">
-                                <i class="fas fa-file-alt mr-2"></i> {{ file.title }}
-                            </a>
-                        </li>
-                        {% endif %}
-                    {% endfor %}                  
-              </ul>          
-          {% endif %}
-      </div>
+<!-- Documents Table -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div class="p-4 bg-gray-100 rounded-lg shadow-md">
+    <div class="mb-4">
+      <!-- Folder List -->
+      {% if folders %}
+        <ul>
+          {% for folder in folders %}
+            <li class="mt-2">
+              <a href="{{ url_for('guide_bot.manage_documents', subdir=(subdir + '/' + folder if subdir else folder)) }}" class="text-blue-500 hover:underline">
+                <i class="fas fa-folder mr-2"></i> {{ folder }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </div>
-  
+
+    <div class="mb-4">
+      <!-- File List -->
+      {% if files %}
+        <ul>
+          {% for file in files %}
+            {% if file.title != 'index' %}
+              <li class="mt-2" oncontextmenu="showContextMenu(event, '{{ file.title }}', 'File', '{{ file.id }}')">
+                <a href="#" class="text-blue-500 hover:underline">
+                  <i class="fas fa-file-alt mr-2"></i> {{ file.title }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
   </div>
+</div>
 
   <!-- Custom Context Menu HTML -->
   <div id="customContextMenu" class="custom-menu">

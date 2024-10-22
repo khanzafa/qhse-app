@@ -359,8 +359,11 @@ def edit_document(id):
     new_name = request.get_json().get('new_name')
     
     if new_name:        
-        document.title = new_name        
-        document.dir = os.path.join('/'.join(document.dir.split('/')[:-1]), new_name)
+        document.title = new_name  
+        src_path = document.dir
+        dst_path = os.path.join('/'.join(document.dir.split('/')[:-1]), new_name)      
+        os.rename(src_path, dst_path)
+        document.dir = dst_path
         db.session.commit()
         flash('Document updated successfully!')
         return redirect(url_for('guide_bot.manage_documents', subdir=""))
