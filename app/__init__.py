@@ -36,6 +36,7 @@ detector_manager = DetectorManager(session)
 detector_thread = None  # Global variable to store the detector thread
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+DETECTED_OBJECTS_FOLDER = os.path.join(os.getcwd(), 'detected_objects')
 
 def run_detectors(app):
     detector_manager.initialize_detectors(app)
@@ -66,13 +67,18 @@ def create_app():
     app.config["WTF_CSRF_ENABLED"] = False
     # Konfigurasi direktori upload    
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    app.config['DETECTED_OBJECTS_FOLDER'] = DETECTED_OBJECTS_FOLDER
     
     app.secret_key = os.urandom(24)
 
     # Membuat direktori upload jika belum ada
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
-        
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(DETECTED_OBJECTS_FOLDER):
+        os.makedirs(DETECTED_OBJECTS_FOLDER)
+
     # Define the b64encode filter
     def base64_encode(data):
         return b64encode(data).decode('utf-8')
@@ -117,11 +123,11 @@ def create_app():
     )
     
     
-    # mail_manager.init_app(app)
+    mail_manager.init_app(app)
     
     # Selenium
-    # report_selenium_manager.initialize_driver()  
-    # otp_selenium_manager.initialize_driver()
+    report_selenium_manager.initialize_driver()  
+    otp_selenium_manager.initialize_driver()
 
 
     # Jalankan thread detektor sebelum memulai Flask

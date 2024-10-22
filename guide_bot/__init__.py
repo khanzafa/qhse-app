@@ -22,7 +22,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # Embeddings
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
-logging.info("Embeddings initialized.")
 
 # Extracting text from uploaded file
 def extract_text_from_file(file_path):    
