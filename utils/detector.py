@@ -81,6 +81,21 @@ class CameraStream(threading.Thread):
             else:
                 logging.warning(f"Failed to read frame from IP: {self.ip_address}")
                 time.sleep(1)  # Retry after a short delay
+                self._reconnect()
+    
+    def _reconnect(self):
+        if self.running:
+            logging.info(f"Reconnecting to camera stream for IP: {self.ip_address}")
+            self.capture.release()
+            time.sleep(2)  # Small delay before reconnecting
+            self.capture = cv2.VideoCapture(self.ip_address)
+            self.capture.set(cv2.CAP_PROP_FPS, 30)
+            while not self.capture.isOpened():
+                logging.error(f"Failed to reopen camera stream for IP: {self.ip_address}")
+                time.sleep(5)
+                logging.info(f"Retrying to open camera stream for IP: {self.ip_address}")
+                self.capture = cv2.VideoCapture(self.ip_address)
+                self.capture.set(cv2.CAP_PROP_FPS, 30)
 
     def get_frame(self):
         with self.lock:
@@ -119,24 +134,27 @@ class DetectorThread(threading.Thread):
                         detected_objects_tracker = self.detected_objects_tracker
                         with self.lock:
                             detected_objects, annotated_frame, self.detected_objects_tracker, self.boxes_id = detector.process_frame(frame, detected_objects_tracker, self.boxes_id)
-                            annotated_frames[self.detector_id] = annotated_frame
-                            # logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
-                            # Add the message to the shared queue
-                            image_filename = f"detected_{detector.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
-                            upload_dir = os.path.join(os.getcwd(), 'detected_objects')
-                            image_path = os.path.join(upload_dir, image_filename)                         
-                            if detected_objects:    
-                                cv2.imwrite(image_path, annotated_frame)
-                                for detected_object in detected_objects:
-                                    for rule in self.notification_rules[self.detector_id]:
-                                        # add new dict var called queue length to the detected object dict
-                                        queue_length = message_queue.qsize()
-                                        detected_object['queue_length'] = queue_length
-                                        # Query the NotificationRule instance again within the same session context
-                                        rule = NotificationRule.query.get(rule.id)
-                                        template = rule.message_template.template
-                                        message = Message(template, detected_object).render()                                   
-                                        message_queue.put((rule.contact.name, message, image_path))  # Add message to the queue
+
+                            # Check if there are any detected obj
+                            if self.boxes_id:
+                                annotated_frames[self.detector_id] = annotated_frame
+                                # logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
+                                # Add the message to the shared queue
+                                image_filename = f"detected_{detector.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+                                upload_dir = os.path.join(os.getcwd(), 'detected_objects')
+                                image_path = os.path.join(upload_dir, image_filename)                         
+                                if detected_objects:    
+                                    cv2.imwrite(image_path, annotated_frame)
+                                    for detected_object in detected_objects:
+                                        for rule in self.notification_rules[self.detector_id]:
+                                            # add new dict var called queue length to the detected object dict
+                                            queue_length = message_queue.qsize()
+                                            detected_object['queue_length'] = queue_length
+                                            # Query the NotificationRule instance again within the same session context
+                                            rule = NotificationRule.query.get(rule.id)
+                                            template = rule.message_template.template
+                                            message = Message(template, detected_object).render()                                   
+                                            message_queue.put((rule.contact.name, message, image_path))  # Add message to the queue
                     except Exception as e:
                         logging.error(f"Error processing frame for detector ID: {self.detector_id}: {e}")
                     finally:
