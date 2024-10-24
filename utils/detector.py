@@ -136,6 +136,7 @@ class DetectorThread(threading.Thread):
                             detected_objects, annotated_frame, self.detected_objects_tracker, self.boxes_id = detector.process_frame(frame, detected_objects_tracker, self.boxes_id)
 
                             # Check if there are any detected obj
+                            print(f"self boxes id {self.boxes_id}")
                             if self.boxes_id:
                                 annotated_frames[self.detector_id] = annotated_frame
                                 # logging.info(f"Detector {detector.id} detected objects: {detected_objects}")
@@ -155,6 +156,7 @@ class DetectorThread(threading.Thread):
                                             template = rule.message_template.template
                                             message = Message(template, detected_object).render()                                   
                                             message_queue.put((rule.contact.name, message, image_path))  # Add message to the queue
+                                            print("add msg to q")
                     except Exception as e:
                         logging.error(f"Error processing frame for detector ID: {self.detector_id}: {e}")
                     finally:
