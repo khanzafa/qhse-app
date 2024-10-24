@@ -143,7 +143,8 @@ def dashboard():
             CCTV.cctv_location.has(name=selected_location)
         )
         
-    current_date = datetime.utcnow()
+    current_date = datetime.utcnow() + timedelta(hours=7)
+
 
     ###########################
     ##### Dashboard Card ######
@@ -161,7 +162,7 @@ def dashboard():
     ##### Daily Data Detected ######
     ################################
     start_time = current_date - timedelta(hours=24)
-
+    
     daily_detected_results = (
         detected_objects_query
         .filter(DetectedObject.timestamp >= start_time)
@@ -234,12 +235,17 @@ def dashboard():
         other_count = sum(daily_pie_chart_counts_list[4:])
         daily_pie_chart_types_list = daily_pie_chart_types_list[:4] + ['Other']
         daily_pie_chart_counts_list = daily_pie_chart_counts_list[:4] + [other_count]
-
-    total_daily_detections = sum(daily_detected_object_counts)
-
+    
     # Debug Output 
+    # total_daily_detections = sum(daily_detected_object_counts)
+    # formatted_daily_labels = [label.strftime('%Y-%m-%d %H:%M') for label in daily_labels]
+
+    # # Combine formatted labels and daily_detected_object_counts
+    # hourly_detected_counts = list(zip(formatted_daily_labels, daily_detected_object_counts))
+    
+    # print('Start Time', start_time)
     # print(f'Selected Location: {selected_location}')
-    # print('Hourly Detected Counts', daily_detected_object_counts)
+    # print('Hourly Detected Counts', hourly_detected_counts)
     # print(f"Total detections in the last 24 hours: {total_daily_detections}")
     # print("Daily Object Types:", daily_object_types)
     # print("Daily Object Counts:", daily_object_counts) 
@@ -328,19 +334,19 @@ def dashboard():
     total_weekly_pie_chart_counts = sum(weekly_pie_chart_counts_list)
 
     # Debug Output 
-    # print(f'Weekly Object Count : {weekly_detected_object_counts}')
-    # print(f'Total Weekly Detection : {total_weekly_detections}')
-    # print(f'Weekly Object Types : {weekly_object_types}')
-    # print(f'Weekly Object Counts : {weekly_object_counts}')
-    # print(f'Total Weekly Object Counts : {sum(weekly_object_counts)}')
-    # print(f'Pie Chart Types : {weekly_pie_chart_types_list}')
-    # print(f'Pie Chart Counts : {weekly_pie_chart_counts_list}')
-    # print(f'Total Pie Chart Counts : {total_weekly_pie_chart_counts}')
+    print(f'Weekly Object Count : {weekly_detected_object_counts}')
+    print(f'Total Weekly Detection : {total_weekly_detections}')
+    print(f'Weekly Object Types : {weekly_object_types}')
+    print(f'Weekly Object Counts : {weekly_object_counts}')
+    print(f'Total Weekly Object Counts : {sum(weekly_object_counts)}')
+    print(f'Pie Chart Types : {weekly_pie_chart_types_list}')
+    print(f'Pie Chart Counts : {weekly_pie_chart_counts_list}')
+    print(f'Total Pie Chart Counts : {total_weekly_pie_chart_counts}')
 
-    # if total_weekly_detections == sum(weekly_object_counts) == total_weekly_pie_chart_counts:
-    #     print("All totals are consistent.")
-    # else:
-    #     print("Totals are inconsistent.")
+    if total_weekly_detections == sum(weekly_object_counts) == total_weekly_pie_chart_counts:
+        print("All totals are consistent.")
+    else:
+        print("Totals are inconsistent.")
 
     
     return render_template(
