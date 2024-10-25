@@ -3,7 +3,7 @@ from functools import wraps
 import os
 import random
 import secrets
-from flask import Blueprint, render_template, flash, redirect, session, url_for, request
+from flask import Blueprint, jsonify, render_template, flash, redirect, session, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 import pytz
 from app import db
@@ -62,19 +62,32 @@ def register():
 
     # Check if the form validates
     if form.validate_on_submit():
-        if form.phone.data.startswith('0'):
-            form.phone.data = '62' + form.phone.data[1:]
-        user = User(
-            id=form.nik.data,
-            name=form.name.data,
-            email=form.email.data,
-            phone_number=form.phone.data,
-            role=form.role.data,
-        )
-        db.session.add(user)
-        db.session.commit()
-        flash('Registration successful. Please wait for approval.', 'success')
-        return redirect(url_for('auth.login'))
+        # Check if NIK exists in the database and other fields are empty
+        user = User.query.filter_by(id=form.nik.data).first()
+
+        if user:
+            # Ensure all other fields (name, email, etc.) are empty or None
+            if any([user.name, user.email, user.phone_number, user.role]):
+                flash("This NIK is already in use. Please contact support if this is an error.", "danger")
+                return redirect(url_for('auth.register'))
+            else:
+                # NIK is valid and other fields are empty, proceed with registration
+                if form.phone.data.startswith('0'):
+                    form.phone.data = '62' + form.phone.data[1:]
+                
+                # Update user fields with the form data
+                user.name = form.name.data
+                user.email = form.email.data
+                user.phone_number = form.phone.data
+                user.role = form.role.data
+                
+                db.session.commit()
+                flash('Registration successful. Please wait for approval.', 'success')
+                return redirect(url_for('auth.login'))
+        else:
+            # NIK doesn't exist in the database
+            flash('This NIK is not available. Please enter a valid NIK.', 'danger')
+            return redirect(url_for('auth.register'))
     
     # If validation fails, check for specific error messages and flash them
     for field, errors in form.errors.items():
@@ -82,6 +95,24 @@ def register():
             flash(f"{error}", 'danger')
 
     return render_template('register.html', form=form)
+
+@auth.route('/check_nik/<nik>', methods=['GET'])
+def check_nik(nik):
+    # Check if NIK exists in the database
+    user = User.query.filter_by(id=nik).first()
+    # Debugging print statements
+    print(f"Checking NIK: {nik}")
+    if user:
+        print(f"User found: {user.id}")
+    else:
+        print("User is None")
+    
+    if user and all(field is None or field == '' for field in [user.name, user.email, user.phone_number, user.role]):
+        # NIK exists and all other fields are empty or None
+        return jsonify({'valid': True})
+    
+    # Either NIK does not exist or it is already in use
+    return jsonify({'valid': False})
 
 @auth.route('/logout')
 @login_required
@@ -169,7 +200,7 @@ def send_otp(user):
     # Send OTP via email
     message = f"Your OTP is {otp_code}. It will expire in 5 minutes."
     msg = OTPMessage(phone_number=user.phone_number, message=message)    
-    msg.send()
+    # msg.send()
 
 def verify_otp(user, otp_code):
     if user.otp_code == otp_code and user.otp_expiration > datetime.utcnow():

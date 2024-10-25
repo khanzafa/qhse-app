@@ -1,105 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <script src="app/static/js/flash_script.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <script src="app/static/js/flash_script.js"></script>
-</head>
+  <body class="bg-gray-100 flex items-center justify-center h-screen">
+    <header
+      style="
+        position: fixed;
+        top: 0;
+        width: auto;
+        z-index: 1000;
+        text-align: center;
+        padding: 10px 0;
+      "
+    >
+      <!-- Flash Message Section -->
+      {% block flash_content %} {% include 'flash_template.html' %} {% endblock
+      %}
+    </header>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-  <header style="position: fixed; top: 0; width: auto; z-index: 1000; text-align: center; padding: 10px 0;">
-    <!-- Flash Message Section -->
-    {% block flash_content %}
-    {% include 'flash_template.html' %}
-    {% endblock %}
-  </header>
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-6">Register</h2>
 
-  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-6">Register</h2>
+      <form
+        method="POST"
+        action="{{ url_for('auth.register') }}"
+        class="space-y-4"
+      >
+        {{ form.hidden_tag() }}
+        <!-- NIK -->
+        <div class="flex flex-col">
+          {{ form.nik.label(class="text-sm font-semibold mb-1") }} {{
+          form.nik(class="border border-gray-300 p-2 rounded-md", id="nikInput")
+          }}
+          <p id="nikMessage" class="text-sm"></p>
+        </div>
 
-    <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4">
-      {{ form.hidden_tag() }}
-      <!-- NIK -->
-      <div class="flex flex-col">
-        {{ form.nik.label(class="text-sm font-semibold mb-1") }} {{
-        form.nik(class="border border-gray-300 p-2 rounded-md") }}
-      </div>
+        <!-- Name -->
+        <div class="flex flex-col">
+          {{ form.name.label(class="text-sm font-semibold mb-1") }} {{
+          form.name(class="border border-gray-300 p-2 rounded-md") }}
+        </div>
 
-      <!-- Name -->
-      <div class="flex flex-col">
-        {{ form.name.label(class="text-sm font-semibold mb-1") }} {{
-        form.name(class="border border-gray-300 p-2 rounded-md") }}
-      </div>
+        <!-- Email -->
+        <div class="flex flex-col">
+          {{ form.email.label(class="text-sm font-semibold mb-1") }} {{
+          form.email(class="border border-gray-300 p-2 rounded-md") }}
+        </div>
 
-      <!-- Email -->
-      <div class="flex flex-col">
-        {{ form.email.label(class="text-sm font-semibold mb-1") }} {{
-        form.email(class="border border-gray-300 p-2 rounded-md") }}
-      </div>
+        <!-- Phone -->
+        <div class="flex flex-col">
+          {{ form.phone.label(class="text-sm font-semibold mb-1") }} {{
+          form.phone(class="border border-gray-300 p-2 rounded-md") }}
+        </div>
 
-      <!-- Phone -->
-      <div class="flex flex-col">
-        {{ form.phone.label(class="text-sm font-semibold mb-1") }} {{
-        form.phone(class="border border-gray-300 p-2 rounded-md") }}
-      </div>
+        <!-- Role -->
+        <div class="flex flex-col">
+          {{ form.role.label(class="text-sm font-semibold mb-1") }} {{
+          form.role(class="border border-gray-300 p-2 rounded-md") }}
+        </div>
 
-      <!-- Role -->
-      <div class="flex flex-col">
-        {{ form.role.label(class="text-sm font-semibold mb-1") }} {{
-        form.role(class="border border-gray-300 p-2 rounded-md") }}
-      </div>
+        <div>
+          {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md
+          cursor-pointer") }}
+        </div>
+      </form>
+      <p class="mt-4 text-center text-sm">
+        Already have an account?
+        <a href="{{ url_for('auth.login') }}" class="text-blue-500"
+          >Login here</a
+        >.
+      </p>
+    </div>
 
-      <div>
-        {{ form.submit(class="bg-blue-500 text-white p-2 rounded-md
-        cursor-pointer") }}
-      </div>
-    </form>
-    <p class="mt-4 text-center text-sm">
-      Already have an account?
-      <a href="{{ url_for('auth.login') }}" class="text-blue-500">Login here</a>.
-    </p>
-  </div>
+    <script>
+      // const togglePassword = document.getElementById("togglePassword");
+      // const passwordInput = document.getElementById("password");
+      // const eyeIcon = document.getElementById("eyeIcon");
 
+      // const togglePassword2 = document.getElementById("togglePassword2");
+      // const passwordInput2 = document.getElementById("password2");
+      // const eyeIcon2 = document.getElementById("eyeIcon2");
 
-  <script>
-    const togglePassword = document.getElementById("togglePassword");
-    const passwordInput = document.getElementById("password");
-    const eyeIcon = document.getElementById("eyeIcon");
+      // togglePassword.addEventListener("click", function () {
+      //   const isPassword = passwordInput.getAttribute("type") === "password";
+      //   passwordInput.setAttribute("type", isPassword ? "text" : "password");
 
-    const togglePassword2 = document.getElementById("togglePassword2");
-    const passwordInput2 = document.getElementById("password2");
-    const eyeIcon2 = document.getElementById("eyeIcon2");
+      //   if (isPassword) {
+      //     eyeIcon.classList.remove("fa-eye-slash");
+      //     eyeIcon.classList.add("fa-eye");
+      //   } else {
+      //     eyeIcon.classList.remove("fa-eye");
+      //     eyeIcon.classList.add("fa-eye-slash");
+      //   }
+      // });
 
-    togglePassword.addEventListener("click", function () {
-      const isPassword = passwordInput.getAttribute("type") === "password";
-      passwordInput.setAttribute("type", isPassword ? "text" : "password");
+      // togglePassword2.addEventListener("click", function () {
+      //   const isPassword = passwordInput2.getAttribute("type") === "password";
+      //   passwordInput2.setAttribute("type", isPassword ? "text" : "password");
 
-      if (isPassword) {
-        eyeIcon.classList.remove("fa-eye-slash");
-        eyeIcon.classList.add("fa-eye");
-      } else {
-        eyeIcon.classList.remove("fa-eye");
-        eyeIcon.classList.add("fa-eye-slash");
-      }
-    });
+      //   if (isPassword) {
+      //     eyeIcon2.classList.remove("fa-eye-slash");
+      //     eyeIcon2.classList.add("fa-eye");
+      //   } else {
+      //     eyeIcon2.classList.remove("fa-eye");
+      //     eyeIcon2.classList.add("fa-eye-slash");
+      //   }
+      // });
 
-    togglePassword2.addEventListener("click", function () {
-      const isPassword = passwordInput2.getAttribute("type") === "password";
-      passwordInput2.setAttribute("type", isPassword ? "text" : "password");
+      document
+        .getElementById("nikInput")
+        .addEventListener("input", function () {
+          const nik = this.value.trim(); // Trim to remove any leading/trailing whitespace
 
-      if (isPassword) {
-        eyeIcon2.classList.remove("fa-eye-slash");
-        eyeIcon2.classList.add("fa-eye");
-      } else {
-        eyeIcon2.classList.remove("fa-eye");
-        eyeIcon2.classList.add("fa-eye-slash");
-      }
-    });
-  </script>
-</body>
+          const nikMessage = document.getElementById("nikMessage");
 
+          // Check if NIK is empty
+          if (nik === "" || nik.length !== 10) {
+            // Clear the message and return, no need to query the server
+            nikMessage.innerHTML = "";
+            return;
+          }
+
+          // Perform the AJAX request
+          fetch(`/check_nik/${nik}`)
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data)
+              const nikMessage = document.getElementById("nikMessage");
+
+              if (data.valid) {
+                // Display a message if the NIK already exists
+                nikMessage.innerHTML = '<span class="text-green-500 text-sm">This NIK is available!</span>';
+              } else {
+                // Display a message if the NIK is available
+                nikMessage.innerHTML = '<span class="text-red-500 text-sm">This NIK is not available to use. Please use a different one.</span>';
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+    </script>
+  </body>
 </html>
