@@ -10,7 +10,13 @@ Steps to install the project:
 
 1. Clone this repository `git clone https://github.com/khanzafa/qhse-app.git` or click `Clone or Download` button and then click `Download ZIP`
 
-2. Install requirements
+2. Install system-level dependencies (Linux only)
+
+   ```bash
+   sudo apt-get update && sudo apt-get install ffmpeg libsm6 libxext6 libgl1 libpq-dev musl-dev -y
+   ```
+
+3. Install requirements
 
    For Windows
    ```bash
@@ -52,7 +58,7 @@ Steps to install the project:
    EDGE_PROFILE_DIR=
    ```
 
-6. Prepare the database
+5. Prepare the database
 
    ```bash
    flask db init
@@ -60,7 +66,7 @@ Steps to install the project:
    flask upgrade
    ```
 
-7. Run the project
+6. Run the project
 
    ```bash
     flask run
