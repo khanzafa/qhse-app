@@ -38,8 +38,16 @@ def user_approval():
             User.name.isnot(None),    # Ensure `name` is not None
             User.name != ''           # Ensure `name` is not an empty string
         ).all()
-        return render_template("user_approval.html", applicants=applicants, form=form)
-
+        filepath = os.path.join("uploads", "data-nik.xlsx")
+        niks = []
+        if os.path.exists(filepath):
+            workbook = load_workbook(filepath)
+            sheet = workbook.active
+            for row in sheet.iter_rows(min_row=1, max_col=1):
+                cell_value = row[0].value
+                if cell_value is not None:
+                    niks.append(str(cell_value).replace('.0', '')[:10])
+        return render_template("user_approval.html", applicants=applicants, form=form, niks=niks)
     
     elif request.method == "POST":
         if form.validate_on_submit():
@@ -147,91 +155,60 @@ def set_session():
 def inject_session_permission():
     return dict(session_permission=session.get('permission_id', ''), permission_name=session.get('permission_name', ''))
 
-@admin_bp.route('/upload_xls', methods=['POST'])
-def upload_xls():
-    ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
+@admin_bp.route('/upload-niks', methods=['GET', 'POST'])
+def upload_niks():
+    if request.method == "POST":
+        file = request.files['file']
+        if file:
+            if file.filename.split('.')[-1] not in ['xlsx', 'xls']:
+                flash("Invalid file type. Please upload an XLS or XLSX file.", "danger")
+                return redirect(url_for("admin.upload_niks"))
 
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+            filename = "data-nik.xlsx"
+            file_path = os.path.join('uploads', filename)
+            file.save(file_path)            
+            try:
+                # Sync User NIK and NIK from Excel
+                users = User.query.all()
+                niks = [user.id for user in users]
+                workbook = load_workbook(file_path)
+                sheet = workbook.active
+                niks_from_excel = set() 
+                for row in sheet.iter_rows(min_row=1, max_col=1):
+                    cell_value = row[0].value
+                    if cell_value is not None:
+                        nik_str = str(cell_value).replace('.0', '')[:10]
+                        niks_from_excel.add(nik_str)
+                niks_to_remove = set(niks) - niks_from_excel
+                niks_to_add = niks_from_excel - set(niks)
+                for nik in niks_to_remove:
+                    user_to_remove = User.query.filter_by(id=nik).first()
+                    if user_to_remove:
+                        db.session.delete(user_to_remove)
 
-    if 'xls_file' not in request.files:
-        flash('No file part', 'danger')
-        logging.debug('No file part in request.')
-        return redirect(url_for("admin.user_approval"))
+                for nik in niks_to_add:
+                    new_user = User(id=nik)
+                    db.session.add(new_user)
+                db.session.commit()
 
-    file = request.files['xls_file']
-    logging.debug(f"Received file: {file.filename}")
-    logging.debug(f"File size: {file.content_length} bytes")
+                # Auto Reject User
+                applicants = User.query.filter(
+                    User.approved.is_(None), 
+                    User.name.isnot(None),
+                    User.name != ''
+                ).all()
 
-    if file.filename == '':
-        flash('No selected file', 'danger')
-        logging.debug('No file selected.')
-        return redirect(url_for("admin.user_approval"))
+                for applicant in applicants:
+                    if applicant.id not in niks_from_excel:
+                        applicant.approved = False
+                db.session.commit()                
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join('uploads', filename)
-        
-        # Save the file and log the operation
-        try:
-            file.save(file_path)
-            logging.debug(f"File saved to {file_path}")
-        except Exception as e:
-            logging.error(f"Error saving file: {str(e)}")
-            flash('Error saving file.', 'danger')
-            return redirect(url_for("admin.user_approval"))
-
-        try:
-            # Load the workbook and get the first sheet
-            workbook = load_workbook(file_path)
-            sheet = workbook.active
-
-            # Read NIKs from the Excel sheet (starting from row 1)
-            nik_list_from_excel = set()
-            for row in sheet.iter_rows(min_row=1, max_col=1):
-                cell_value = row[0].value
-                if cell_value is not None:
-                    # Take first 10 characters, ensuring it's treated as a string
-                    nik_str = str(cell_value).replace('.0', '')[:10]  # Remove float representation if any
-                    nik_list_from_excel.add(nik_str)
-
-            logging.debug(f"NIKs from Excel: {nik_list_from_excel}")
-
-            # Query all existing NIKs in the database
-            existing_users = User.query.with_entities(User.id).all()
-            existing_niks_in_db = {user.id for user in existing_users}
-            logging.debug(f"Existing NIKs in database: {existing_niks_in_db}")
-
-            # NIKs to be removed
-            niks_to_remove = existing_niks_in_db - nik_list_from_excel
-            logging.debug(f"NIKs to be removed: {niks_to_remove}")
-            for nik in niks_to_remove:
-                user_to_remove = User.query.filter_by(id=nik).first()
-                if user_to_remove:
-                    db.session.delete(user_to_remove)
-                    logging.debug(f"Removed NIK: {nik}")
-
-            # NIKs to be added
-            niks_to_add = nik_list_from_excel - existing_niks_in_db
-            logging.debug(f"NIKs to be added: {niks_to_add}")
-            for nik in niks_to_add:
-                new_user = User(id=nik)
-                db.session.add(new_user)
-                logging.debug(f"Added NIK: {nik}")
-
-            # Commit changes to the database
-            db.session.commit()
-            flash('NIKs processed successfully. Updated database accordingly.', 'success')
-
-        except Exception as e:
-            db.session.rollback()  # Rollback in case of error
-            logging.error(f"Error processing the file: {str(e)}")
-            flash(f'An error occurred while processing the file: {str(e)}', 'danger')
-            return redirect(url_for("admin.user_approval"))
-
-    else:
-        flash('Invalid file type. Please upload an XLS or XLSX file.', 'danger')
-        logging.debug('Invalid file type uploaded.')
-        return redirect(url_for("admin.user_approval"))
-
-    return redirect(url_for("admin.user_approval"))  # Redirect to the user approval page after processing
+                flash("NIKs processed successfully. Updated database accordingly.", "success")
+            except Exception as e:
+                db.session.rollback()
+                flash(f"An error occurred while processing the file: {str(e)}", "danger")
+            return redirect(url_for("admin.upload_niks"))
+        else:
+            flash("No file selected", "danger")
+            return redirect(url_for("admin.upload_niks"))
+    return redirect(url_for("admin.user_approval"))

@@ -67,7 +67,7 @@ def register():
 
         if user:
             # Ensure all other fields (name, email, etc.) are empty or None
-            if any([user.name, user.email, user.phone_number, user.role]):
+            if any([user.name, user.email, user.phone_number]):
                 flash("This NIK is already in use. Please contact support if this is an error.", "danger")
                 return redirect(url_for('auth.register'))
             else:

@@ -52,29 +52,27 @@
             
             <div class="mb-6">
                 <h2 class="text-xl font-bold text-gray-600 mb-2">Upload XLS</h2>
-                <form method="POST" action="{{ url_for('admin.upload_xls') }}" enctype="multipart/form-data" class="flex items-center">
+                <form method="POST" action="{{ url_for('admin.upload_niks') }}" enctype="multipart/form-data" class="flex items-center">
                     {{ form.hidden_tag() }}
-                    <input type="file" name="xls_file" accept=".xls, .xlsx" class="bg-gray-100 p-2 rounded-md mr-2 flex-grow">
+                    <input title="file" type="file" name="file" accept=".xls, .xlsx" class="bg-gray-100 p-2 rounded-md mr-2 flex-grow">
                     <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Upload</button>
                 </form>
             </div>
 
-            {% if xls_data %}
+            {% if niks %}
             <div class="mt-6">
                 <h2 class="text-xl font-bold text-gray-600 mb-2">XLS Data</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse rounded-md overflow-hidden">
                         <thead>
                             <tr class="bg-gray-200">
-                                <th class="p-3 text-left text-gray-600 border">No</th>
                                 <th class="p-3 text-left text-gray-600 border">NIK</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for row in xls_data %}
+                            {% for nik in niks %}
                             <tr class="border-b border-gray-200 hover:bg-gray-100">
-                                <td class="p-3 border">index</td>
-                                <td class="p-3 border">nik</td>
+                                <td class="p-3 border">{{nik}}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
