@@ -36,6 +36,10 @@ Steps to install the project:
    # Mail setup
    MAIL_USERNAME='mail@gmail.com'
    MAIL_PASSWORD='password'
+
+   # Browser profile setup
+   FIREFOX_PROFILE_DIR=
+   EDGE_PROFILE_DIR=
    ```
 
 5. Prepare the database
