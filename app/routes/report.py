@@ -229,14 +229,13 @@ def dashboard():
     daily_pie_chart_types_list = list(daily_pie_chart_counts_dict.keys())
     daily_pie_chart_counts_list = list(daily_pie_chart_counts_dict.values())
 
-    total_pie_chart_counts = sum(daily_pie_chart_counts_list)
-
     if len(daily_pie_chart_types_list) > 4:
         other_count = sum(daily_pie_chart_counts_list[4:])
         daily_pie_chart_types_list = daily_pie_chart_types_list[:4] + ['Other']
         daily_pie_chart_counts_list = daily_pie_chart_counts_list[:4] + [other_count]
     
     # Debug Output 
+    # total_pie_chart_counts = sum(daily_pie_chart_counts_list)
     # total_daily_detections = sum(daily_detected_object_counts)
     # formatted_daily_labels = [label.strftime('%Y-%m-%d %H:%M') for label in daily_labels]
 
@@ -330,23 +329,22 @@ def dashboard():
         weekly_pie_chart_types_list = weekly_pie_chart_types_list[:4] + ['Other']
         weekly_pie_chart_counts_list = weekly_pie_chart_counts_list[:4] + [other_count]
 
-    total_weekly_detections = sum(weekly_detected_object_counts)
-    total_weekly_pie_chart_counts = sum(weekly_pie_chart_counts_list)
-
     # Debug Output 
-    print(f'Weekly Object Count : {weekly_detected_object_counts}')
-    print(f'Total Weekly Detection : {total_weekly_detections}')
-    print(f'Weekly Object Types : {weekly_object_types}')
-    print(f'Weekly Object Counts : {weekly_object_counts}')
-    print(f'Total Weekly Object Counts : {sum(weekly_object_counts)}')
-    print(f'Pie Chart Types : {weekly_pie_chart_types_list}')
-    print(f'Pie Chart Counts : {weekly_pie_chart_counts_list}')
-    print(f'Total Pie Chart Counts : {total_weekly_pie_chart_counts}')
+    # total_weekly_detections = sum(weekly_detected_object_counts)
+    # total_weekly_pie_chart_counts = sum(weekly_pie_chart_counts_list)
+    # print(f'Weekly Object Count : {weekly_detected_object_counts}')
+    # print(f'Total Weekly Detection : {total_weekly_detections}')
+    # print(f'Weekly Object Types : {weekly_object_types}')
+    # print(f'Weekly Object Counts : {weekly_object_counts}')
+    # print(f'Total Weekly Object Counts : {sum(weekly_object_counts)}')
+    # print(f'Pie Chart Types : {weekly_pie_chart_types_list}')
+    # print(f'Pie Chart Counts : {weekly_pie_chart_counts_list}')
+    # print(f'Total Pie Chart Counts : {total_weekly_pie_chart_counts}')
 
-    if total_weekly_detections == sum(weekly_object_counts) == total_weekly_pie_chart_counts:
-        print("All totals are consistent.")
-    else:
-        print("Totals are inconsistent.")
+    # if total_weekly_detections == sum(weekly_object_counts) == total_weekly_pie_chart_counts:
+    #     print("All totals are consistent.")
+    # else:
+    #     print("Totals are inconsistent.")
 
     
     return render_template(
