@@ -88,20 +88,20 @@ class Fallen:
         return annotated_frame
 
 # Video capture and display loop
-cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture(0)
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+# while True:
+#     ret, frame = cap.read()
+#     if not ret:
+#         break
 
-    fallen_detector = Fallen(frame)
-    annotated_frame = fallen_detector.process_frame()
+#     fallen_detector = Fallen(frame)
+#     annotated_frame = fallen_detector.process_frame()
 
-    cv2.imshow('Pose Detection', annotated_frame)
+#     cv2.imshow('Pose Detection', annotated_frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
 
-cap.release()
-cv2.destroyAllWindows()
+# cap.release()
+# cv2.destroyAllWindows()

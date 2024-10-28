@@ -250,6 +250,43 @@ class Detector(db.Model):
                     'name': gesture_name,
                     'timestamp': datetime.now(),
                 }
+        elif self.weight.detector_type.name == 'Fall Detection':
+            from gesture_detection.fallen import Fallen
+            annotated_frame, gesture_name = Fallen(frame=frame).process_results()
+            print(Back.GREEN)
+            print(gesture_name)
+            print(Style.RESET_ALL)
+            detected_object = DetectedObject(
+                    detector_id=self.id,
+                    name=gesture_name,
+                    frame=cv2.imencode('.jpg', frame)[1].tobytes(),
+                    timestamp=datetime.now(),
+                    permission_id=self.permission_id                
+                )
+            
+            detected_object_info = {
+                    # cctv
+                    'cctv_id': cctv.id,
+                    'cctv_location': cctv_location.name,
+                    'cctv_type': cctv.type,
+                    'ip_address': cctv.ip_address,
+                    'cctv_status': cctv.status,
+                    'cctv_permission_id': cctv.permission_id,
+                    'cctv_created_at': cctv.created_at,
+                    'cctv_updated_at': cctv.updated_at,
+                    
+                    # detector
+                    'detector_id': detector.id,
+                    'detector_type_id': detector.detector_type_id,
+                    'weight_id': detector.weight_id,
+                    'running': detector.running,
+                    'detector_permission_id': detector.permission_id,
+                    'detector_created_at': detector.created_at,
+                    'detector_updated_at': detector.updated_at,
+                    
+                    'name': gesture_name,
+                    'timestamp': datetime.now(),
+                }
         else:
             model = YOLO(self.weight.path)
             results = model.track(frame, stream=False, persist=True)
