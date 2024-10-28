@@ -200,7 +200,7 @@ def send_otp(user):
     # Send OTP via email
     message = f"Your OTP is {otp_code}. It will expire in 5 minutes."
     msg = OTPMessage(phone_number=user.phone_number, message=message)    
-    # msg.send()
+    msg.send()
 
 def verify_otp(user, otp_code):
     if user.otp_code == otp_code and user.otp_expiration > datetime.utcnow():

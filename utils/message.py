@@ -106,6 +106,7 @@ otp_selenium_manager = OTPManager()
 
 class MailManager:
     def __init__(self):
+        # Barcode path
         self.barcode_path = '/html/body/div[1]/div/div/div[2]/div[3]/div[1]'
         self.previous_data_ref = None
         self.selenium_manager = None
@@ -177,6 +178,8 @@ class MailManager:
             
 mail_manager = MailManager()
 
+# WA Message Path
+# WA Path
 class Message:
     def __init__(self, message_template, detected_object):
         self.message_template = message_template
