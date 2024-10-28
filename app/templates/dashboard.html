@@ -136,14 +136,21 @@
         return `${date.getDate()} ${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
     }
 
-    const dailyLabels = {{ daily_labels|tojson }}.map(time => {
-        const date = new Date(time);
-        const hours = date.getHours().toString().padStart(2, '0'); // Menjamin dua digit
-        const minutes = date.getMinutes().toString().padStart(2, '0'); // Menjamin dua digit
-        const day = date.getDate().toString().padStart(2, '0'); // Menjamin dua digit
-        const month = date.toLocaleString('en-US', { month: 'short' }); // Bulan dalam format singkat
-        return `${hours}:${minutes}, ${day} ${month}`; // Format akhir
+    const dailyLabels = {{ daily_labels|tojson }}
+
+    const formattedLabels = dailyLabels.map(label => {
+    const date = new Date(label); // Convert string to Date object
+
+    // Format the date to "HH:MM, DD Mon"
+    const hours = date.getUTCHours().toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    const day = date.getUTCDate();
+    const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+
+    return `${hours}:${minutes}, ${day} ${month}`;
     });
+
+    console.log(formattedLabels);
 
     const dailyCounts = {{ daily_counts|tojson }}; // Should contain the count of detected objects for each hour
     const dailyDetectedBarChartCtx = document.getElementById('dailyDetectedBarChart').getContext('2d');
@@ -151,7 +158,7 @@
     new Chart(dailyDetectedBarChartCtx, {
         type: 'bar', // Changed from 'line' to 'bar'
         data: {
-            labels: dailyLabels, // Use the labels for the x-axis
+            labels: formattedLabels, // Use the labels for the x-axis
             datasets: [{
                 label: 'Detected Objects',
                 data: dailyCounts, // Use the counts for the y-axis
@@ -376,7 +383,7 @@
 
 
         const labels = {{ weekly_labels|tojson }}.map(formatDate);
-        const numDetectedObjectPerDay = {{ weekly_counts|tojson }}.reverse();
+        const numDetectedObjectPerDay = {{ weekly_counts|tojson }};
 
         const ppeBarChartCtx = document.getElementById('ppeBarChart').getContext('2d');
         const dataset = [{

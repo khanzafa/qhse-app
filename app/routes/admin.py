@@ -8,6 +8,8 @@ import re
 from utils.auth import get_allowed_permission_ids
 import logging
 from functools import wraps
+from werkzeug.utils import secure_filename
+from openpyxl import load_workbook
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -31,8 +33,21 @@ def user_approval():
     form = UserApprovalForm()
     
     if request.method == "GET":
-        applicants = User.query.filter(User.approved.is_(None)).all()
-        return render_template("user_approval.html", applicants=applicants, form=form)
+        applicants = User.query.filter(
+            User.approved.is_(None),  # Check if `approved` is None
+            User.name.isnot(None),    # Ensure `name` is not None
+            User.name != ''           # Ensure `name` is not an empty string
+        ).all()
+        filepath = os.path.join("uploads", "data-nik.xlsx")
+        niks = []
+        if os.path.exists(filepath):
+            workbook = load_workbook(filepath)
+            sheet = workbook.active
+            for row in sheet.iter_rows(min_row=1, max_col=1):
+                cell_value = row[0].value
+                if cell_value is not None:
+                    niks.append(str(cell_value).replace('.0', '')[:10])
+        return render_template("user_approval.html", applicants=applicants, form=form, niks=niks)
     
     elif request.method == "POST":
         if form.validate_on_submit():
@@ -139,3 +154,61 @@ def set_session():
 @admin_bp.app_context_processor
 def inject_session_permission():
     return dict(session_permission=session.get('permission_id', ''), permission_name=session.get('permission_name', ''))
+
+@admin_bp.route('/upload-niks', methods=['GET', 'POST'])
+def upload_niks():
+    if request.method == "POST":
+        file = request.files['file']
+        if file:
+            if file.filename.split('.')[-1] not in ['xlsx', 'xls']:
+                flash("Invalid file type. Please upload an XLS or XLSX file.", "danger")
+                return redirect(url_for("admin.upload_niks"))
+
+            filename = "data-nik.xlsx"
+            file_path = os.path.join('uploads', filename)
+            file.save(file_path)            
+            try:
+                # Sync User NIK and NIK from Excel
+                users = User.query.all()
+                niks = [user.id for user in users]
+                workbook = load_workbook(file_path)
+                sheet = workbook.active
+                niks_from_excel = set() 
+                for row in sheet.iter_rows(min_row=1, max_col=1):
+                    cell_value = row[0].value
+                    if cell_value is not None:
+                        nik_str = str(cell_value).replace('.0', '')[:10]
+                        niks_from_excel.add(nik_str)
+                niks_to_remove = set(niks) - niks_from_excel
+                niks_to_add = niks_from_excel - set(niks)
+                for nik in niks_to_remove:
+                    user_to_remove = User.query.filter_by(id=nik).first()
+                    if user_to_remove:
+                        db.session.delete(user_to_remove)
+
+                for nik in niks_to_add:
+                    new_user = User(id=nik)
+                    db.session.add(new_user)
+                db.session.commit()
+
+                # Auto Reject User
+                applicants = User.query.filter(
+                    User.approved.is_(None), 
+                    User.name.isnot(None),
+                    User.name != ''
+                ).all()
+
+                for applicant in applicants:
+                    if applicant.id not in niks_from_excel:
+                        applicant.approved = False
+                db.session.commit()                
+
+                flash("NIKs processed successfully. Updated database accordingly.", "success")
+            except Exception as e:
+                db.session.rollback()
+                flash(f"An error occurred while processing the file: {str(e)}", "danger")
+            return redirect(url_for("admin.upload_niks"))
+        else:
+            flash("No file selected", "danger")
+            return redirect(url_for("admin.upload_niks"))
+    return redirect(url_for("admin.user_approval"))

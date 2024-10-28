@@ -387,8 +387,9 @@ class Detector(db.Model):
                         # Update tracker info
                         detected_objects_tracker[track_id] = tracker
 
-                print('tambahkan detected obj')
-                detected_objects.append(detected_object_info)
+                if results[0].boxes is not None:
+                    print('tambahkan detected obj')
+                    detected_objects.append(detected_object_info)
                 
             db.session.commit()
             

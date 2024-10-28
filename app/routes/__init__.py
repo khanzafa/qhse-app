@@ -8,6 +8,7 @@ from app.routes.notification import notification_bp
 from app.routes.report import report_bp
 from app.routes.weight import weight_bp
 from app.routes.admin import admin_bp
+from app.routes.dg_classifier import dg_classifier_bp
 from guide_bot.routes import guide_bot
 from datetime import datetime, timedelta
 from collections import Counter
@@ -55,6 +56,7 @@ app_routes = [
     weight_bp,
     admin_bp,
     guide_bot,
+    dg_classifier_bp
 ]
 
 main = Blueprint("main", __name__)
