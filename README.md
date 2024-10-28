@@ -25,6 +25,16 @@ Steps to install the project:
 4. Set the environment variable. Make a new file `.env` and fill it with the following code:
 
    [Mail Setup Tutorial link](https://mailtrap.io/blog/flask-send-email-gmail/)
+   How to get Firefox profile:
+   1. Open Firefox  
+   2. Type about:profiles  
+   3. Copy the Root Directory path of the selected profile  
+   
+   How to get edge profile path:
+   1. Open Edge  
+   2. Type edge://version  
+   3. Copy profile path
+      
    ```env
    # PostgreSQL database configuration for development
    DATABASE_URL=postgresql://postgres:YOUR_POSTGRES_PASSWORD@localhost/
@@ -42,7 +52,7 @@ Steps to install the project:
    EDGE_PROFILE_DIR=
    ```
 
-5. Prepare the database
+6. Prepare the database
 
    ```bash
    flask db init
@@ -50,7 +60,7 @@ Steps to install the project:
    flask upgrade
    ```
 
-6. Run the project
+7. Run the project
 
    ```bash
     flask run
