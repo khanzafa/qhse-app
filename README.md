@@ -41,9 +41,9 @@ Steps to install the project:
 5. Prepare the database
 
    ```bash
-   python flask db init
-   python flask db migrate
-   python flask upgrade
+   flask db init
+   flask db migrate
+   flask upgrade
    ```
 
 6. Run the project
