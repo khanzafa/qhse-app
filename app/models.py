@@ -212,6 +212,7 @@ class Detector(db.Model):
         detector = db.session.query(Detector).filter(Detector.id == self.id).first()
         cctv = db.session.query(CCTV).join(Detector).filter(Detector.id == self.id).first()
         cctv_location = db.session.query(CCTVLocation).filter(CCTVLocation.id == cctv.cctv_location_id).first()
+        detected_objects = []
         
         if self.weight.detector_type.name == 'Help Gesture':
             from gesture_detection.gesture import Gesture
@@ -226,6 +227,7 @@ class Detector(db.Model):
                     timestamp=datetime.now(),
                     permission_id=self.permission_id                
                 )
+            detected_objects.append(detected_object)
             
             detected_object_info = {
                     # cctv
@@ -291,7 +293,6 @@ class Detector(db.Model):
             model = YOLO(self.weight.path)
             results = model.track(frame, stream=False, persist=True)
             annotated_frame = results[0].plot()
-            detected_objects = []
             current_time = time.time()
             
             current_ids = [int(c.id.item()) for c in results[0].boxes if hasattr(c, 'id') and c.id is not None]
@@ -429,6 +430,7 @@ class Detector(db.Model):
                     detected_objects.append(detected_object_info)
                 
             db.session.commit()
+            detected_object_info['id'] = detected_object.id
             
         return detected_objects, annotated_frame, detected_objects_tracker, boxes_id
 

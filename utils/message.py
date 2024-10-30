@@ -62,7 +62,7 @@ class ReportManager(SeleniumManager):
         from selenium.webdriver.firefox.options import Options
         from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
         firefox_options = Options()
-        firefox_options.add_argument('--headless')
+        # firefox_options.add_argument('--headless')
         firefox_options.add_argument("-profile")
         firefox_options.add_argument(os.getenv("FIREFOX_PROFILE_DIR"))
         self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
@@ -85,7 +85,7 @@ class OTPManager(SeleniumManager):
         edge_options.add_argument('--no-first-run')
         edge_options.add_argument('--no-default-browser-check')
         edge_options.add_argument('--no-sandbox')
-        edge_options.add_argument('--headless=new')
+        # edge_options.add_argument('--headless=new')
         edge_options.add_argument('--ignore-certificate-errors')
         edge_options.add_argument('--disable-extensions')
         edge_options.add_argument('--disable-dev-shm-usage')

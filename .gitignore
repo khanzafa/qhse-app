@@ -23,3 +23,5 @@ obj_detection_vino.py
 remote.jumpserver.pem
 None/*
 detected_objects/
+detected_objects.json
+yolov8n-pose.pt

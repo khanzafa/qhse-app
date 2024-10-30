@@ -58,9 +58,10 @@ class Fallen:
             if conf > 0.5:
                 cv2.circle(annotated_frame, (int(x), int(y)), 5, (0, 0, 255), -1)
 
-    def process_frame(self):
+    def process_results(self):
         results = self.model(self.frame)
         annotated_frame = self.frame.copy()
+        status = "No Detection"
 
         for obj_idx in range(len(results[0].keypoints)):
             self.keypoints = results[0].keypoints[obj_idx].data[0]
@@ -85,7 +86,7 @@ class Fallen:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.9, box_color, 2, cv2.LINE_AA
                 )
 
-        return annotated_frame
+        return annotated_frame, status
 
 # Video capture and display loop
 # cap = cv2.VideoCapture(0)

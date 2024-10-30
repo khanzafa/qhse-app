@@ -16,7 +16,6 @@ from utils.message import OTPMessage
 auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
-@auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.menu'))
@@ -200,7 +199,7 @@ def send_otp(user):
     # Send OTP via email
     message = f"Your OTP is {otp_code}. It will expire in 5 minutes."
     msg = OTPMessage(phone_number=user.phone_number, message=message)    
-    msg.send()
+    # msg.send()
 
 def verify_otp(user, otp_code):
     if user.otp_code == otp_code and user.otp_expiration > datetime.utcnow():
